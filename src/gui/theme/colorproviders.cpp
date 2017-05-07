@@ -28,7 +28,13 @@
 
 #include "colorproviders.h"
 
+#include "config.h"
+
 #include <QMetaEnum>
+
+#ifdef PLASMA_INTEGRATION
+#include "plasmacolorprovider.h"
+#endif
 
 namespace
 {
@@ -60,6 +66,9 @@ namespace
 void Theme::Serialization::registerColorProviders()
 {
     static ColorProvidersRegistrator colorProvidersRegistrator;
+#ifdef PLASMA_INTEGRATION
+    registerPlasmaColorProviders();
+#endif
 }
 
 Theme::Serialization::ExplicitColor::ExplicitColor(const QColor &color)

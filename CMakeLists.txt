@@ -25,6 +25,7 @@ option(WEBUI "Allows to disable the WebUI." ON)
 option(STACKTRACE "Enable stacktrace feature" ON)
 
 if (UNIX)
+    option(PLASMA_INTEGRATION "Enable KDE/Plasma integration" OFF)
     cmake_dependent_option(SYSTEMD "Install the systemd service file (headless only)" OFF
         "NOT GUI" OFF)
     cmake_dependent_option(DBUS "Enable use of QtDBus (GUI only)" ON "GUI" OFF)

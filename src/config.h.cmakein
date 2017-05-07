@@ -23,3 +23,7 @@
 
 #define QBT_VERSION "v@qbit_VERSION@"
 #define QBT_VERSION_2 "@qbit_VERSION@"
+
+#cmakedefine PLASMA_INTEGRATION
+
+
