@@ -39,6 +39,11 @@ if (GUI)
             ${qbit_SOURCE_DIR}/src/icons/skin/qbittorrent-tray-light.svg
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/status
         COMPONENT data)
+
+    install(FILES ${ADDITIONAL_THEME_FILES}
+            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/qBittorrent/theme/
+            COMPONENT data
+    )
 endif()
 
 if (PLASMA_INTEGRATION)
