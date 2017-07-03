@@ -73,15 +73,15 @@ namespace
     {
         switch (st) {
         case SearchTab::Status::Ongoing:
-            return QLatin1String("task-ongoing");
+            return QLatin1String("state-sync");
         case SearchTab::Status::Finished:
-            return QLatin1String("task-complete");
+            return QLatin1String("state-ok");
         case SearchTab::Status::Aborted:
-            return QLatin1String("task-reject");
+            return QLatin1String("state-warning");
         case SearchTab::Status::Error:
-            return QLatin1String("task-attention");
+            return QLatin1String("state-error");
         case SearchTab::Status::NoResults:
-            return QLatin1String("task-attention");
+            return QLatin1String("state-offline");
         default:
             return QString();
         }

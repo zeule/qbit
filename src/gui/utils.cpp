@@ -57,11 +57,16 @@ qreal Utils::Gui::screenScalingFactor(const QWidget *widget)
 #endif  // Q_OS_WIN
 }
 
-QPixmap Utils::Gui::scaledPixmap(const QString &path, const QWidget *widget, const int height)
+QPixmap Utils::Gui::scaledPixmap(const QPixmap &pixmap, const QWidget *widget, const int height)
 {
-    const QPixmap pixmap(path);
     const int scaledHeight = ((height > 0) ? height : pixmap.height()) * Utils::Gui::screenScalingFactor(widget);
     return pixmap.scaledToHeight(scaledHeight, Qt::SmoothTransformation);
+}
+
+
+QPixmap Utils::Gui::scaledPixmap(const QString &path, const QWidget *widget, const int height)
+{
+    return scaledPixmap(QPixmap(path), widget, height);
 }
 
 QSize Utils::Gui::smallIconSize(const QWidget *widget)
