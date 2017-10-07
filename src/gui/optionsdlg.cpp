@@ -222,8 +222,10 @@ OptionsDialog::OptionsDialog(QWidget *parent)
 
     m_ui->IpFilterRefreshBtn->setIcon(GuiIconProvider::instance()->getIcon("view-refresh"));
 
-    m_ui->labelGlobalRate->setPixmap(Utils::Gui::scaledPixmap(":/icons/slow_off.png", this, 16));
-    m_ui->labelAltRate->setPixmap(Utils::Gui::scaledPixmap(":/icons/slow.png", this, 16));
+    m_ui->labelGlobalRate->setPixmap(
+        Utils::Gui::scaledPixmap(GuiIconProvider::instance()->getIcon(QLatin1String("speedometer")).pixmap(64, 64), this, 16));
+    m_ui->labelAltRate->setPixmap(
+        Utils::Gui::scaledPixmap(GuiIconProvider::instance()->getIcon(QLatin1String("speedometer-flipped")).pixmap(64, 64), this, 16));
 
     m_ui->deleteTorrentWarningIcon->setPixmap(QApplication::style()->standardIcon(QStyle::SP_MessageBoxCritical).pixmap(16, 16));
     m_ui->deleteTorrentWarningIcon->hide();
