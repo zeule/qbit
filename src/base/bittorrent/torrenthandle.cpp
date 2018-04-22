@@ -893,8 +893,11 @@ bool TorrentHandle::hasFilteredPieces() const
 int TorrentHandle::queuePosition() const
 {
     if (m_nativeStatus.queue_position < 0) return 0;
-
+#if LIBTORRENT_VERSION_NUM < 10200
     return m_nativeStatus.queue_position + 1;
+#else
+    return m_nativeStatus.queue_position + decltype(m_nativeStatus.queue_position)::diff_type(1);
+#endif
 }
 
 QString TorrentHandle::error() const

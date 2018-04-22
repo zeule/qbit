@@ -52,6 +52,8 @@
 #include "propertieswidget.h"
 #include "trackersadditiondlg.h"
 
+#include <numeric>
+
 TrackerList::TrackerList(PropertiesWidget *properties)
     : QTreeWidget()
     , m_properties(properties)
@@ -360,7 +362,31 @@ void TrackerList::loadTrackers()
         }
 
         item->setText(COL_RECEIVED, QString::number(data.numPeers));
-#if LIBTORRENT_VERSION_NUM >= 10000
+#if LIBTORRENT_VERSION_NUM >= 10200
+        struct ScrapeAccumulator {
+            ScrapeAccumulator(int libtorrent::announce_endpoint::* memb)
+                : m_memb {memb}
+            {
+            }
+
+            int operator() (int a, const libtorrent::announce_endpoint& b) const
+            {
+                return b.*m_memb > 0 ? a + b.*m_memb : a;
+            }
+        private:
+            int libtorrent::announce_endpoint::* m_memb;
+        };
+
+        item->setText(COL_SEEDS, QString::number(
+            std::accumulate(entry.nativeEntry().endpoints.begin(), entry.nativeEntry().endpoints.end(), 0,
+                ScrapeAccumulator(&libtorrent::announce_endpoint::scrape_complete))));
+        item->setText(COL_PEERS, QString::number(
+            std::accumulate(entry.nativeEntry().endpoints.begin(), entry.nativeEntry().endpoints.end(), 0,
+                ScrapeAccumulator(&libtorrent::announce_endpoint::scrape_incomplete))));
+        item->setText(COL_DOWNLOADED, QString::number(
+            std::accumulate(entry.nativeEntry().endpoints.begin(), entry.nativeEntry().endpoints.end(), 0,
+                ScrapeAccumulator(&libtorrent::announce_endpoint::scrape_downloaded))));
+#elif LIBTORRENT_VERSION_NUM >= 10000
         item->setText(COL_SEEDS, QString::number(entry.nativeEntry().scrape_complete > 0 ? entry.nativeEntry().scrape_complete : 0));
         item->setText(COL_PEERS, QString::number(entry.nativeEntry().scrape_incomplete > 0 ? entry.nativeEntry().scrape_incomplete : 0));
         item->setText(COL_DOWNLOADED, QString::number(entry.nativeEntry().scrape_downloaded > 0 ? entry.nativeEntry().scrape_downloaded : 0));

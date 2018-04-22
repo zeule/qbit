@@ -12,3 +12,6 @@
 #endif
 
 #cmakedefine STACKTRACE_WIN
+
+/* Define when libtorrent/string_view.hpp is available (libtorrent >=1.2.0)*/
+#cmakedefine HAVE_LIBTORRENT_STRING_VIEW_HPP

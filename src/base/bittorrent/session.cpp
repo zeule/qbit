@@ -29,8 +29,11 @@
 
 #include "session.h"
 
+#include "config.h"
+
 #include <algorithm>
 #include <cstdlib>
+#include <iostream>
 #include <queue>
 #include <string>
 
@@ -70,6 +73,9 @@
 #endif
 #include <libtorrent/session_status.hpp>
 #include <libtorrent/torrent_info.hpp>
+#if LIBTORRENT_VERSION_NUM >= 10200
+#include <libtorrent/read_resume_data.hpp>
+#endif
 
 #include "base/algorithm.h"
 #include "base/logger.h"
@@ -140,13 +146,27 @@ namespace
         return result;
     }
 
+    // we declare this shortcut here, because...
+    inline QString fromStdString(const std::string& str)
+    {
+        return QString::fromStdString(str);
+    }
+#ifdef HAVE_LIBTORRENT_STRING_VIEW_HPP
+    // ... if libtorrent uses string_view, we need the second overload only in this file.
+    inline QString fromStdString(const libtorrent::string_view& str)
+    {
+        return QString::fromUtf8(str.data(), str.size());
+    }
+#endif
+
+
     template <typename Entry>
     QSet<QString> entryListToSetImpl(const Entry &entry)
     {
         Q_ASSERT(entry.type() == Entry::list_t);
         QSet<QString> output;
         for (int i = 0; i < entry.list_size(); ++i) {
-            const QString tag = QString::fromStdString(entry.list_string_value_at(i));
+            const QString tag = fromStdString(entry.list_string_value_at(i));
             if (Session::isValidTag(tag))
                 output.insert(tag);
             else
@@ -453,7 +473,11 @@ Session::Session(QObject *parent)
     pack.set_bool(libt::settings_pack::upnp_ignore_nonrouters, true);
     configure(pack);
 
+#if LIBTORRENT_VERSION_NUM < 10200
     m_nativeSession = new libt::session(pack, 0);
+#else
+    m_nativeSession = new libt::session(pack, libt::session::add_default_plugins);
+#endif
     m_nativeSession->set_alert_notify([this]()
     {
         QMetaObject::invokeMethod(this, "readAlerts", Qt::QueuedConnection);
@@ -1951,8 +1975,11 @@ bool Session::cancelLoadMetadata(const InfoHash &hash)
     m_loadedMetadata.remove(hash);
     libt::torrent_handle torrent = m_nativeSession->find_torrent(hash);
     if (!torrent.is_valid()) return false;
-
+#if LIBTORRENT_VERSION_NUM < 10200
     if (!torrent.status(0).has_metadata) {
+#else
+    if (!torrent.status(libt::status_flags_t(0)).has_metadata) {
+#endif
         // if hidden torrent is still loading metadata...
         --m_extraLimit;
         adjustLimits();
@@ -2111,9 +2138,25 @@ bool Session::addTorrent_impl(AddTorrentData addData, const MagnetUri &magnetUri
         }
     }
 
+    const bool fromMagnetUri = magnetUri.isValid();
     libt::add_torrent_params p;
+    if (addData.resumed && !fromMagnetUri) {
+#if LIBTORRENT_VERSION_NUM >= 10200
+    libt::error_code ec;
+    p = libt::read_resume_data(fastresumeData, ec);
+#else
+    // Set torrent fast resume data
+    p.resume_data = {fastresumeData.constData(), fastresumeData.constData() + fastresumeData.size()};
+    p.flags |= libt::add_torrent_params::flag_use_resume_save_path;
+#endif
+    }
+
     InfoHash hash;
+#if LIBTORRENT_VERSION_NUM < 10200
     std::vector<boost::uint8_t> filePriorities;
+#else
+    std::vector<libt::download_priority_t> filePriorities;
+#endif
 
     QString savePath;
     if (addData.savePath.isEmpty()) // using Automatic mode
@@ -2121,7 +2164,6 @@ bool Session::addTorrent_impl(AddTorrentData addData, const MagnetUri &magnetUri
     else  // using Manual mode
         savePath = addData.savePath;
 
-    bool fromMagnetUri = magnetUri.isValid();
     if (fromMagnetUri) {
         hash = magnetUri.hash();
 
@@ -2164,12 +2206,7 @@ bool Session::addTorrent_impl(AddTorrentData addData, const MagnetUri &magnetUri
         return false;
     }
 
-    if (addData.resumed && !fromMagnetUri) {
-        // Set torrent fast resume data
-        p.resume_data = {fastresumeData.constData(), fastresumeData.constData() + fastresumeData.size()};
-        p.flags |= libt::add_torrent_params::flag_use_resume_save_path;
-    }
-    else {
+    if (!addData.resumed || fromMagnetUri) {
         foreach (int prio, addData.filePriorities)
             filePriorities.push_back(prio);
         p.file_priorities = filePriorities;
@@ -4190,7 +4227,11 @@ void Session::handlePortmapAlert(libt::portmap_alert *p)
 void Session::handlePeerBlockedAlert(libt::peer_blocked_alert *p)
 {
     boost::system::error_code ec;
-    std::string ip = p->ip.to_string(ec);
+#if LIBTORRENT_VERSION_NUM < 10200
+    const std::string ip = p->ip.to_string(ec);
+#else
+    const std::string ip = p->endpoint.address().to_string(ec);
+#endif
     QString reason;
     switch (p->reason) {
     case libt::peer_blocked_alert::ip_filter:
@@ -4459,31 +4500,31 @@ namespace
 #endif
 
         torrentData.savePath = Profile::instance().fromPortablePath(
-            Utils::Fs::fromNativePath(QString::fromStdString(fast.dict_find_string_value("qBt-savePath"))));
+            Utils::Fs::fromNativePath(fromStdString(fast.dict_find_string_value("qBt-savePath"))));
 
-        std::string ratioLimitString = fast.dict_find_string_value("qBt-ratioLimit");
+        const auto ratioLimitString = fast.dict_find_string_value("qBt-ratioLimit");
         if (ratioLimitString.empty())
             torrentData.ratioLimit = fast.dict_find_int_value("qBt-ratioLimit", TorrentHandle::USE_GLOBAL_RATIO * 1000) / 1000.0;
         else
-            torrentData.ratioLimit = QString::fromStdString(ratioLimitString).toDouble();
+            torrentData.ratioLimit = fromStdString(ratioLimitString).toDouble();
         torrentData.seedingTimeLimit = fast.dict_find_int_value("qBt-seedingTimeLimit", TorrentHandle::USE_GLOBAL_SEEDING_TIME);
         // **************************************************************************************
         // Workaround to convert legacy label to category
         // TODO: Should be removed in future
-        torrentData.category = QString::fromStdString(fast.dict_find_string_value("qBt-label"));
+        torrentData.category = fromStdString(fast.dict_find_string_value("qBt-label"));
         if (torrentData.category.isEmpty())
         // **************************************************************************************
-            torrentData.category = QString::fromStdString(fast.dict_find_string_value("qBt-category"));
+            torrentData.category = fromStdString(fast.dict_find_string_value("qBt-category"));
         // auto because the return type depends on the #if above.
         const auto tagsEntry = fast.dict_find_list("qBt-tags");
         if (isList(tagsEntry))
             torrentData.tags = entryListToSet(tagsEntry);
-        torrentData.name = QString::fromStdString(fast.dict_find_string_value("qBt-name"));
+        torrentData.name = fromStdString(fast.dict_find_string_value("qBt-name"));
         torrentData.hasSeedStatus = fast.dict_find_int_value("qBt-seedStatus");
         torrentData.disableTempPath = fast.dict_find_int_value("qBt-tempPathDisabled");
         torrentData.hasRootFolder = fast.dict_find_int_value("qBt-hasRootFolder");
 
-        magnetUri = MagnetUri(QString::fromStdString(fast.dict_find_string_value("qBt-magnetUri")));
+        magnetUri = MagnetUri(fromStdString(fast.dict_find_string_value("qBt-magnetUri")));
         torrentData.addPaused = fast.dict_find_int_value("qBt-paused");
         torrentData.addForced = fast.dict_find_int_value("qBt-forced");
         torrentData.firstLastPiecePriority = fast.dict_find_int_value("qBt-firstLastPiecePriority");

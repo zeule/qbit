@@ -32,7 +32,10 @@
 #include <QUrl>
 #include <QDateTime>
 
+#include <boost/optional.hpp>
+
 #include <libtorrent/error_code.hpp>
+#include <libtorrent/version.hpp>
 
 #include "base/utils/misc.h"
 #include "base/utils/fs.h"
@@ -45,8 +48,12 @@ namespace libt = libtorrent;
 using namespace BitTorrent;
 
 TorrentInfo::TorrentInfo(NativeConstPtr nativeInfo)
+#if LIBTORRENT_VERSION_NUM >= 10200
+    : m_nativeInfo {std::const_pointer_cast<libt::torrent_info>(nativeInfo)}
+#else
+    : m_nativeInfo {boost::const_pointer_cast<libt::torrent_info>(nativeInfo)}
+#endif
 {
-    m_nativeInfo = boost::const_pointer_cast<libt::torrent_info>(nativeInfo);
 }
 
 TorrentInfo::TorrentInfo(const TorrentInfo &other)
@@ -303,7 +310,11 @@ QVector<QByteArray> TorrentInfo::pieceHashes() const
     hashes.reserve(count);
 
     for (int i = 0; i < count; ++i)
+#if LIBTORRENT_VERSION_NUM < 10200
         hashes += { m_nativeInfo->hash_for_piece_ptr(i), libtorrent::sha1_hash::size };
+#else
+        hashes += { m_nativeInfo->hash_for_piece_ptr(i), libtorrent::sha1_hash::size() };
+#endif
 
     return hashes;
 }
