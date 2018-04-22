@@ -30,6 +30,8 @@
 
 #include "mainwindow.h"
 
+#include "config.h"
+
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QCryptographicHash>

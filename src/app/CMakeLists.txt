@@ -95,7 +95,7 @@ endif (WEBUI)
 
 # we have to include resources into the bundle
 if (APPLE)
-    set(OSX_RES_SRC_DIR "${qBittorrent_SOURCE_DIR}/dist/mac")
+    set(OSX_RES_SRC_DIR "${qbit_SOURCE_DIR}/dist/mac")
     list(APPEND QBT_APP_RESOURCE_SOURCE
         "${OSX_RES_SRC_DIR}/qt.conf"
         "${OSX_RES_SRC_DIR}/qBitTorrentDocument.icns"
@@ -106,7 +106,7 @@ if (APPLE)
         "${OSX_RES_SRC_DIR}/qbittorrent_mac.icns"
         PROPERTIES
             MACOSX_PACKAGE_LOCATION Resources)
-    set(QT_TR_DIR "${qBittorrent_SOURCE_DIR}/dist/qt-translations")
+    set(QT_TR_DIR "${qbit_SOURCE_DIR}/dist/qt-translations")
     set(QT_TRANSLATIONS
         ${QT_TR_DIR}/qt_ar.qm
         ${QT_TR_DIR}/qt_bg.qm
@@ -172,11 +172,11 @@ if (APPLE)
 
 # substitute @EXECUTABLE@ in dist/mac/Info.plist
     set(EXECUTABLE ${qbt_BUNDLE_NAME})
-    configure_file(${qBittorrent_SOURCE_DIR}/dist/mac/Info.plist ${qBittorrent_BINARY_DIR}/dist/mac/Info.plist @ONLY)
+    configure_file(${qbit_SOURCE_DIR}/dist/mac/Info.plist ${qbit_BINARY_DIR}/dist/mac/Info.plist @ONLY)
 
     set_target_properties(qBittorrent PROPERTIES
         MACOSX_BUNDLE_BUNDLE_NAME "${qbt_BUNDLE_NAME}"
-        MACOSX_BUNDLE_INFO_PLIST ${qBittorrent_BINARY_DIR}/dist/mac/Info.plist
+        MACOSX_BUNDLE_INFO_PLIST ${qbit_BINARY_DIR}/dist/mac/Info.plist
     )
 endif (APPLE)
 

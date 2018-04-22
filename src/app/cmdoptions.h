@@ -33,6 +33,8 @@
 #ifndef APP_OPTIONS_H
 #define APP_OPTIONS_H
 
+#include "config.h"
+
 #include <stdexcept>
 
 #include <QString>

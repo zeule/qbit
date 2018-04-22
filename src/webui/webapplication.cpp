@@ -28,6 +28,8 @@
 
 #include "webapplication.h"
 
+#include "config.h"
+
 #include <algorithm>
 #include <functional>
 #include <queue>

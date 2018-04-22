@@ -29,6 +29,8 @@
 #ifndef UPGRADE_H
 #define UPGRADE_H
 
+#include "config.h"
+
 #include <libtorrent/version.hpp>
 #if LIBTORRENT_VERSION_NUM >= 10100
 #include <libtorrent/bdecode.hpp>

@@ -30,6 +30,8 @@
 
 #include "torrentcreatorthread.h"
 
+#include "config.h"
+
 #include <fstream>
 
 #include <boost/bind.hpp>

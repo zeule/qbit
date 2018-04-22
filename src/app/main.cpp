@@ -31,6 +31,8 @@
 
 #include <cstdlib>
 
+#include "config.h"
+
 #include <QDebug>
 #include <QScopedPointer>
 #include <QThread>

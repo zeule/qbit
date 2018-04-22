@@ -11,7 +11,15 @@
 #define DISABLE_WEBUI
 #endif
 
-#cmakedefine STACKTRACE_WIN
+#cmakedefine STACKTRACE
 
 /* Define when libtorrent/string_view.hpp is available (libtorrent >=1.2.0)*/
 #cmakedefine HAVE_LIBTORRENT_STRING_VIEW_HPP
+
+#define QBT_VERSION_MAJOR @qbit_VERSION_MAJOR@
+#define QBT_VERSION_MINOR @qbit_VERSION_MINOR@
+#define QBT_VERSION_BUGFIX @qbit_VERSION_PATCH@
+#define QBT_VERSION_BUILD @qbit_VERSION_TWEAK@
+
+#define QBT_VERSION "v@qbit_VERSION@"
+#define QBT_VERSION_2 "@qbit_VERSION@"

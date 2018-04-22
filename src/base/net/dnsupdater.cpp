@@ -25,6 +25,9 @@
  * but you are not obligated to do so. If you do not wish to do so, delete this
  * exception statement from your version.
  */
+#include "dnsupdater.h"
+
+#include "config.h"
 
 #include <QDebug>
 #include <QRegExp>
@@ -34,7 +37,6 @@
 #include "base/logger.h"
 #include "base/net/downloadhandler.h"
 #include "base/net/downloadmanager.h"
-#include "dnsupdater.h"
 
 using namespace Net;
 

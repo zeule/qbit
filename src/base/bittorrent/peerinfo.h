@@ -29,6 +29,8 @@
 #ifndef BITTORRENT_PEERINFO_H
 #define BITTORRENT_PEERINFO_H
 
+#include "config.h"
+
 #include <QBitArray>
 #include <QCoreApplication>
 #include <QHostAddress>

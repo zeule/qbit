@@ -32,6 +32,8 @@
 
 #include "preferences.h"
 
+#include "config.h"
+
 #include <QCryptographicHash>
 #include <QDir>
 #include <QLocale>

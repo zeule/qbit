@@ -1,33 +1,12 @@
-cmake_minimum_required(VERSION 3.5)
-cmake_policy(VERSION 3.5)
+cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
-include(FunctionReadVersion)
 
-read_version("${CMAKE_CURRENT_SOURCE_DIR}/version.pri" VER_MAJOR VER_MINOR VER_BUGFIX VER_BUILD VER_STATUS)
-# message(STATUS "Project version is: ${VER_MAJOR}.${VER_MINOR}.${VER_BUGFIX}.${VER_BUILD} (${VER_STATUS})")
+project(qbit
+     VERSION 0.0.1.0
+)
 
-project(qBittorrent VERSION ${VER_MAJOR}.${VER_MINOR}.${VER_BUGFIX}.${VER_BUILD})
-
-set(PROJECT_VERSION "${VER_MAJOR}.${VER_MINOR}.${VER_BUGFIX}")
-
-if (NOT VER_BUILD EQUAL 0)
-    set(PROJECT_VERSION "${PROJECT_VERSION}.${VER_BUILD}")
-endif()
-
-set(PROJECT_VERSION "${PROJECT_VERSION}${VER_STATUS}")
-
-add_definitions(-DQBT_VERSION_MAJOR=${VER_MAJOR})
-add_definitions(-DQBT_VERSION_MINOR=${VER_MINOR})
-add_definitions(-DQBT_VERSION_BUGFIX=${VER_BUGFIX})
-add_definitions(-DQBT_VERSION_BUILD=${VER_BUILD})
-
-add_definitions(-DQBT_VERSION="v${PROJECT_VERSION}")
-add_definitions(-DQBT_VERSION_2="${PROJECT_VERSION}")
-
-if (UNIX AND NOT APPLE)
-    include(GNUInstallDirs)
-endif (UNIX AND NOT APPLE)
+include(GNUInstallDirs)
 
 if(WIN32)
     include(winconf)
@@ -37,7 +16,7 @@ endif(WIN32)
 include(CMakeDependentOption)
 
 option(SYSTEM_QTSINGLEAPPLICATION
-    "Use the system qtsingleapplication library or shipped one otherwise")
+    "Use the system qtsingleapplication library or shipped one otherwise" ON)
 
 option(GUI "Allows to disable GUI for headless running. Disables QtDBus and the GeoIP Database" ON)
 
@@ -50,7 +29,6 @@ if (UNIX)
         "NOT GUI" OFF)
     cmake_dependent_option(DBUS "Enable use of QtDBus (GUI only)" ON "GUI" OFF)
 endif(UNIX)
-
 
 add_subdirectory(src)
 add_subdirectory(dist)

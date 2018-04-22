@@ -33,6 +33,8 @@
 
 #include <QFile>
 
+#include "config.h"
+
 #include "base/utils/misc.h"
 #include "base/unicodestrings.h"
 #include "ui_about.h"

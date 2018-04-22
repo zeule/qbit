@@ -30,6 +30,8 @@
 
 #include "appcontroller.h"
 
+#include "config.h"
+
 #include <QCoreApplication>
 #include <QDebug>
 #include <QJsonDocument>

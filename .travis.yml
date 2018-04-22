@@ -10,18 +10,13 @@ env:
     # Uncomment when Travis upgraded "Ubuntu 12.04 LTS" to a newer version whose repo will have a more up-to-date libtorrent package
     #- lt_branch=dist gui=true
     #- lt_branch=dist gui=false
-    - lt_branch=RC_1_0 gui=true build_system=cmake
-    - lt_branch=RC_1_0 gui=false build_system=cmake
-    - lt_branch=RC_1_0 gui=true build_system=qmake
-    - lt_branch=RC_1_0 gui=false build_system=qmake
+    - lt_branch=RC_1_0 gui=true
+    - lt_branch=RC_1_0 gui=false
   global:
     - secure: "OI9CUjj4lTb0HwwIZU5PbECU3hLlAL6KC8KsbwohG8/O3j5fLcnmDsK4Ad9us5cC39sS11Jcd1kDP2qRcCuST/glVNhLkcjKkiQerOfd5nQ/qL4JYfz/1mfP5mdpz9jHKzpLUIG+TXkbSTjP6VVmsb5KPT+3pKEdRFZB+Pu9+J8="
     - coverity_branch: coverity_scan
 
 matrix:
-  allow_failures:
-    - env: lt_branch=RC_1_0 gui=true build_system=cmake
-    - env: lt_branch=RC_1_0 gui=false build_system=cmake
 
 branches:
   except:
@@ -58,7 +53,7 @@ addons:
       - ubuntu-toolchain-r-test
       #- boost-latest
       - sourceline: 'ppa:qbittorrent-team/qbittorrent-stable'
-      - sourceline: 'ppa:beineri/opt-qt551-trusty'
+      - sourceline: 'ppa:beineri/opt-qt591-trusty'
       - sourceline: 'ppa:adrozdoff/cmake'
     packages:
       # packages list: https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
@@ -67,7 +62,7 @@ addons:
       - libssl-dev
       - [libboost-dev, libboost-system-dev]
       - libtorrent-rasterbar-dev
-      - [qt55base, qt55svg, qt55tools]
+      - [qt59base, qt59svg, qt59tools]
       - [gcc-6, g++-6]
 
 before_install:
@@ -92,18 +87,15 @@ before_install:
       if [ "$gui" = true ]; then export "DISPLAY=:99.0" && /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16 ; fi ;
 
       # Qt 5
-      PATH=/opt/qt55/bin:${PATH}
+      PATH=/opt/qt59/bin:${PATH}
 
-      if [ "$build_system" = "cmake" ]; then
-          COMPILER_VERSION=6
-          export CXX="${CXX}-${COMPILER_VERSION}" CC="${CC}-${COMPILER_VERSION}"
-      fi
+      COMPILER_VERSION=6
+      export CXX="${CXX}-${COMPILER_VERSION}" CC="${CC}-${COMPILER_VERSION}"
     fi
 
   # print settings
   - echo $lt_branch
   - echo $gui
-  - echo $build_system
   - echo $ltconf
   - echo $qbtconf
 
@@ -143,13 +135,11 @@ install:
       cp "$HOME/hombebrew_cache/libtorrent-rasterbar-1.1.6+git20180101.b45acf28a5+patched-configure.el_capitan.bottle.tar.gz" "$(brew --cache)"
       brew install "$HOME/hombebrew_cache/libtorrent-rasterbar.rb"
 
-      if [ "$build_system" = "cmake" ]; then
-        brew outdated cmake || brew upgrade cmake
-        brew install ninja
+      brew outdated cmake || brew upgrade cmake
+      brew install ninja
 
-        ln -s /usr/local/opt/qt/mkspecs /usr/local/mkspecs
-        ln -s /usr/local/opt/qt/plugins /usr/local/plugins
-      fi
+      ln -s /usr/local/opt/qt/mkspecs /usr/local/mkspecs
+      ln -s /usr/local/opt/qt/plugins /usr/local/plugins
 
       MY_CMAKE_OPENSSL_HINT="-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/"
     fi
@@ -163,39 +153,19 @@ script:
   - if [ "$TRAVIS_BRANCH" = "$coverity_branch" ]; then exit ; fi # skip usual build when running coverity scan
   - |
     cd "$TRAVIS_BUILD_DIR"
-    if [ "$build_system" = "cmake" ]; then
-      mkdir build
-      cd build
-      cmake -DGUI=${gui} -DCMAKE_INSTALL_PREFIX="$qbt_path" "$MY_CMAKE_OPENSSL_HINT" \
-        -G "Ninja" -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE ..
-      BUILD_TOOL="ninja"
-    fi
-    if [ "$build_system" = "qmake" ]; then
-      if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-        # For some reason for RC_1_1 we need to also specify the OpenSSL compiler/linker flags
-        # Homebrew doesn't symlink OpenSSL for security reasons
-        ./bootstrap.sh && ./configure $qbtconf CXXFLAGS="$(PKG_CONFIG_PATH="/usr/local/opt/openssl/lib/pkgconfig:$PKG_CONFIG_PATH" pkg-config --cflags openssl)" LDFLAGS="$(PKG_CONFIG_PATH="/usr/local/opt/openssl/lib/pkgconfig:$PKG_CONFIG_PATH" pkg-config --libs openssl)"
-        sed -i "" -e "s/^\(CC.*&&\).*$/\1 $CC/" src/Makefile  # workaround for Qt & ccache: https://bugreports.qt.io/browse/QTBUG-31034
-        sed -i "" -e "s/^\(CXX.*&&\).*$/\1 $CXX/" src/Makefile
-        sed -i "" -e 's/^\(CXXFLAGS.*\)$/\1 -Wno-unused-local-typedefs -Wno-inconsistent-missing-override/' src/Makefile
-      else
-        ./bootstrap.sh && ./configure $qbtconf
-      fi
-      BUILD_TOOL="make"
-    fi
-  - $BUILD_TOOL && $BUILD_TOOL install
+    mkdir build
+    cd build
+    cmake -DGUI=${gui} -DCMAKE_INSTALL_PREFIX="$qbt_path" "$MY_CMAKE_OPENSSL_HINT" \
+        -G "Ninja" -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE -DSYSTEM_QTSINGLEAPPLICATION=OFF ..
+  - cmake --build .
+  - cmake --build . install
 
 after_success:
   - if [ "$gui" = true ]; then qbt_exe="qbittorrent" ; else qbt_exe="qbittorrent-nox" ; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then cd "$qbt_path/bin" ; fi
   - |
     if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-      if [ "$build_system" = "qmake" ]; then
-        macdeployqt "$TRAVIS_BUILD_DIR/src/$qbt_exe.app"
-        cd "$TRAVIS_BUILD_DIR/src/$qbt_exe.app/Contents/MacOS"
-      else
-        cd "$qbt_path/$qbt_exe.app/Contents/MacOS"
-      fi
+      cd "$qbt_path/$qbt_exe.app/Contents/MacOS"
     fi
   - ./$qbt_exe --version
 

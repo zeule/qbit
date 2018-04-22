@@ -30,6 +30,8 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+#include "config.h"
+
 #include <QPointer>
 #include <QStringList>
 #include <QTranslator>

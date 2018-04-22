@@ -28,6 +28,8 @@
 
 #include "synccontroller.h"
 
+#include "config.h"
+
 #include <QJsonObject>
 
 #include "base/bittorrent/peerinfo.h"

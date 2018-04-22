@@ -30,6 +30,8 @@
 
 #include "optionsdlg.h"
 
+#include "config.h"
+
 #include <cstdlib>
 
 #include <QApplication>

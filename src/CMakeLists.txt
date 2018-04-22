@@ -9,7 +9,7 @@ include(CheckIncludeFileCXX)
 include(MacroLinkQtComponents)
 include(QbtTargetSources)
 
-find_package(Boost 1.60 REQUIRED)
+find_package(Boost 1.56 REQUIRED)
 find_package(LibtorrentRasterbar REQUIRED)
 
 set(CMAKE_REQUIRED_INCLUDES ${LibtorrentRasterbar_INCLUDE_DIR})
@@ -30,13 +30,7 @@ endif (GUI)
 if (DBUS)
     list (APPEND QBT_QT_COMPONENTS DBus)
 endif (DBUS)
-find_package(Qt5 5.5.1 COMPONENTS ${QBT_QT_COMPONENTS} REQUIRED)
-
-if (GUI AND APPLE)
-    # Fix MOC inability to detect macOS. This seems to only affect cmake.
-    # Relevant issue: https://bugreports.qt.io/browse/QTBUG-58325
-    set(CMAKE_AUTOMOC_MOC_OPTIONS ${CMAKE_AUTOMOC_MOC_OPTIONS} -DQ_OS_MAC)
-endif ()
+find_package(Qt5 5.9 COMPONENTS ${QBT_QT_COMPONENTS} REQUIRED)
 
 set(CMAKE_AUTOMOC True)
 list(APPEND CMAKE_AUTORCC_OPTIONS -compress 9 -threshold 5)
@@ -48,38 +42,17 @@ add_definitions(-DQT_NO_CAST_TO_ASCII)
 # Efficient construction for QString & QByteArray (Qt >= 4.8)
 add_definitions(-DQT_USE_QSTRINGBUILDER)
 
-if (NOT GUI)
-    add_definitions(-DDISABLE_GUI -DDISABLE_COUNTRIES_RESOLUTION)
-endif (NOT GUI)
-
-if (NOT WEBUI)
-    add_definitions(-DDISABLE_WEBUI)
-endif (NOT WEBUI)
-
-if (STACKTRACE)
-    add_definitions(-DSTACKTRACE)
-endif(STACKTRACE)
-# nogui {
-#     TARGET = qbittorrent-nox
-# } else {
-#     CONFIG(static) {
-#         DEFINES += QBT_STATIC_QT
-#         QTPLUGIN += qico
-#     }
-#     TARGET = qbittorrent
-# }
-
-if (UNIX AND NOT APPLE)
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     add_compile_options(-Wformat -Wformat-security)
 endif ()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Project is built in DEBUG mode.")
-else (CMAKE_BUILD_TYPE STREQUAL "Debug")
+else()
     message(STATUS "Project is built in RELEASE mode.")
     message(STATUS "Disabling debug output.")
     add_definitions(-DQT_NO_DEBUG_OUTPUT)
-endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+endif()
 
 set(QBT_USE_GUI ${GUI})
 set(QBT_USE_WEBUI ${WEBUI})

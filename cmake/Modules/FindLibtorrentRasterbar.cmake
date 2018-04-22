@@ -20,7 +20,7 @@ macro(_detect_boost_components _outComponets librariesList)
 endmacro()
 
 if(PKG_CONFIG_FOUND)
-    pkg_check_modules(PC_LIBTORRENT_RASTERBAR QUIET libtorrent-rasterbar)
+    pkg_check_modules(PC_LIBTORRENT_RASTERBAR libtorrent-rasterbar)
 endif()
 
 if(LibtorrentRasterbar_USE_STATIC_LIBS)

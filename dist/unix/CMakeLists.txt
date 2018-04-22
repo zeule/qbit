@@ -11,9 +11,9 @@ endif(SYSTEMD)
 
 
 if (GUI)
-    list(APPEND MAN_FILES ${qBittorrent_SOURCE_DIR}/doc/qbittorrent.1)
+    list(APPEND MAN_FILES ${qbit_SOURCE_DIR}/doc/qbittorrent.1)
 else (GUI)
-    list(APPEND MAN_FILES ${qBittorrent_SOURCE_DIR}/doc/qbittorrent-nox.1)
+    list(APPEND MAN_FILES ${qbit_SOURCE_DIR}/doc/qbittorrent-nox.1)
 endif (GUI)
 
 install(FILES ${MAN_FILES}
@@ -25,7 +25,7 @@ if (GUI)
             DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor
             FILES_MATCHING PATTERN "*.png")
 
-    install(FILES ${qBittorrent_SOURCE_DIR}/src/icons/qbittorrent.desktop
+    install(FILES ${qbit_SOURCE_DIR}/src/icons/qbittorrent.desktop
             DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications/
             COMPONENT data)
 
@@ -34,9 +34,9 @@ if (GUI)
             COMPONENT data)
 
     install(FILES
-            ${qBittorrent_SOURCE_DIR}/src/icons/skin/qbittorrent-tray.svg
-            ${qBittorrent_SOURCE_DIR}/src/icons/skin/qbittorrent-tray-dark.svg
-            ${qBittorrent_SOURCE_DIR}/src/icons/skin/qbittorrent-tray-light.svg
+            ${qbit_SOURCE_DIR}/src/icons/skin/qbittorrent-tray.svg
+            ${qbit_SOURCE_DIR}/src/icons/skin/qbittorrent-tray-dark.svg
+            ${qbit_SOURCE_DIR}/src/icons/skin/qbittorrent-tray-light.svg
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/status
         COMPONENT data)
 endif()
