@@ -476,7 +476,7 @@ Session::Session(QObject *parent)
 #if LIBTORRENT_VERSION_NUM < 10200
     m_nativeSession = new libt::session(pack, 0);
 #else
-    m_nativeSession = new libt::session(pack, libt::session::add_default_plugins);
+    m_nativeSession = new libt::session(std::move(pack), {});
 #endif
     m_nativeSession->set_alert_notify([this]()
     {
