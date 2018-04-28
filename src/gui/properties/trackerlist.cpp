@@ -377,14 +377,15 @@ void TrackerList::loadTrackers()
             int libtorrent::announce_endpoint::* m_memb;
         };
 
+        const auto endpoints = entry.nativeEntry().endpoints;
         item->setText(COL_SEEDS, QString::number(
-            std::accumulate(entry.nativeEntry().endpoints.begin(), entry.nativeEntry().endpoints.end(), 0,
+            std::accumulate(endpoints.begin(), endpoints.end(), 0,
                 ScrapeAccumulator(&libtorrent::announce_endpoint::scrape_complete))));
         item->setText(COL_PEERS, QString::number(
-            std::accumulate(entry.nativeEntry().endpoints.begin(), entry.nativeEntry().endpoints.end(), 0,
+            std::accumulate(endpoints.begin(), endpoints.end(), 0,
                 ScrapeAccumulator(&libtorrent::announce_endpoint::scrape_incomplete))));
         item->setText(COL_DOWNLOADED, QString::number(
-            std::accumulate(entry.nativeEntry().endpoints.begin(), entry.nativeEntry().endpoints.end(), 0,
+            std::accumulate(endpoints.begin(), endpoints.end(), 0,
                 ScrapeAccumulator(&libtorrent::announce_endpoint::scrape_downloaded))));
 #elif LIBTORRENT_VERSION_NUM >= 10000
         item->setText(COL_SEEDS, QString::number(entry.nativeEntry().scrape_complete > 0 ? entry.nativeEntry().scrape_complete : 0));
