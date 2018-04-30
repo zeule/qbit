@@ -2142,12 +2142,12 @@ bool Session::addTorrent_impl(AddTorrentData addData, const MagnetUri &magnetUri
     libt::add_torrent_params p;
     if (addData.resumed && !fromMagnetUri) {
 #if LIBTORRENT_VERSION_NUM >= 10200
-    libt::error_code ec;
-    p = libt::read_resume_data(fastresumeData, ec);
+        libt::error_code ec;
+        p = libt::read_resume_data(fastresumeData, ec);
 #else
-    // Set torrent fast resume data
-    p.resume_data = {fastresumeData.constData(), fastresumeData.constData() + fastresumeData.size()};
-    p.flags |= libt::add_torrent_params::flag_use_resume_save_path;
+        // Set torrent fast resume data
+        p.resume_data = {fastresumeData.constData(), fastresumeData.constData() + fastresumeData.size()};
+        p.flags |= libt::add_torrent_params::flag_use_resume_save_path;
 #endif
     }
 
@@ -2233,7 +2233,7 @@ bool Session::addTorrent_impl(AddTorrentData addData, const MagnetUri &magnetUri
         p.storage_mode = libt::storage_mode_allocate;
     else
         p.storage_mode = libt::storage_mode_sparse;
-
+#if LIBTORRENT_VERSION_NUM < 10200
     p.flags |= libt::add_torrent_params::flag_paused; // Start in pause
     p.flags &= ~libt::add_torrent_params::flag_auto_managed; // Because it is added in paused state
     p.flags &= ~libt::add_torrent_params::flag_duplicate_is_error; // Already checked
@@ -2244,6 +2244,18 @@ bool Session::addTorrent_impl(AddTorrentData addData, const MagnetUri &magnetUri
         p.flags |= libt::add_torrent_params::flag_seed_mode;
     else
         p.flags &= ~libt::add_torrent_params::flag_seed_mode;
+#else
+    p.flags |= libt::torrent_flags::paused; // Start in pause
+    p.flags |= libt::torrent_flags::auto_managed; // Because it is added in paused state
+    p.flags &= ~libt::torrent_flags::duplicate_is_error; // Already checked
+
+    // Seeding mode
+    // Skip checking and directly start seeding (new in libtorrent v0.15)
+    if (addData.skipChecking)
+        p.flags |= libt::torrent_flags::seed_mode;
+    else
+        p.flags &= ~libt::torrent_flags::seed_mode;
+#endif
 
     // Limits
     p.max_connections = maxConnectionsPerTorrent();
