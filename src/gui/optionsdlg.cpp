@@ -1141,14 +1141,14 @@ void OptionsDialog::loadOptions()
 
     case ProxyType::SOCKS5_PW:
         useProxyAuth = true;
-        // fallthrough
+        [[fallthrough]];
     case ProxyType::SOCKS5:
         m_ui->comboProxyType->setCurrentIndex(2);
         break;
 
     case ProxyType::HTTP_PW:
         useProxyAuth = true;
-        // fallthrough
+        [[fallthrough]];
     case ProxyType::HTTP:
         m_ui->comboProxyType->setCurrentIndex(3);
         break;
