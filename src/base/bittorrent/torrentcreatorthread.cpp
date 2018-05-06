@@ -136,11 +136,14 @@ void TorrentCreatorThread::run()
 
         if (isInterruptionRequested()) return;
 
-#if LIBTORRENT_VERSION_NUM < 10200
+#if LIBTORRENT_VERSION_NUM < 10100
+        libt::create_torrent newTorrent(fs, m_params.pieceSize, -1
+            , (m_params.isAlignmentOptimized ? libt::create_torrent::optimize : 0));
+#elif LIBTORRENT_VERSION_NUM < 10200
         libt::create_torrent newTorrent(fs, m_params.pieceSize, -1
             , (m_params.isAlignmentOptimized ? libt::create_torrent::optimize_alignment : 0));
 #else
-        libt::create_torrent newTorrent(fs, m_params.pieceSize, -1
+    libt::create_torrent newTorrent(fs, m_params.pieceSize, -1
             , (m_params.isAlignmentOptimized ? libt::create_torrent::optimize_alignment : libt::create_flags_t()));
 #endif
 
@@ -212,7 +215,11 @@ int TorrentCreatorThread::calculateTotalPieces(const QString &inputPath, const i
 
     libt::file_storage fs;
     libt::add_files(fs, Utils::Fs::toNativePath(inputPath).toStdString(), fileFilter);
-#if LIBTORRENT_VERSION_NUM < 10200
+
+#if LIBTORRENT_VERSION_NUM < 10100
+    return libt::create_torrent(fs, pieceSize, -1
+        , (isAlignmentOptimized ? libt::create_torrent::optimize : 0)).num_pieces();
+#elif LIBTORRENT_VERSION_NUM < 10200
     return libt::create_torrent(fs, pieceSize, -1
         , (isAlignmentOptimized ? libt::create_torrent::optimize_alignment : 0)).num_pieces();
 #else
