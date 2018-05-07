@@ -113,7 +113,7 @@ Theme::ThemeSerializer::ThemeSerializer(Kind kind, const QString &themeName,
     for (const auto &p : loaded.elements) {
         const auto it = m_names.find(p.first.toLatin1());
         if (it == m_names.end()) {
-            qCWarning(theme) << "Unexpected theme element '" << p.first << '\'';
+            qCWarning(theme) << "Unexpected theme element" << p.first;
             continue;
         }
         deserializer(it->second, p.second);
