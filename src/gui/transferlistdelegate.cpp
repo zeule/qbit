@@ -105,7 +105,7 @@ void TransferListDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
     }
     case TorrentModel::TR_UPSPEED:
     case TorrentModel::TR_DLSPEED: {
-        const qulonglong speed = index.data().toULongLong();
+        const qlonglong speed = index.data().toLongLong();
         if (hideValues && !speed)
             break;
         opt.displayAlignment = Qt::AlignRight | Qt::AlignVCenter;

@@ -33,13 +33,13 @@
 class HTTPError : public RuntimeError
 {
 public:
-    HTTPError(int statusCode, const QString &statusText, const QString &message = "");
+    HTTPError(unsigned statusCode, const QString &statusText, const QString &message = "");
 
-    int statusCode() const;
+    unsigned statusCode() const;
     QString statusText() const;
 
 private:
-    const int m_statusCode;
+    const unsigned m_statusCode;
     const QString m_statusText;
 };
 

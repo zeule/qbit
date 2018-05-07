@@ -35,6 +35,8 @@
 
 #include "base/logger.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 namespace libt = libtorrent;
 
 namespace
@@ -101,7 +103,7 @@ namespace
         return !ec;
     }
 
-    const int BUFFER_SIZE = 2 * 1024 * 1024; // 2 MiB
+    const std::size_t BUFFER_SIZE = 2 * 1024 * 1024; // 2 MiB
     const int MAX_LOGGED_ERRORS = 5;
 }
 
@@ -131,9 +133,9 @@ int FilterParserThread::parseDATFilterFile()
 
     std::vector<char> buffer(BUFFER_SIZE, 0); // seems a bit faster than QVector
     qint64 bytesRead = 0;
-    int offset = 0;
-    int start = 0;
-    int endOfLine = -1;
+    std::size_t offset = 0;
+    char* start = nullptr;
+    char* endOfLine = nullptr;
     int nbLine = 0;
     int parseErrorCount = 0;
     const auto addLog = [&parseErrorCount](const QString &msg)
@@ -143,46 +145,46 @@ int FilterParserThread::parseDATFilterFile()
     };
 
     while (true) {
-        bytesRead = file.read(buffer.data() + offset, BUFFER_SIZE - offset - 1);
+        bytesRead = file.read(buffer.data() + offset, boost::numeric_cast<qint64>(BUFFER_SIZE - offset - 1));
         if (bytesRead < 0)
             break;
-        int dataSize = bytesRead + offset;
+        std::size_t dataSize = boost::numeric_cast<std::size_t>(bytesRead) + offset;
         if (bytesRead == 0 && dataSize == 0)
             break;
 
-        for (start = 0; start < dataSize; ++start) {
-            endOfLine = -1;
+        for (start = &buffer[0]; start < &buffer[dataSize]; ++start) {
+            endOfLine = nullptr;
             // The file might have ended without the last line having a newline
             if (!(bytesRead == 0 && dataSize > 0)) {
-                for (int i = start; i < dataSize; ++i) {
-                    if (buffer[i] == '\n') {
-                        endOfLine = i;
+                for (char* pi = start; pi < &buffer[dataSize]; ++pi) {
+                    if (*pi == '\n') {
+                        endOfLine = pi;
                         // We need to NULL the newline in case the line has only an IP range.
                         // In that case the parser won't work for the end IP, because it ends
                         // with the newline and not with a number.
-                        buffer[i] = '\0';
+                        *pi = '\0';
                         break;
                     }
                 }
             }
             else {
-                endOfLine = dataSize;
+                endOfLine = &buffer[dataSize];
                 buffer[dataSize] = '\0';
             }
 
-            if (endOfLine == -1) {
+            if (endOfLine == nullptr) {
                 // read the next chunk from file
                 // but first move(copy) the leftover data to the front of the buffer
-                offset = dataSize - start;
-                memmove(buffer.data(), buffer.data() + start, offset);
+                offset = boost::numeric_cast<std::size_t>(&buffer[dataSize] - start);
+                memmove(buffer.data(), start, offset);
                 break;
             }
             else {
                 ++nbLine;
             }
 
-            if ((buffer[start] == '#')
-                || ((buffer[start] == '/') && ((start + 1 < dataSize) && (buffer[start + 1] == '/')))) {
+            if ((*start == '#')
+                || ((*start == '/') && ((start + 1 < &buffer[dataSize]) && (*(start + 1) == '/')))) {
                 start = endOfLine;
                 continue;
             }
@@ -190,14 +192,14 @@ int FilterParserThread::parseDATFilterFile()
             // Each line should follow this format:
             // 001.009.096.105 - 001.009.096.105 , 000 , Some organization
             // The 3rd entry is access level and if above 127 the IP range isn't blocked.
-            int firstComma = findAndNullDelimiter(buffer.data(), ',', start, endOfLine);
-            if (firstComma != -1)
-                findAndNullDelimiter(buffer.data(), ',', firstComma + 1, endOfLine);
+            char* firstComma = findAndNullDelimiter(',', start, endOfLine);
+            if (firstComma != nullptr)
+                findAndNullDelimiter(',', firstComma + 1, endOfLine);
 
             // Check if there is an access value (apparently not mandatory)
-            if (firstComma != -1) {
+            if (firstComma != nullptr) {
                 // There is possibly one
-                const long int nbAccess = strtol(buffer.data() + firstComma + 1, nullptr, 10);
+                const long int nbAccess = strtol(firstComma + 1, nullptr, 10);
                 // Ignoring this rule because access value is too high
                 if (nbAccess > 127L) {
                     start = endOfLine;
@@ -206,9 +208,9 @@ int FilterParserThread::parseDATFilterFile()
             }
 
             // IP Range should be split by a dash
-            int endOfIPRange = ((firstComma == -1) ? (endOfLine - 1) : (firstComma - 1));
-            int delimIP = findAndNullDelimiter(buffer.data(), '-', start, endOfIPRange);
-            if (delimIP == -1) {
+            char* endOfIPRange = ((firstComma == nullptr) ? (endOfLine - 1) : (firstComma - 1));
+            char* delimIP = findAndNullDelimiter('-', start, endOfIPRange);
+            if (delimIP == nullptr) {
                 ++parseErrorCount;
                 addLog(tr("IP filter line %1 is malformed.").arg(nbLine));
                 start = endOfLine;
@@ -216,8 +218,8 @@ int FilterParserThread::parseDATFilterFile()
             }
 
             libt::address startAddr;
-            int newStart = trim(buffer.data(), start, delimIP - 1);
-            if (!parseIPAddress(buffer.data() + newStart, startAddr)) {
+            char* newStart = trim(start, delimIP - 1);
+            if (!parseIPAddress(newStart, startAddr)) {
                 ++parseErrorCount;
                 addLog(tr("IP filter line %1 is malformed. Start IP of the range is malformed.").arg(nbLine));
                 start = endOfLine;
@@ -225,8 +227,8 @@ int FilterParserThread::parseDATFilterFile()
             }
 
             libt::address endAddr;
-            newStart = trim(buffer.data(), delimIP + 1, endOfIPRange);
-            if (!parseIPAddress(buffer.data() + newStart, endAddr)) {
+            newStart = trim(delimIP + 1, endOfIPRange);
+            if (!parseIPAddress(newStart, endAddr)) {
                 ++parseErrorCount;
                 addLog(tr("IP filter line %1 is malformed. End IP of the range is malformed.").arg(nbLine));
                 start = endOfLine;
@@ -255,7 +257,7 @@ int FilterParserThread::parseDATFilterFile()
             }
         }
 
-        if (start >= dataSize)
+        if (start >= &buffer[dataSize])
             offset = 0;
     }
 
@@ -279,9 +281,9 @@ int FilterParserThread::parseP2PFilterFile()
 
     std::vector<char> buffer(BUFFER_SIZE, 0); // seems a bit faster than QVector
     qint64 bytesRead = 0;
-    int offset = 0;
-    int start = 0;
-    int endOfLine = -1;
+    std::size_t offset = 0;
+    char* start = nullptr;
+    char* endOfLine = nullptr;
     int nbLine = 0;
     int parseErrorCount = 0;
     const auto addLog = [&parseErrorCount](const QString &msg)
@@ -291,46 +293,46 @@ int FilterParserThread::parseP2PFilterFile()
     };
 
     while (true) {
-        bytesRead = file.read(buffer.data() + offset, BUFFER_SIZE - offset - 1);
+        bytesRead = file.read(buffer.data() + offset, boost::numeric_cast<qint64>(BUFFER_SIZE - offset - 1));
         if (bytesRead < 0)
             break;
-        int dataSize = bytesRead + offset;
+        std::size_t dataSize = boost::numeric_cast<std::size_t>(bytesRead) + offset;
         if (bytesRead == 0 && dataSize == 0)
             break;
 
-        for (start = 0; start < dataSize; ++start) {
-            endOfLine = -1;
+        for (start = &buffer.front(); start < &buffer[dataSize]; ++start) {
+            endOfLine = nullptr;
             // The file might have ended without the last line having a newline
             if (!(bytesRead == 0 && dataSize > 0)) {
-                for (int i = start; i < dataSize; ++i) {
-                    if (buffer[i] == '\n') {
+                for (char* i = start; i < &buffer[dataSize]; ++i) {
+                    if (*i == '\n') {
                         endOfLine = i;
                         // We need to NULL the newline in case the line has only an IP range.
                         // In that case the parser won't work for the end IP, because it ends
                         // with the newline and not with a number.
-                        buffer[i] = '\0';
+                        *i = '\0';
                         break;
                     }
                 }
             }
             else {
-                endOfLine = dataSize;
+                endOfLine = &buffer[dataSize];
                 buffer[dataSize] = '\0';
             }
 
-            if (endOfLine == -1) {
+            if (endOfLine == nullptr) {
                 // read the next chunk from file
                 // but first move(copy) the leftover data to the front of the buffer
-                offset = dataSize - start;
-                memmove(buffer.data(), buffer.data() + start, offset);
+                offset = boost::numeric_cast<std::size_t>(&buffer[dataSize] - start);
+                memmove(buffer.data(), start, offset);
                 break;
             }
             else {
                 ++nbLine;
             }
 
-            if ((buffer[start] == '#')
-                || ((buffer[start] == '/') && ((start + 1 < dataSize) && (buffer[start + 1] == '/')))) {
+            if ((*start == '#')
+                || ((*start == '/') && ((start + 1 < &buffer[dataSize]) && (*(start + 1) == '/')))) {
                 start = endOfLine;
                 continue;
             }
@@ -338,8 +340,8 @@ int FilterParserThread::parseP2PFilterFile()
             // Each line should follow this format:
             // Some organization:1.0.0.0-1.255.255.255
             // The "Some organization" part might contain a ':' char itself so we find the last occurrence
-            int partsDelimiter = findAndNullDelimiter(buffer.data(), ':', start, endOfLine, true);
-            if (partsDelimiter == -1) {
+            char* partsDelimiter = findAndNullDelimiter(':', start, endOfLine, true);
+            if (partsDelimiter == nullptr) {
                 ++parseErrorCount;
                 addLog(tr("IP filter line %1 is malformed.").arg(nbLine));
                 start = endOfLine;
@@ -347,8 +349,8 @@ int FilterParserThread::parseP2PFilterFile()
             }
 
             // IP Range should be split by a dash
-            int delimIP = findAndNullDelimiter(buffer.data(), '-', partsDelimiter + 1, endOfLine);
-            if (delimIP == -1) {
+            char* delimIP = findAndNullDelimiter('-', partsDelimiter + 1, endOfLine);
+            if (delimIP == nullptr) {
                 ++parseErrorCount;
                 addLog(tr("IP filter line %1 is malformed.").arg(nbLine));
                 start = endOfLine;
@@ -356,8 +358,8 @@ int FilterParserThread::parseP2PFilterFile()
             }
 
             libt::address startAddr;
-            int newStart = trim(buffer.data(), partsDelimiter + 1, delimIP - 1);
-            if (!parseIPAddress(buffer.data() + newStart, startAddr)) {
+            char* newStart = trim(partsDelimiter + 1, delimIP - 1);
+            if (!parseIPAddress(newStart, startAddr)) {
                 ++parseErrorCount;
                 addLog(tr("IP filter line %1 is malformed. Start IP of the range is malformed.").arg(nbLine));
                 start = endOfLine;
@@ -365,8 +367,8 @@ int FilterParserThread::parseP2PFilterFile()
             }
 
             libt::address endAddr;
-            newStart = trim(buffer.data(), delimIP + 1, endOfLine);
-            if (!parseIPAddress(buffer.data() + newStart, endAddr)) {
+            newStart = trim(delimIP + 1, endOfLine);
+            if (!parseIPAddress(newStart, endAddr)) {
                 ++parseErrorCount;
                 addLog(tr("IP filter line %1 is malformed. End IP of the range is malformed.").arg(nbLine));
                 start = endOfLine;
@@ -394,7 +396,7 @@ int FilterParserThread::parseP2PFilterFile()
             }
         }
 
-        if (start >= dataSize)
+        if (start >= &buffer[dataSize])
             offset = 0;
     }
 
@@ -588,36 +590,36 @@ void FilterParserThread::run()
     qDebug("IP Filter thread: finished parsing, filter applied");
 }
 
-int FilterParserThread::findAndNullDelimiter(char *const data, char delimiter, int start, int end, bool reverse)
+char* FilterParserThread::findAndNullDelimiter(char delimiter, char *const start, char *const end, bool reverse)
 {
     if (!reverse) {
-        for (int i = start; i <= end; ++i) {
-            if (data[i] == delimiter) {
-                data[i] = '\0';
+        for (char* i = start; i <= end; ++i) {
+            if (*i == delimiter) {
+                *i = '\0';
                 return i;
             }
         }
     }
     else {
-        for (int i = end; i >= start; --i) {
-            if (data[i] == delimiter) {
-                data[i] = '\0';
+        for (char* i = end; i >= start; --i) {
+            if (*i == delimiter) {
+                *i = '\0';
                 return i;
             }
         }
     }
 
-    return -1;
+    return nullptr;
 }
 
-int FilterParserThread::trim(char* const data, int start, int end)
+char* FilterParserThread::trim(char *const start, char *const end)
 {
     if (start >= end) return start;
-    int newStart = start;
+    char* newStart = start;
 
-    for (int i = start; i <= end; ++i) {
-        if (isspace(data[i]) != 0) {
-            data[i] = '\0';
+    for (char* i = start; i <= end; ++i) {
+        if (isspace(*i) != 0) {
+            *i = '\0';
         }
         else {
             newStart = i;
@@ -625,9 +627,9 @@ int FilterParserThread::trim(char* const data, int start, int end)
         }
     }
 
-    for (int i = end; i >= start; --i) {
-        if (isspace(data[i]) != 0)
-            data[i] = '\0';
+    for (char* i = end; i >= start; --i) {
+        if (isspace(*i) != 0)
+            *i = '\0';
         else
             break;
     }

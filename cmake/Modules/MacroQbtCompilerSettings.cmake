@@ -22,7 +22,8 @@ macro(qbt_set_compiler_options)
     # 		"-Weffc++"
             "-Werror -Wno-error=cpp"
             # we should modify code to make these ones obsolete
-            "-Wno-error=sign-conversion -Wno-error=float-equal"
+# 			"-Wno-error=sign-conversion"
+            "-Wno-error=float-equal"
         )
 
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)

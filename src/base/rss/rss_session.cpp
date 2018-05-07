@@ -50,6 +50,8 @@
 #include "rss_item.h"
 #include "rss_folder.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 const int MsecsPerMin = 60000;
 const QString ConfFolderName(QStringLiteral("rss"));
 const QString DataFolderName(QStringLiteral("rss/articles"));
@@ -99,7 +101,7 @@ Session::Session()
 
     connect(&m_refreshTimer, &QTimer::timeout, this, &Session::refresh);
     if (m_processingEnabled) {
-        m_refreshTimer.start(m_refreshInterval * MsecsPerMin);
+        m_refreshTimer.start(boost::numeric_cast<int>(m_refreshInterval * MsecsPerMin));
         refresh();
     }
 
@@ -323,7 +325,7 @@ void Session::loadLegacy()
         return;
     }
 
-    uint i = 0;
+    int i = 0;
     foreach (QString legacyPath, legacyFeedPaths) {
         if (Item::PathSeparator == QString(legacyPath[0]))
             legacyPath.remove(0, 1);
@@ -414,7 +416,7 @@ void Session::setProcessingEnabled(bool enabled)
         m_processingEnabled = enabled;
         SettingsStorage::instance()->storeValue(SettingsKey_ProcessingEnabled, m_processingEnabled);
         if (m_processingEnabled) {
-            m_refreshTimer.start(m_refreshInterval * MsecsPerMin);
+            m_refreshTimer.start(boost::numeric_cast<int>(m_refreshInterval * MsecsPerMin));
             refresh();
         }
         else {
@@ -460,7 +462,7 @@ void Session::setRefreshInterval(uint refreshInterval)
     if (m_refreshInterval != refreshInterval) {
         SettingsStorage::instance()->storeValue(SettingsKey_RefreshInterval, refreshInterval);
         m_refreshInterval = refreshInterval;
-        m_refreshTimer.start(m_refreshInterval * MsecsPerMin);
+        m_refreshTimer.start(boost::numeric_cast<int>(m_refreshInterval * MsecsPerMin));
     }
 }
 

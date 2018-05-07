@@ -65,6 +65,8 @@
 #include "session.h"
 #include "trackerentry.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 const QString QB_EXT {".!qB"};
 
 namespace libt = libtorrent;
@@ -645,8 +647,8 @@ QStringList TorrentHandle::absoluteFilePathsUnwanted() const
     std::vector<int> fp;
     fp = m_nativeHandle.file_priorities();
 
-    int count = static_cast<int>(fp.size());
-    for (int i = 0; i < count; ++i) {
+    std::size_t count = fp.size();
+    for (std::size_t i = 0; i < count; ++i) {
         if (fp[i] == 0) {
             const QString path = Utils::Fs::expandPathAbs(saveDir.absoluteFilePath(filePath(i)));
             if (path.contains(".unwanted"))
@@ -782,8 +784,8 @@ bool TorrentHandle::hasFirstLastPiecePriority() const
 
     TorrentInfo::PieceRange extremities;
     bool found = false;
-    int count = static_cast<int>(fp.size());
-    for (int i = 0; i < count; ++i) {
+    const std::size_t count = fp.size();
+    for (std::size_t i = 0; i < count; ++i) {
         const QString ext = Utils::Fs::fileExtension(filePath(i));
         if (Utils::Misc::isPreviewable(ext) && (fp[i] > 0)) {
             extremities = info().filePieces(i);
@@ -962,7 +964,7 @@ qulonglong TorrentHandle::eta() const
                 seedingTimeEta = 0;
         }
 
-        return qMin(ratioEta, seedingTimeEta);
+        return static_cast<qulonglong>(qMin(ratioEta, seedingTimeEta));
     }
 
     if (!speedAverage.download) return MAX_ETA;
@@ -976,8 +978,8 @@ QVector<qreal> TorrentHandle::filesProgress() const
     QVector<qreal> result;
     m_nativeHandle.file_progress(fp, libt::torrent_handle::piece_granularity);
 
-    int count = static_cast<int>(fp.size());
-    for (int i = 0; i < count; ++i) {
+    const std::size_t count = fp.size();
+    for (std::size_t i = 0; i < count; ++i) {
         qlonglong size = fileSize(i);
         if ((size <= 0) || (fp[i] == size))
             result << 1;
@@ -1308,8 +1310,8 @@ void TorrentHandle::setFirstLastPiecePriority(bool b)
     std::vector<int> pp = m_nativeHandle.piece_priorities();
 
     // Download first and last pieces first for all media files in the torrent
-    int nbfiles = static_cast<int>(fp.size());
-    for (int index = 0; index < nbfiles; ++index) {
+    const std::size_t nbfiles = fp.size();
+    for (std::size_t index = 0; index < nbfiles; ++index) {
         const QString path = filePath(index);
         const QString ext = Utils::Fs::fileExtension(path);
         if (Utils::Misc::isPreviewable(ext) && (fp[index] > 0)) {
@@ -1323,8 +1325,8 @@ void TorrentHandle::setFirstLastPiecePriority(bool b)
             // worst case: AVI index = 1% of total file size (at the end of the file)
             int nNumPieces = ceil(fileSize(index) * 0.01 / pieceLength());
             for (int i = 0; i < nNumPieces; ++i) {
-                pp[extremities.first() + i] = prio;
-                pp[extremities.last() - i] = prio;
+                pp[boost::numeric_cast<std::size_t>(extremities.first() + i)] = prio;
+                pp[boost::numeric_cast<std::size_t>(extremities.last() - i)] = prio;
             }
         }
     }
@@ -1414,9 +1416,10 @@ bool TorrentHandle::saveTorrentFile(const QString &path)
 void TorrentHandle::setFilePriority(int index, int priority)
 {
     std::vector<int> priorities = m_nativeHandle.file_priorities();
+    const std::size_t ind = boost::numeric_cast<std::size_t>(index);
 
-    if ((priorities.size() > static_cast<quint64>(index)) && (priorities[index] != priority)) {
-        priorities[index] = priority;
+    if ((priorities.size() > ind) && (priorities[ind] != priority)) {
+        priorities[ind] = priority;
         prioritizeFiles(QVector<int>::fromStdVector(priorities));
     }
 }
@@ -1500,7 +1503,7 @@ void TorrentHandle::handleTrackerReplyAlert(libtorrent::tracker_reply_alert *p)
     qDebug("Received a tracker reply from %s (Num_peers = %d)", qUtf8Printable(trackerUrl), p->num_peers);
     // Connection was successful now. Remove possible old errors
     m_trackerInfos[trackerUrl].lastMessage.clear(); // Reset error/warning message
-    m_trackerInfos[trackerUrl].numPeers = p->num_peers;
+    m_trackerInfos[trackerUrl].numPeers = boost::numeric_cast<quint32>(p->num_peers);
 
     m_session->handleTorrentTrackerReply(this, trackerUrl);
 }

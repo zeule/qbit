@@ -44,6 +44,8 @@
 #include "trackerentry.h"
 #include "torrentinfo.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 namespace libt = libtorrent;
 using namespace BitTorrent;
 
@@ -356,7 +358,7 @@ TorrentInfo::PieceRange TorrentInfo::filePieces(int fileIndex) const
                         static_cast<int>((firstOffset + fileSize - 1) / pieceLength()));
 }
 
-void TorrentInfo::renameFile(uint index, const QString &newPath)
+void TorrentInfo::renameFile(int index, const QString &newPath)
 {
     if (!isValid()) return;
     nativeInfo()->rename_file(index, Utils::Fs::toNativePath(newPath).toStdString());

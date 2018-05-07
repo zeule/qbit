@@ -162,8 +162,8 @@ int SpeedPlotView::maxYValue()
             continue;
 
         for (int i = int(queue.size()) - 1, j = 0; i >= 0 && j <= m_viewablePointsCount; --i, ++j)
-            if (queue[i].y[id] > maxYValue)
-                maxYValue = queue[i].y[id];
+            if (queue[static_cast<std::size_t>(i)].y[id] > maxYValue)
+                maxYValue = queue[static_cast<std::size_t>(i)].y[id];
     }
 
     return maxYValue;
@@ -244,7 +244,7 @@ void SpeedPlotView::paintEvent(QPaintEvent *)
         for (int i = int(queue.size()) - 1, j = 0; i >= 0 && j <= m_viewablePointsCount; --i, ++j) {
 
             int newX = rect.right() - j * xTickSize;
-            int newY = rect.bottom() - queue[i].y[id] * yMultiplier;
+            int newY = rect.bottom() - queue[static_cast<std::size_t>(i)].y[id] * yMultiplier;
 
             points.push_back(QPoint(newX, newY));
         }

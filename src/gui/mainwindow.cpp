@@ -97,6 +97,8 @@
 #include "ui_mainwindow.h"
 #include "utils.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #ifdef Q_OS_WIN
 #include "base/net/downloadhandler.h"
 #include "base/net/downloadmanager.h"
@@ -1528,16 +1530,18 @@ void MainWindow::updateGUI()
         html += "qBittorrent";
         html += "</div>";
         html += "<div style='vertical-align: baseline; height: 18px;'>";
-        html += "<img src='" + GuiIconProvider::instance()->getIconPath("cloud-download") + "' height='1.2ex'/>&nbsp;" + tr("DL speed: %1", "e.g: Download speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(status.payloadDownloadRate, true));
+        html += "<img src='" + GuiIconProvider::instance()->getIconPath("cloud-download") + "' height='1.2ex'/>&nbsp;" + tr("DL speed: %1", "e.g: Download speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadDownloadRate), true));
         html += "</div>";
         html += "<div style='vertical-align: baseline; height: 18px;'>";
-        html += "<img src='" + GuiIconProvider::instance()->getIconPath("cloud-upload") +"' height='1.2ex'/>&nbsp;" + tr("UP speed: %1", "e.g: Upload speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(status.payloadUploadRate, true));
+        html += "<img src='" + GuiIconProvider::instance()->getIconPath("cloud-upload") +"' height='1.2ex'/>&nbsp;" + tr("UP speed: %1", "e.g: Upload speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadUploadRate), true));
         html += "</div>";
 #else
         // OSes such as Windows do not support html here
-        QString html = tr("DL speed: %1", "e.g: Download speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(status.payloadDownloadRate, true));
+        QString html = tr("DL speed: %1", "e.g: Download speed: 10 KiB/s").arg(
+            Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadDownloadRate), true));
         html += "\n";
-        html += tr("UP speed: %1", "e.g: Upload speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(status.payloadUploadRate, true));
+        html += tr("UP speed: %1", "e.g: Upload speed: 10 KiB/s").arg(
+            Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadUploadRate), true));
 #endif // Q_OS_UNIX
         m_systrayIcon->setToolTip(html); // tray icon
     }
@@ -1551,8 +1555,8 @@ void MainWindow::updateGUI()
 
     if (m_displaySpeedInTitle) {
         setWindowTitle(tr("[D: %1, U: %2] qBittorrent %3", "D = Download; U = Upload; %3 is qBittorrent version")
-            .arg(Utils::Misc::friendlyUnit(status.payloadDownloadRate, true)
-                , Utils::Misc::friendlyUnit(status.payloadUploadRate, true)
+            .arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadDownloadRate), true)
+                , Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadUploadRate), true)
                 , QBT_VERSION));
     }
 }

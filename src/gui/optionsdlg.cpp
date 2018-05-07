@@ -81,6 +81,8 @@
 
 #include "ui_optionsdlg.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 namespace
 {
     /**
@@ -284,7 +286,7 @@ OptionsDialog::OptionsDialog(QWidget *parent)
     initializeLanguageCombo();
 
     // Load week days (scheduler)
-    for (uint i = 1; i <= 7; ++i)
+    for (int i = 1; i <= 7; ++i)
         m_ui->schedule_days->addItem(QDate::longDayName(i, QDate::StandaloneFormat));
 
     // Load options
@@ -757,7 +759,7 @@ void OptionsDialog::saveOptions()
     app->setFileLoggerEnabled(m_ui->checkFileLog->isChecked());
     // End General preferences
 
-    RSS::Session::instance()->setRefreshInterval(m_ui->spinRSSRefreshInterval->value());
+    RSS::Session::instance()->setRefreshInterval(static_cast<uint>(m_ui->spinRSSRefreshInterval->value()));
     RSS::Session::instance()->setMaxArticlesPerFeed(m_ui->spinRSSMaxArticlesPerFeed->value());
     RSS::Session::instance()->setProcessingEnabled(m_ui->checkRSSEnable->isChecked());
     RSS::AutoDownloader::instance()->setProcessingEnabled(m_ui->checkRSSAutoDownloaderEnable->isChecked());
@@ -1000,7 +1002,7 @@ void OptionsDialog::loadOptions()
     m_ui->checkRSSAutoDownloaderEnable->setChecked(RSS::AutoDownloader::instance()->isProcessingEnabled());
     m_ui->textSmartEpisodeFilters->setPlainText(RSS::AutoDownloader::instance()->smartEpisodeFilters().join('\n'));
 
-    m_ui->spinRSSRefreshInterval->setValue(RSS::Session::instance()->refreshInterval());
+    m_ui->spinRSSRefreshInterval->setValue(boost::numeric_cast<int>(RSS::Session::instance()->refreshInterval()));
     m_ui->spinRSSMaxArticlesPerFeed->setValue(RSS::Session::instance()->maxArticlesPerFeed());
 
     auto session = BitTorrent::Session::instance();
@@ -1078,7 +1080,7 @@ void OptionsDialog::loadOptions()
     m_ui->comboProtocol->setCurrentIndex(static_cast<int>(session->btProtocol()));
     m_ui->checkUPnP->setChecked(Net::PortForwarder::instance()->isEnabled());
     m_ui->checkRandomPort->setChecked(session->useRandomPort());
-    m_ui->spinPort->setValue(session->port());
+    m_ui->spinPort->setValue(static_cast<int>(session->port()));
     m_ui->spinPort->setDisabled(m_ui->checkRandomPort->isChecked());
 
     intValue = session->maxConnections();
@@ -1309,15 +1311,15 @@ void OptionsDialog::loadOptions()
 
 // return min & max ports
 // [min, max]
-int OptionsDialog::getPort() const
+unsigned OptionsDialog::getPort() const
 {
-    return m_ui->spinPort->value();
+    return static_cast<unsigned>(m_ui->spinPort->value());
 }
 
 void OptionsDialog::on_randomButton_clicked()
 {
     // Range [1024: 65535]
-    m_ui->spinPort->setValue(Utils::Random::rand(1024, 65535));
+    m_ui->spinPort->setValue(static_cast<int>(Utils::Random::rand(1024, 65535)));
 }
 
 int OptionsDialog::getEncryptionSetting() const

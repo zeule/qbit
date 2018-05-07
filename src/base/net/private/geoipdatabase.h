@@ -31,11 +31,12 @@
 
 #include <QtGlobal>
 #include <QCoreApplication>
+#include <QDateTime>
+#include <QVariant>
 
 class QHostAddress;
 class QString;
 class QByteArray;
-class QDateTime;
 
 struct DataFieldDescriptor;
 
@@ -89,9 +90,9 @@ private:
     quint16 m_ipVersion;
     quint16 m_recordSize;
     quint32 m_nodeCount;
-    int m_nodeSize;
-    int m_indexSize;
-    int m_recordBytes;
+    std::size_t m_nodeSize;
+    std::size_t m_indexSize;
+    std::size_t m_recordBytes;
     QDateTime m_buildEpoch;
     // Search data
     mutable QHash<quint32, QString> m_countries;

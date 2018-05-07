@@ -322,9 +322,9 @@ bool Utils::Fs::isNetworkFileSystem(const QString &path)
         || (strncmp(buf.f_fstypename, "smbfs", sizeof(buf.f_fstypename)) == 0));
 #else
     // usually defined in /usr/include/linux/magic.h
-    const unsigned long CIFS_MAGIC_NUMBER = 0xFF534D42;
-    const unsigned long NFS_SUPER_MAGIC = 0x6969;
-    const unsigned long SMB_SUPER_MAGIC = 0x517B;
+    const decltype(statfs::f_type) CIFS_MAGIC_NUMBER = 0xFF534D42;
+    const decltype(statfs::f_type) NFS_SUPER_MAGIC = 0x6969;
+    const decltype(statfs::f_type) SMB_SUPER_MAGIC = 0x517B;
 
     return ((buf.f_type == CIFS_MAGIC_NUMBER)
         || (buf.f_type == NFS_SUPER_MAGIC)

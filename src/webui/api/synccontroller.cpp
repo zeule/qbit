@@ -43,6 +43,8 @@
 #include "isessionmanager.h"
 #include "serialize/serialize_torrent.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 // Sync main data keys
 const char KEY_SYNC_MAINDATA_QUEUEING[] = "queueing";
 const char KEY_SYNC_MAINDATA_USE_ALT_SPEED_LIMITS[] = "use_alt_speed_limits";
@@ -130,7 +132,7 @@ namespace
         // num_peers is not reliable (adds up peers, which didn't even overcome tcp handshake)
         quint32 peers = 0;
         foreach (BitTorrent::TorrentHandle *const torrent, BitTorrent::Session::instance()->torrents())
-            peers += torrent->peersCount();
+            peers += boost::numeric_cast<quint32>(torrent->peersCount());
         map[KEY_TRANSFER_WRITE_CACHE_OVERLOAD] = ((sessionStatus.diskWriteQueue > 0) && (peers > 0)) ? Utils::String::fromDouble((100. * sessionStatus.diskWriteQueue) / peers, 2) : "0";
         map[KEY_TRANSFER_READ_CACHE_OVERLOAD] = ((sessionStatus.diskReadQueue > 0) && (peers > 0)) ? Utils::String::fromDouble((100. * sessionStatus.diskReadQueue) / peers, 2) : "0";
 

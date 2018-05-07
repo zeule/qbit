@@ -263,7 +263,7 @@ TransferListWidget::TransferListWidget(QWidget *parent, MainWindow *mainWindow)
 
     //Ensure that at least one column is visible at all times
     bool atLeastOne = false;
-    for (unsigned int i = 0; i<TorrentModel::NB_COLUMNS; i++) {
+    for (int i = 0; i<TorrentModel::NB_COLUMNS; i++) {
         if (!isColumnHidden(i)) {
             atLeastOne = true;
             break;
@@ -275,7 +275,7 @@ TransferListWidget::TransferListWidget(QWidget *parent, MainWindow *mainWindow)
     //When adding/removing columns between versions some may
     //end up being size 0 when the new version is launched with
     //a conf file from the previous version.
-    for (unsigned int i = 0; i<TorrentModel::NB_COLUMNS; i++)
+    for (int i = 0; i<TorrentModel::NB_COLUMNS; i++)
         if ((columnWidth(i) <= 0) && (!isColumnHidden(i)))
             resizeColumnToContents(i);
 
@@ -715,7 +715,7 @@ void TransferListWidget::displayDLHoSMenu(const QPoint&)
         actions.append(myAct);
     }
     int visibleCols = 0;
-    for (unsigned int i = 0; i<TorrentModel::NB_COLUMNS; i++) {
+    for (int i = 0; i<TorrentModel::NB_COLUMNS; i++) {
         if (!isColumnHidden(i))
             visibleCols++;
 

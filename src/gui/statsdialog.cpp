@@ -37,6 +37,8 @@
 #include "ui_statsdialog.h"
 #include "utils.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 StatsDialog::StatsDialog(QWidget *parent)
     : QDialog(parent)
     , m_ui(new Ui::StatsDialog)
@@ -66,10 +68,10 @@ void StatsDialog::update()
     // All-time DL/UL
     quint64 atd = BitTorrent::Session::instance()->getAlltimeDL();
     quint64 atu = BitTorrent::Session::instance()->getAlltimeUL();
-    m_ui->labelAlltimeDL->setText(Utils::Misc::friendlyUnit(atd));
-    m_ui->labelAlltimeUL->setText(Utils::Misc::friendlyUnit(atu));
+    m_ui->labelAlltimeDL->setText(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(atd)));
+    m_ui->labelAlltimeUL->setText(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(atu)));
     // Total waste (this session)
-    m_ui->labelWaste->setText(Utils::Misc::friendlyUnit(ss.totalWasted));
+    m_ui->labelWaste->setText(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(ss.totalWasted)));
     // Global ratio
     m_ui->labelGlobalRatio->setText(
                 ((atd > 0) && (atu > 0))
@@ -82,7 +84,7 @@ void StatsDialog::update()
         ? Utils::String::fromDouble(100 * readRatio, 2)
         : "0"));
     // Buffers size
-    m_ui->labelTotalBuf->setText(Utils::Misc::friendlyUnit(cs.totalUsedBuffers * 16 * 1024));
+    m_ui->labelTotalBuf->setText(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(cs.totalUsedBuffers * 16 * 1024)));
     // Disk overload (100%) equivalent
     // From lt manual: disk_write_queue and disk_read_queue are the number of peers currently waiting on a disk write or disk read
     // to complete before it receives or sends any more data on the socket. It's a metric of how disk bound you are.
@@ -90,7 +92,7 @@ void StatsDialog::update()
     // num_peers is not reliable (adds up peers, which didn't even overcome tcp handshake)
     quint32 peers = 0;
     foreach (BitTorrent::TorrentHandle *const torrent, BitTorrent::Session::instance()->torrents())
-        peers += torrent->peersCount();
+        peers += boost::numeric_cast<quint32>(torrent->peersCount());
 
     m_ui->labelWriteStarve->setText(QString("%1%")
                                     .arg(((ss.diskWriteQueue > 0) && (peers > 0))
@@ -103,7 +105,7 @@ void StatsDialog::update()
     // Disk queues
     m_ui->labelQueuedJobs->setText(QString::number(cs.jobQueueLength));
     m_ui->labelJobsTime->setText(tr("%1 ms", "18 milliseconds").arg(cs.averageJobTime));
-    m_ui->labelQueuedBytes->setText(Utils::Misc::friendlyUnit(cs.queuedBytes));
+    m_ui->labelQueuedBytes->setText(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(cs.queuedBytes)));
 
     // Total connected peers
     m_ui->labelPeers->setText(QString::number(ss.peersCount));

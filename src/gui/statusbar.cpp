@@ -44,6 +44,8 @@
 #include "speedlimitdlg.h"
 #include "utils.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 StatusBar::StatusBar(QWidget *parent)
     : QStatusBar(parent)
 {
@@ -207,17 +209,17 @@ void StatusBar::updateSpeedLabels()
 {
     const BitTorrent::SessionStatus &sessionStatus = BitTorrent::Session::instance()->status();
 
-    QString speedLbl = Utils::Misc::friendlyUnit(sessionStatus.payloadDownloadRate, true);
+    QString speedLbl = Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.payloadDownloadRate), true);
     int speedLimit = BitTorrent::Session::instance()->downloadSpeedLimit();
     if (speedLimit)
         speedLbl += " [" + Utils::Misc::friendlyUnit(speedLimit, true) + "]";
-    speedLbl += " (" + Utils::Misc::friendlyUnit(sessionStatus.totalPayloadDownload) + ")";
+    speedLbl += " (" + Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.totalPayloadDownload)) + ")";
     m_dlSpeedLbl->setText(speedLbl);
     speedLimit = BitTorrent::Session::instance()->uploadSpeedLimit();
-    speedLbl = Utils::Misc::friendlyUnit(sessionStatus.payloadUploadRate, true);
+    speedLbl = Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.payloadUploadRate), true);
     if (speedLimit)
         speedLbl += " [" + Utils::Misc::friendlyUnit(speedLimit, true) + "]";
-    speedLbl += " (" + Utils::Misc::friendlyUnit(sessionStatus.totalPayloadUpload) + ")";
+    speedLbl += " (" + Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.totalPayloadUpload)) + ")";
     m_upSpeedLbl->setText(speedLbl);
 }
 

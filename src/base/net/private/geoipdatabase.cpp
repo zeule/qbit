@@ -26,15 +26,18 @@
  * exception statement from your version.
  */
 
-#include <QDebug>
-#include <QVariant>
-#include <QHash>
-#include <QHostAddress>
-#include <QDateTime>
-#include <QFile>
+#include "geoipdatabase.h"
 
 #include "base/types.h"
-#include "geoipdatabase.h"
+
+#include <QDebug>
+#include <QHash>
+#include <QHostAddress>
+#include <QFile>
+
+#include <boost/numeric/conversion/cast.hpp>
+
+#include <type_traits>
 
 namespace
 {
@@ -128,7 +131,7 @@ GeoIPDatabase *GeoIPDatabase::load(const QByteArray &data, QString &error)
         return 0;
     }
 
-    db = new GeoIPDatabase(data.size());
+    db = new GeoIPDatabase(static_cast<unsigned>(data.size()));
 
     memcpy(reinterpret_cast<char *>(db->m_data), data.constData(), db->m_size);
 
@@ -277,8 +280,8 @@ bool GeoIPDatabase::loadDB(QString &error) const
 {
     qDebug() << "Parsing MaxMindDB index tree...";
 
-    const int nodeSize = m_recordSize / 4; // in bytes
-    const int indexSize = m_nodeCount * nodeSize;
+    const std::size_t nodeSize = m_recordSize / 4; // in bytes
+    const std::size_t indexSize = m_nodeCount * nodeSize;
     if ((m_size < (indexSize + sizeof(DATA_SECTION_SEPARATOR)))
         || (memcmp(m_data + indexSize, DATA_SECTION_SEPARATOR, sizeof(DATA_SECTION_SEPARATOR)) != 0)) {
         error = tr("Database corrupted: no data section found.");
@@ -297,12 +300,12 @@ QVariantHash GeoIPDatabase::readMetadata() const
         size = MAX_METADATA_SIZE;
     }
 
-    const QByteArray data = QByteArray::fromRawData(ptr, size);
+    const QByteArray data = QByteArray::fromRawData(ptr, boost::numeric_cast<int>(size));
     int index = data.lastIndexOf(METADATA_BEGIN_MARK);
     if (index >= 0) {
         if (m_size > MAX_METADATA_SIZE)
-            index += (m_size - MAX_METADATA_SIZE); // from begin of all data
-        quint32 offset = static_cast<quint32>(index + strlen(METADATA_BEGIN_MARK));
+            index += boost::numeric_cast<int>(m_size - MAX_METADATA_SIZE); // from begin of all data
+        quint32 offset = boost::numeric_cast<quint32>(index) + strlen(METADATA_BEGIN_MARK);
         QVariant metadata = readDataField(offset);
         if (metadata.userType() == QMetaType::QVariantHash)
             return metadata.toHash();
@@ -333,7 +336,7 @@ QVariant GeoIPDatabase::readDataField(quint32 &offset) const
         qDebug() << "* Illegal Pointer using";
         break;
     case DataType::String:
-        fieldValue = QString::fromUtf8(reinterpret_cast<const char *>(m_data + locOffset), descr.fieldSize);
+        fieldValue = QString::fromUtf8(reinterpret_cast<const char *>(m_data + locOffset), static_cast<int>(descr.fieldSize));
         locOffset += descr.fieldSize;
         break;
     case DataType::Double:
@@ -343,7 +346,7 @@ QVariant GeoIPDatabase::readDataField(quint32 &offset) const
             qDebug() << "* Invalid field size for type: Double";
         break;
     case DataType::Bytes:
-        fieldValue = QByteArray(reinterpret_cast<const char *>(m_data + locOffset), descr.fieldSize);
+        fieldValue = QByteArray(reinterpret_cast<const char *>(m_data + locOffset), static_cast<int>(descr.fieldSize));
         locOffset += descr.fieldSize;
         break;
     case DataType::Integer16:
@@ -394,22 +397,22 @@ QVariant GeoIPDatabase::readDataField(quint32 &offset) const
 bool GeoIPDatabase::readDataFieldDescriptor(quint32 &offset, DataFieldDescriptor &out) const
 {
     const uchar *dataPtr = m_data + offset;
-    int availSize = m_size - offset;
-    if (availSize < 1) return false;
+    if (offset + 1 >= m_size) return false;
+    unsigned availSize = m_size - offset;
 
     out.fieldType = static_cast<DataType>((dataPtr[0] & 0xE0) >> 5);
     if (out.fieldType == DataType::Pointer) {
-        int size = ((dataPtr[0] & 0x18) >> 3);
+        unsigned size = ((dataPtr[0] & 0x18) >> 3);
         if (availSize < (size + 2)) return false;
 
         if (size == 0)
-            out.offset = ((dataPtr[0] & 0x07) << 8) + dataPtr[1];
+            out.offset = boost::numeric_cast<quint32>(((dataPtr[0] & 0x07) << 8) + dataPtr[1]);
         else if (size == 1)
-            out.offset = ((dataPtr[0] & 0x07) << 16) + (dataPtr[1] << 8) + dataPtr[2] + 2048;
+            out.offset = boost::numeric_cast<quint32>(((dataPtr[0] & 0x07) << 16) + (dataPtr[1] << 8) + dataPtr[2] + 2048);
         else if (size == 2)
-            out.offset = ((dataPtr[0] & 0x07) << 24) + (dataPtr[1] << 16) + (dataPtr[2] << 8) + dataPtr[3] + 526336;
+            out.offset = boost::numeric_cast<quint32>(((dataPtr[0] & 0x07) << 24) + (dataPtr[1] << 16) + (dataPtr[2] << 8) + dataPtr[3] + 526336);
         else if (size == 3)
-            out.offset = (dataPtr[1] << 24) + (dataPtr[2] << 16) + (dataPtr[3] << 8) + dataPtr[4];
+            out.offset = boost::numeric_cast<quint32>((dataPtr[1] << 24) + (dataPtr[2] << 16) + (dataPtr[3] << 8) + dataPtr[4]);
 
         offset += size + 2;
         return true;
@@ -429,17 +432,17 @@ bool GeoIPDatabase::readDataFieldDescriptor(quint32 &offset, DataFieldDescriptor
     }
     else if (out.fieldSize == 29) {
         if (availSize < 2) return false;
-        out.fieldSize = dataPtr[1] + 29;
+        out.fieldSize = dataPtr[1] + 29u;
         offset += 2;
     }
     else if (out.fieldSize == 30) {
         if (availSize < 3) return false;
-        out.fieldSize = (dataPtr[1] << 8) + dataPtr[2] + 285;
+        out.fieldSize = boost::numeric_cast<quint32>((dataPtr[1] << 8) + dataPtr[2] + 285);
         offset += 3;
     }
     else if (out.fieldSize == 31) {
         if (availSize < 4) return false;
-        out.fieldSize = (dataPtr[1] << 16) + (dataPtr[2] << 8) + dataPtr[3] + 65821;
+        out.fieldSize = boost::numeric_cast<quint32>((dataPtr[1] << 16) + (dataPtr[2] << 8) + dataPtr[3] + 65821);
         offset += 4;
     }
 
@@ -458,12 +461,14 @@ QVariant GeoIPDatabase::readMapValue(quint32 &offset, quint32 count) const
 
     for (quint32 i = 0; i < count; ++i) {
         QVariant field = readDataField(offset);
-        if (field.userType() != QMetaType::QString)
+        // Qt declares QVariant::Type with LastType == 0xffffffff to make underlying type unsigned int,
+        // but userType() returns int. Stupid.
+        if (static_cast<std::underlying_type<QMetaType::Type>::type>(field.userType()) != QMetaType::QString)
             return QVariant();
 
         QString key = field.toString();
         field = readDataField(offset);
-        if (field.userType() == QVariant::Invalid)
+        if (static_cast<std::underlying_type<QVariant::Type>::type>(field.userType()) == QVariant::Invalid)
             return QVariant();
 
         map[key] = field;
@@ -477,8 +482,8 @@ QVariant GeoIPDatabase::readArrayValue(quint32 &offset, quint32 count) const
     QVariantList array;
 
     for (quint32 i = 0; i < count; ++i) {
-        QVariant field = readDataField(offset);
-        if (field.userType() == QVariant::Invalid)
+        QVariant field = readDataField(offset);;
+        if (static_cast<std::underlying_type<QVariant::Type>::type>(field.userType()) == QVariant::Invalid)
             return QVariant();
 
         array.append(field);

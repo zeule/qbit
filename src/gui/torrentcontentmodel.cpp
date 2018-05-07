@@ -59,6 +59,8 @@
 #include "macutilities.h"
 #endif
 
+#include <boost/numeric/conversion/cast.hpp>
+
 namespace
 {
     QIcon getDirectoryIcon()
@@ -487,7 +489,8 @@ void TorrentContentModel::setupModelData(const BitTorrent::TorrentInfo &info)
             currentParent = newParent;
         }
         // Actually create the file
-        TorrentContentModelFile* fileItem = new TorrentContentModelFile(info.fileName(i), info.fileSize(i), currentParent, i);
+        TorrentContentModelFile* fileItem = new TorrentContentModelFile(
+            info.fileName(i), boost::numeric_cast<qulonglong>(info.fileSize(i)), currentParent, i);
         currentParent->appendChild(fileItem);
         m_filesIndex.push_back(fileItem);
     }

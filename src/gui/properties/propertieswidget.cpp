@@ -67,11 +67,14 @@
 #include "transferlistwidget.h"
 #include "utils.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #include "ui_propertieswidget.h"
 
 #ifdef Q_OS_MAC
 #include "macutilities.h"
 #endif
+
 
 PropertiesWidget::PropertiesWidget(QWidget *parent, MainWindow *mainWindow, TransferListWidget *transferList)
     : QWidget(parent)
@@ -447,7 +450,7 @@ void PropertiesWidget::loadDynamicData()
                                            .arg(m_torrent->connectionsCount())
                                            .arg(m_torrent->connectionsLimit() < 0 ? QString::fromUtf8(C_INFINITY) : QString::number(m_torrent->connectionsLimit())));
 
-            m_ui->labelETAVal->setText(Utils::Misc::userFriendlyDuration(m_torrent->eta()));
+            m_ui->labelETAVal->setText(Utils::Misc::userFriendlyDuration(boost::numeric_cast<qlonglong>(m_torrent->eta())));
 
             // Update next announce time
             m_ui->labelReannounceInVal->setText(Utils::Misc::userFriendlyDuration(m_torrent->nextAnnounce()));

@@ -28,14 +28,14 @@
 
 #include "httperror.h"
 
-HTTPError::HTTPError(int statusCode, const QString &statusText, const QString &message)
+HTTPError::HTTPError(unsigned statusCode, const QString &statusText, const QString &message)
     : RuntimeError {message}
     , m_statusCode {statusCode}
     , m_statusText {statusText}
 {
 }
 
-int HTTPError::statusCode() const
+unsigned HTTPError::statusCode() const
 {
     return m_statusCode;
 }

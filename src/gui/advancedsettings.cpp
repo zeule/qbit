@@ -40,6 +40,8 @@
 #include "gui/addnewtorrentdialog.h"
 #include "gui/mainwindow.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 enum AdvSettingsCols
 {
     PROPERTY,
@@ -151,7 +153,7 @@ void AdvancedSettings::saveAdvancedSettings()
     session->setSendBufferLowWatermark(spinSendBufferLowWatermark.value());
     session->setSendBufferWatermarkFactor(spinSendBufferWatermarkFactor.value());
     // Save resume data interval
-    session->setSaveResumeDataInterval(spin_save_resume_data_interval.value());
+    session->setSaveResumeDataInterval(boost::numeric_cast<uint>(spin_save_resume_data_interval.value()));
     // Outgoing ports
     session->setOutgoingPortsMin(outgoing_ports_min.value());
     session->setOutgoingPortsMax(outgoing_ports_max.value());
@@ -162,7 +164,7 @@ void AdvancedSettings::saveAdvancedSettings()
     // Recheck torrents on completion
     pref->recheckTorrentsOnCompletion(cb_recheck_completed.isChecked());
     // Transfer list refresh interval
-    session->setRefreshInterval(spin_list_refresh.value());
+    session->setRefreshInterval(boost::numeric_cast<uint>(spin_list_refresh.value()));
     // Peer resolution
     pref->resolvePeerCountries(cb_resolve_countries.isChecked());
     pref->resolvePeerHostNames(cb_resolve_hosts.isChecked());
@@ -339,7 +341,7 @@ void AdvancedSettings::loadAdvancedSettings()
     // Save resume data interval
     spin_save_resume_data_interval.setMinimum(1);
     spin_save_resume_data_interval.setMaximum(1440);
-    spin_save_resume_data_interval.setValue(session->saveResumeDataInterval());
+    spin_save_resume_data_interval.setValue(boost::numeric_cast<int>(session->saveResumeDataInterval()));
     spin_save_resume_data_interval.setSuffix(tr(" m", " minutes"));
     addRow(SAVE_RESUME_DATA_INTERVAL, tr("Save resume data interval", "How often the fastresume file is saved."), &spin_save_resume_data_interval);
     // Outgoing port Min
@@ -365,7 +367,7 @@ void AdvancedSettings::loadAdvancedSettings()
     // Transfer list refresh interval
     spin_list_refresh.setMinimum(30);
     spin_list_refresh.setMaximum(99999);
-    spin_list_refresh.setValue(session->refreshInterval());
+    spin_list_refresh.setValue(boost::numeric_cast<int>(session->refreshInterval()));
     spin_list_refresh.setSuffix(tr(" ms", " milliseconds"));
     addRow(LIST_REFRESH, tr("Transfer list refresh interval"), &spin_list_refresh);
     // Resolve Peer countries

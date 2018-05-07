@@ -143,7 +143,7 @@ private:
     int getActionOnDblClOnTorrentDl() const;
     int getActionOnDblClOnTorrentFn() const;
     // Connection options
-    int getPort() const;
+    unsigned getPort() const;
     bool isUPnPEnabled() const;
     QPair<int, int> getGlobalBandwidthLimits() const;
     QPair<int, int> getAltGlobalBandwidthLimits() const;

@@ -314,7 +314,7 @@ void AppController::setPreferencesAction()
     // Connection
     // Listening Port
     if (m.contains("listen_port"))
-        session->setPort(m["listen_port"].toInt());
+        session->setPort(m["listen_port"].toUInt());
     if (m.contains("upnp"))
         Net::PortForwarder::instance()->setEnabled(m["upnp"].toBool());
     if (m.contains("random_port"))

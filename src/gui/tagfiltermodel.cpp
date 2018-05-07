@@ -152,7 +152,7 @@ QModelIndex TagFilterModel::index(int row, int, const QModelIndex &) const
 {
     if (!isValidRow(row))
         return QModelIndex();
-    return createIndex(row, 0, row);
+    return createIndex(row, 0, static_cast<quintptr>(row));
 }
 
 int TagFilterModel::rowCount(const QModelIndex &parent) const

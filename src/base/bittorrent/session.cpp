@@ -101,6 +101,8 @@
 #include "tracker.h"
 #include "trackerentry.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #ifdef Q_OS_WIN
 #include <iphlpapi.h>
 #endif
@@ -527,13 +529,13 @@ Session::Session(QObject *parent)
     m_tags = QSet<QString>::fromList(m_storedTags.value());
 
     m_refreshTimer = new QTimer(this);
-    m_refreshTimer->setInterval(refreshInterval());
+    m_refreshTimer->setInterval(boost::numeric_cast<int>(refreshInterval()));
     connect(m_refreshTimer, &QTimer::timeout, this, &Session::refresh);
     m_refreshTimer->start();
 
     // Regular saving of fastresume data
     m_resumeDataTimer = new QTimer(this);
-    m_resumeDataTimer->setInterval(saveResumeDataInterval() * 60 * 1000);
+    m_resumeDataTimer->setInterval(boost::numeric_cast<int>(saveResumeDataInterval() * 60 * 1000));
     connect(m_resumeDataTimer, &QTimer::timeout, this, [this]() { generateResumeData(); });
 
     m_statistics = new Statistics(this);
@@ -650,7 +652,7 @@ uint Session::refreshInterval() const
 void Session::setRefreshInterval(uint value)
 {
     if (value != refreshInterval()) {
-        m_refreshTimer->setInterval(value);
+        m_refreshTimer->setInterval(boost::numeric_cast<int>(value));
         m_refreshInterval = value;
     }
 }
@@ -1127,80 +1129,37 @@ void Session::applyBandwidthLimits(libtorrent::settings_pack &settingsPack)
 
 void Session::initMetrics()
 {
-    m_metricIndices.net.hasIncomingConnections = libt::find_metric_idx("net.has_incoming_connections");
-    Q_ASSERT(m_metricIndices.net.hasIncomingConnections >= 0);
-
-    m_metricIndices.net.sentPayloadBytes = libt::find_metric_idx("net.sent_payload_bytes");
-    Q_ASSERT(m_metricIndices.net.sentPayloadBytes >= 0);
-
-    m_metricIndices.net.recvPayloadBytes = libt::find_metric_idx("net.recv_payload_bytes");
-    Q_ASSERT(m_metricIndices.net.recvPayloadBytes >= 0);
-
-    m_metricIndices.net.sentBytes = libt::find_metric_idx("net.sent_bytes");
-    Q_ASSERT(m_metricIndices.net.sentBytes >= 0);
-
-    m_metricIndices.net.recvBytes = libt::find_metric_idx("net.recv_bytes");
-    Q_ASSERT(m_metricIndices.net.recvBytes >= 0);
-
-    m_metricIndices.net.sentIPOverheadBytes = libt::find_metric_idx("net.sent_ip_overhead_bytes");
-    Q_ASSERT(m_metricIndices.net.sentIPOverheadBytes >= 0);
-
-    m_metricIndices.net.recvIPOverheadBytes = libt::find_metric_idx("net.recv_ip_overhead_bytes");
-    Q_ASSERT(m_metricIndices.net.recvIPOverheadBytes >= 0);
-
-    m_metricIndices.net.sentTrackerBytes = libt::find_metric_idx("net.sent_tracker_bytes");
-    Q_ASSERT(m_metricIndices.net.sentTrackerBytes >= 0);
-
-    m_metricIndices.net.recvTrackerBytes = libt::find_metric_idx("net.recv_tracker_bytes");
-    Q_ASSERT(m_metricIndices.net.recvTrackerBytes >= 0);
-
-    m_metricIndices.net.recvRedundantBytes = libt::find_metric_idx("net.recv_redundant_bytes");
-    Q_ASSERT(m_metricIndices.net.recvRedundantBytes >= 0);
-
-    m_metricIndices.net.recvFailedBytes = libt::find_metric_idx("net.recv_failed_bytes");
-    Q_ASSERT(m_metricIndices.net.recvFailedBytes >= 0);
-
-    m_metricIndices.peer.numPeersConnected = libt::find_metric_idx("peer.num_peers_connected");
-    Q_ASSERT(m_metricIndices.peer.numPeersConnected >= 0);
-
-    m_metricIndices.peer.numPeersDownDisk = libt::find_metric_idx("peer.num_peers_down_disk");
-    Q_ASSERT(m_metricIndices.peer.numPeersDownDisk >= 0);
-
-    m_metricIndices.peer.numPeersUpDisk = libt::find_metric_idx("peer.num_peers_up_disk");
-    Q_ASSERT(m_metricIndices.peer.numPeersUpDisk >= 0);
-
-    m_metricIndices.dht.dhtBytesIn = libt::find_metric_idx("dht.dht_bytes_in");
-    Q_ASSERT(m_metricIndices.dht.dhtBytesIn >= 0);
-
-    m_metricIndices.dht.dhtBytesOut = libt::find_metric_idx("dht.dht_bytes_out");
-    Q_ASSERT(m_metricIndices.dht.dhtBytesOut >= 0);
-
-    m_metricIndices.dht.dhtNodes = libt::find_metric_idx("dht.dht_nodes");
-    Q_ASSERT(m_metricIndices.dht.dhtNodes >= 0);
-
-    m_metricIndices.disk.diskBlocksInUse = libt::find_metric_idx("disk.disk_blocks_in_use");
-    Q_ASSERT(m_metricIndices.disk.diskBlocksInUse >= 0);
-
-    m_metricIndices.disk.numBlocksRead = libt::find_metric_idx("disk.num_blocks_read");
-    Q_ASSERT(m_metricIndices.disk.numBlocksRead >= 0);
-
-    m_metricIndices.disk.numBlocksCacheHits = libt::find_metric_idx("disk.num_blocks_cache_hits");
-    Q_ASSERT(m_metricIndices.disk.numBlocksCacheHits >= 0);
-
-    m_metricIndices.disk.writeJobs = libt::find_metric_idx("disk.num_write_ops");
-    Q_ASSERT(m_metricIndices.disk.writeJobs >= 0);
-
-    m_metricIndices.disk.readJobs = libt::find_metric_idx("disk.num_read_ops");
-    Q_ASSERT(m_metricIndices.disk.readJobs >= 0);
-
-    m_metricIndices.disk.hashJobs = libt::find_metric_idx("disk.num_blocks_hashed");
-    Q_ASSERT(m_metricIndices.disk.hashJobs >= 0);
-
-    m_metricIndices.disk.queuedDiskJobs = libt::find_metric_idx("disk.queued_disk_jobs");
-    Q_ASSERT(m_metricIndices.disk.queuedDiskJobs >= 0);
-
-    m_metricIndices.disk.diskJobTime = libt::find_metric_idx("disk.disk_job_time");
-    Q_ASSERT(m_metricIndices.disk.diskJobTime >= 0);
+    const auto findMetricIndex = [](const char* indexName) -> std::size_t
+    {
+        const auto res = libt::find_metric_idx(indexName);
+        Q_ASSERT(res >= 0);
+        return static_cast<std::size_t>(res);
+    };
+    m_metricIndices.net.hasIncomingConnections = findMetricIndex("net.has_incoming_connections");
+    m_metricIndices.net.sentPayloadBytes = findMetricIndex("net.sent_payload_bytes");
+    m_metricIndices.net.recvPayloadBytes = findMetricIndex("net.recv_payload_bytes");
+    m_metricIndices.net.sentBytes = findMetricIndex("net.sent_bytes");
+    m_metricIndices.net.recvBytes = findMetricIndex("net.recv_bytes");
+    m_metricIndices.net.sentIPOverheadBytes = findMetricIndex("net.sent_ip_overhead_bytes");
+    m_metricIndices.net.recvIPOverheadBytes = findMetricIndex("net.recv_ip_overhead_bytes");
+    m_metricIndices.net.sentTrackerBytes = findMetricIndex("net.sent_tracker_bytes");
+    m_metricIndices.net.recvTrackerBytes = findMetricIndex("net.recv_tracker_bytes");
+    m_metricIndices.net.recvRedundantBytes = findMetricIndex("net.recv_redundant_bytes");
+    m_metricIndices.net.recvFailedBytes = findMetricIndex("net.recv_failed_bytes");
+    m_metricIndices.peer.numPeersConnected = findMetricIndex("peer.num_peers_connected");
+    m_metricIndices.peer.numPeersDownDisk = findMetricIndex("peer.num_peers_down_disk");
+    m_metricIndices.peer.numPeersUpDisk = findMetricIndex("peer.num_peers_up_disk");
+    m_metricIndices.dht.dhtBytesIn = findMetricIndex("dht.dht_bytes_in");
+    m_metricIndices.dht.dhtBytesOut = findMetricIndex("dht.dht_bytes_out");
+    m_metricIndices.dht.dhtNodes = findMetricIndex("dht.dht_nodes");
+    m_metricIndices.disk.diskBlocksInUse = findMetricIndex("disk.disk_blocks_in_use");
+    m_metricIndices.disk.numBlocksRead = findMetricIndex("disk.num_blocks_read");
+    m_metricIndices.disk.numBlocksCacheHits = findMetricIndex("disk.num_blocks_cache_hits");
+    m_metricIndices.disk.writeJobs = findMetricIndex("disk.num_write_ops");
+    m_metricIndices.disk.readJobs = findMetricIndex("disk.num_read_ops");
+    m_metricIndices.disk.hashJobs = findMetricIndex("disk.num_blocks_hashed");
+    m_metricIndices.disk.queuedDiskJobs = findMetricIndex("disk.queued_disk_jobs");
+    m_metricIndices.disk.diskJobTime = findMetricIndex("disk.disk_job_time");
 }
 
 void Session::configure(libtorrent::settings_pack &settingsPack)
@@ -2738,19 +2697,19 @@ void Session::setSaveResumeDataInterval(uint value)
 {
     if (value != saveResumeDataInterval()) {
         m_saveResumeDataInterval = value;
-        m_resumeDataTimer->setInterval(value * 60 * 1000);
+        m_resumeDataTimer->setInterval(boost::numeric_cast<int>(value * 60 * 1000));
     }
 }
 
-int Session::port() const
+unsigned Session::port() const
 {
-    static int randomPort = Utils::Random::rand(1024, 65535);
+    static unsigned randomPort = Utils::Random::rand(1024, 65535);
     if (useRandomPort())
         return randomPort;
     return m_port;
 }
 
-void Session::setPort(int port)
+void Session::setPort(unsigned port)
 {
     if (port != this->port()) {
         m_port = port;
@@ -4359,10 +4318,10 @@ void Session::handleSessionStatsAlert(libt::session_stats_alert *p)
     const auto dhtDownload = p->values[m_metricIndices.dht.dhtBytesIn];
     const auto dhtUpload = p->values[m_metricIndices.dht.dhtBytesOut];
 
-    auto calcRate = [interval](quint64 previous, quint64 current)
+    auto calcRate = [interval](quint64 previous, qint64 current)
     {
-        Q_ASSERT(current >= previous);
-        return static_cast<quint64>((current - previous) / interval);
+        Q_ASSERT(current >= boost::numeric_cast<qint64>(previous));
+        return static_cast<quint64>((boost::numeric_cast<quint64>(current) - previous) / interval);
     };
 
     m_status.payloadDownloadRate = calcRate(m_status.totalPayloadDownload, totalPayloadDownload);
@@ -4376,33 +4335,33 @@ void Session::handleSessionStatsAlert(libt::session_stats_alert *p)
     m_status.trackerDownloadRate = calcRate(m_status.trackerDownload, trackerDownload);
     m_status.trackerUploadRate = calcRate(m_status.trackerUpload, trackerUpload);
 
-    m_status.totalDownload = totalDownload;
-    m_status.totalUpload = totalUpload;
-    m_status.totalPayloadDownload = totalPayloadDownload;
-    m_status.totalPayloadUpload = totalPayloadUpload;
-    m_status.ipOverheadDownload = ipOverheadDownload;
-    m_status.ipOverheadUpload = ipOverheadUpload;
-    m_status.trackerDownload = trackerDownload;
-    m_status.trackerUpload = trackerUpload;
-    m_status.dhtDownload = dhtDownload;
-    m_status.dhtUpload = dhtUpload;
-    m_status.totalWasted = p->values[m_metricIndices.net.recvRedundantBytes]
-            + p->values[m_metricIndices.net.recvFailedBytes];
-    m_status.dhtNodes = p->values[m_metricIndices.dht.dhtNodes];
-    m_status.diskReadQueue = p->values[m_metricIndices.peer.numPeersUpDisk];
-    m_status.diskWriteQueue = p->values[m_metricIndices.peer.numPeersDownDisk];
-    m_status.peersCount = p->values[m_metricIndices.peer.numPeersConnected];
+    m_status.totalDownload = boost::numeric_cast<quint64>(totalDownload);
+    m_status.totalUpload = boost::numeric_cast<quint64>(totalUpload);
+    m_status.totalPayloadDownload = boost::numeric_cast<quint64>(totalPayloadDownload);
+    m_status.totalPayloadUpload = boost::numeric_cast<quint64>(totalPayloadUpload);
+    m_status.ipOverheadDownload = boost::numeric_cast<quint64>(ipOverheadDownload);
+    m_status.ipOverheadUpload = boost::numeric_cast<quint64>(ipOverheadUpload);
+    m_status.trackerDownload = boost::numeric_cast<quint64>(trackerDownload);
+    m_status.trackerUpload = boost::numeric_cast<quint64>(trackerUpload);
+    m_status.dhtDownload = boost::numeric_cast<quint64>(dhtDownload);
+    m_status.dhtUpload = boost::numeric_cast<quint64>(dhtUpload);
+    m_status.totalWasted = boost::numeric_cast<quint64>(p->values[m_metricIndices.net.recvRedundantBytes]
+            + p->values[m_metricIndices.net.recvFailedBytes]);
+    m_status.dhtNodes = boost::numeric_cast<quint64>(p->values[m_metricIndices.dht.dhtNodes]);
+    m_status.diskReadQueue = boost::numeric_cast<quint64>(p->values[m_metricIndices.peer.numPeersUpDisk]);
+    m_status.diskWriteQueue = boost::numeric_cast<quint64>(p->values[m_metricIndices.peer.numPeersDownDisk]);
+    m_status.peersCount = boost::numeric_cast<quint64>(p->values[m_metricIndices.peer.numPeersConnected]);
 
     const int numBlocksRead = p->values[m_metricIndices.disk.numBlocksRead];
     const int numBlocksCacheHits = p->values[m_metricIndices.disk.numBlocksCacheHits];
-    m_cacheStatus.totalUsedBuffers = p->values[m_metricIndices.disk.diskBlocksInUse];
+    m_cacheStatus.totalUsedBuffers = boost::numeric_cast<quint64>(p->values[m_metricIndices.disk.diskBlocksInUse]);
     m_cacheStatus.readRatio = static_cast<qreal>(numBlocksCacheHits) / std::max(numBlocksCacheHits + numBlocksRead, 1);
-    m_cacheStatus.jobQueueLength = p->values[m_metricIndices.disk.queuedDiskJobs];
+    m_cacheStatus.jobQueueLength = boost::numeric_cast<quint64>(p->values[m_metricIndices.disk.queuedDiskJobs]);
 
-    quint64 totalJobs = p->values[m_metricIndices.disk.writeJobs] + p->values[m_metricIndices.disk.readJobs]
-                  + p->values[m_metricIndices.disk.hashJobs];
+    quint64 totalJobs = boost::numeric_cast<quint64>(p->values[m_metricIndices.disk.writeJobs] + p->values[m_metricIndices.disk.readJobs]
+                  + p->values[m_metricIndices.disk.hashJobs]);
     m_cacheStatus.averageJobTime = totalJobs > 0
-                                   ? (p->values[m_metricIndices.disk.diskJobTime] / totalJobs) : 0;
+                                   ? boost::numeric_cast<quint64>(p->values[m_metricIndices.disk.diskJobTime]) / totalJobs : 0u;
 
     emit statsUpdated();
 }

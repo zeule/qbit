@@ -33,6 +33,8 @@
 
 #include <QByteArray>
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #ifndef ZLIB_CONST
 #define ZLIB_CONST  // make z_stream.next_in const
 #endif
@@ -45,7 +47,7 @@ QByteArray Utils::Gzip::compress(const QByteArray &data, const int level, bool *
     if (data.isEmpty())
         return {};
 
-    const int BUFSIZE = 128 * 1024;
+    const uLong BUFSIZE = 128 * 1024;
     std::vector<char> tmpBuf(BUFSIZE);
 
     z_stream strm;
@@ -65,7 +67,7 @@ QByteArray Utils::Gzip::compress(const QByteArray &data, const int level, bool *
         return {};
 
     QByteArray output;
-    output.reserve(deflateBound(&strm, data.size()));
+    output.reserve(deflateBound(&strm, boost::numeric_cast<uLong>(data.size())));
 
     // feed to deflate
     while (strm.avail_in > 0) {
@@ -76,7 +78,7 @@ QByteArray Utils::Gzip::compress(const QByteArray &data, const int level, bool *
             return {};
         }
 
-        output.append(tmpBuf.data(), (BUFSIZE - strm.avail_out));
+        output.append(tmpBuf.data(), boost::numeric_cast<int>(BUFSIZE - strm.avail_out));
         strm.next_out = reinterpret_cast<Bytef *>(tmpBuf.data());
         strm.avail_out = BUFSIZE;
     }
@@ -85,7 +87,7 @@ QByteArray Utils::Gzip::compress(const QByteArray &data, const int level, bool *
     while (result != Z_STREAM_END) {
         result = deflate(&strm, Z_FINISH);
 
-        output.append(tmpBuf.data(), (BUFSIZE - strm.avail_out));
+        output.append(tmpBuf.data(), boost::numeric_cast<int>(BUFSIZE - strm.avail_out));
         strm.next_out = reinterpret_cast<Bytef *>(tmpBuf.data());
         strm.avail_out = BUFSIZE;
     }
@@ -130,7 +132,7 @@ QByteArray Utils::Gzip::decompress(const QByteArray &data, bool *ok)
         result = inflate(&strm, Z_NO_FLUSH);
 
         if (result == Z_STREAM_END) {
-            output.append(tmpBuf.data(), (BUFSIZE - strm.avail_out));
+            output.append(tmpBuf.data(), boost::numeric_cast<int>(BUFSIZE - strm.avail_out));
             break;
         }
 
@@ -139,7 +141,7 @@ QByteArray Utils::Gzip::decompress(const QByteArray &data, bool *ok)
             return {};
         }
 
-        output.append(tmpBuf.data(), (BUFSIZE - strm.avail_out));
+        output.append(tmpBuf.data(), boost::numeric_cast<int>(BUFSIZE - strm.avail_out));
         strm.next_out = reinterpret_cast<Bytef *>(tmpBuf.data());
         strm.avail_out = BUFSIZE;
     }
