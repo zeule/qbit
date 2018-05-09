@@ -26,15 +26,15 @@
  * exception statement from your version.
  */
 
+#include "torrentinfo.h"
+
+#include <libtorrent/error_code.hpp>
+
 #include <QDebug>
 #include <QString>
-#include <QList>
 #include <QUrl>
 #include <QDateTime>
 
-#include <boost/optional.hpp>
-
-#include <libtorrent/error_code.hpp>
 #include <libtorrent/version.hpp>
 
 #include "base/utils/misc.h"
@@ -42,7 +42,6 @@
 #include "base/utils/string.h"
 #include "infohash.h"
 #include "trackerentry.h"
-#include "torrentinfo.h"
 
 #include <boost/numeric/conversion/cast.hpp>
 
@@ -162,8 +161,8 @@ QString TorrentInfo::name() const
 QDateTime TorrentInfo::creationDate() const
 {
     if (!isValid()) return QDateTime();
-    boost::optional<time_t> t = m_nativeInfo->creation_date();
-    return t ? QDateTime::fromTime_t(*t) : QDateTime();
+    const auto t = m_nativeInfo->creation_date();
+    return t ? QDateTime::fromTime_t(t) : QDateTime();
 }
 
 QString TorrentInfo::creator() const

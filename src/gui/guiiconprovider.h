@@ -79,7 +79,7 @@ private slots:
     void colorThemeChanged();
 
 private:
-    explicit GuiIconProvider(QObject *parent = 0);
+    explicit GuiIconProvider(QObject *parent = nullptr);
     ~GuiIconProvider();
 
     Q_ENUM(IconSet)

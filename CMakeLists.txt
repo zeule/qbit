@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
 
+message(WARNING "No official support for cmake build system. If it is broken, please submit patches!")
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 
 project(qbit
