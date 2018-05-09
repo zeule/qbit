@@ -31,6 +31,16 @@
 
 #include <math.h>
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clanf diagnostic ignored "-Wfloat-equal"
+#endif
+
 // BEGIN internal helper functions
 namespace {
     // normalize: like qBound(a, 0.0, 1.0) but without needing the args and with
@@ -326,3 +336,10 @@ QColor Utils::Color::overlayColors(const QColor &base, const QColor &paint,
     return img.pixel(0, 0);
 }
 
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

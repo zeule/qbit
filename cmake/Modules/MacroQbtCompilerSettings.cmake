@@ -88,7 +88,7 @@ macro(qbt_set_compiler_options)
             string(APPEND CMAKE_C_FLAGS_DEBUG " -O0 -g3 -march=native -pipe" )
             string(APPEND CMAKE_CXX_FLAGS_DEBUG " -O0 -g3 -march=native -pipe" )
         endif (_DEBUG_OPTIMIZATION_LEVEL_IS_SUPPORTED)
-    endif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    endif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU|Clang")
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
         set(QBT_ADDITONAL_FLAGS "-wd4290 -wd4275 -wd4251 /W4" CACHE STRING "Additional qBittorent compile flags")
