@@ -7,29 +7,29 @@ project(qbit
 )
 
 include(GNUInstallDirs)
+include(FeatureSummary)
 
 if(WIN32)
     include(winconf)
 endif(WIN32)
 
+macro(feature_option _name _description _default)
+    option(${_name} "${_description}" ${_default})
+    add_feature_info(${_name} ${_name} "${_description}")
+endmacro()
+
 # we need options here, because they are used not only in "src" subdir, but in the "dist" dir too
 include(CMakeDependentOption)
 
-option(SYSTEM_QTSINGLEAPPLICATION
-    "Use the system qtsingleapplication library or shipped one otherwise" ON)
-
-option(GUI "Allows to disable GUI for headless running. Disables QtDBus and the GeoIP Database" ON)
-
-option(WEBUI "Allows to disable the WebUI." ON)
-
-option(STACKTRACE "Enable stacktrace feature" ON)
+feature_option(WEBUI "Enables built-in HTTP server for headless use" ON)
+feature_option(STACKTRACE "Enable stacktraces" ON)
 
 if (UNIX)
-    option(PLASMA_INTEGRATION "Enable KDE/Plasma integration" OFF)
-    cmake_dependent_option(SYSTEMD "Install the systemd service file (headless only)" OFF
-        "NOT GUI" OFF)
-    cmake_dependent_option(DBUS "Enable use of QtDBus (GUI only)" ON "GUI" OFF)
+    option(PLASMA_INTEGRATION "Enable KDE/Plasma integration" ON)
+    feature_option(SYSTEMD "Install the systemd service file (headless only)" OFF)
 endif(UNIX)
 
 add_subdirectory(src)
 add_subdirectory(dist)
+
+feature_summary(DESCRIPTION "\nConfiguration results:" WHAT ALL)

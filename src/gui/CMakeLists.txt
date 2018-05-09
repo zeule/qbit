@@ -9,11 +9,11 @@ add_subdirectory(powermanagement)
 add_subdirectory(rss)
 add_subdirectory(search)
 
-if (UNIX AND NOT APPLE AND DBUS)
+if (Qt5DBus_FOUND)
    add_subdirectory(qtnotify)
    include_directories(qtnotify)
    list(APPEND QBT_GUI_OPTIONAL_LINK_LIBRARIES qbt_qtnotify)
-endif (UNIX AND NOT APPLE AND DBUS)
+endif (Qt5DBus_FOUND)
 
 include_directories(
 ${CMAKE_CURRENT_BINARY_DIR}/properties
@@ -201,10 +201,13 @@ target_link_libraries(qbt_gui qbt_lineedit qbt_powermanagement qbt_rss qbt_prope
     ${QBT_GUI_OPTIONAL_LINK_LIBRARIES} qbt_base
     QtSingleApplication::QtSingleApplication
 )
+
 if(WIN32)
+    find_package(Qt5 ${requiredQtVersion} REQUIRED COMPONENTS WinExtras)
     target_link_libraries(qbt_gui Qt5::WinExtras)
 endif(WIN32)
 
 if (APPLE)
-    target_link_libraries(qbt_gui Qt5::MacExtras)
+    find_package(Qt5 ${requiredQtVersion} REQUIRED COMPONENTS MacExtras)
+    target_link_libraries(qbt_gui Qt5::MacExtras objc)
 endif()

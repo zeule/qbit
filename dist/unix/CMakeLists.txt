@@ -10,17 +10,17 @@ if (SYSTEMD)
 endif(SYSTEMD)
 
 
-if (GUI)
+if (Qt5Widgets_FOUND)
     list(APPEND MAN_FILES ${qbit_SOURCE_DIR}/doc/qbittorrent.1)
-else (GUI)
+else (Qt5Widgets_FOUND)
     list(APPEND MAN_FILES ${qbit_SOURCE_DIR}/doc/qbittorrent-nox.1)
-endif (GUI)
+endif (Qt5Widgets_FOUND)
 
 install(FILES ${MAN_FILES}
         DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
         COMPONENT doc)
 
-if (GUI)
+if (Qt5Widgets_FOUND)
     install(DIRECTORY menuicons/
             DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor
             FILES_MATCHING PATTERN "*.png")

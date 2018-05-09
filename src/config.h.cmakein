@@ -1,3 +1,6 @@
+#ifndef QBT_CONFIG_H
+#define QBT_CONFIG_H
+
 #cmakedefine QBT_USE_GUI
 
 #ifndef QBT_USE_GUI
@@ -26,4 +29,5 @@
 
 #cmakedefine PLASMA_INTEGRATION
 
+#endif
 

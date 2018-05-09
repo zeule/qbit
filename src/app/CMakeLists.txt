@@ -58,36 +58,22 @@ if (STACKTRACE)
         list(APPEND QBT_APP_HEADERS stacktrace.h)
     else (UNIX)
         list(APPEND QBT_APP_HEADERS stacktrace_win.h)
-        if (GUI)
+        if (Qt5Widgets_FOUND)
             list(APPEND QBT_APP_HEADERS stacktrace_win_dlg.h)
-        endif (GUI)
+        endif (Qt5Widgets_FOUND)
     endif (UNIX)
 endif (STACKTRACE)
-
-# usesystemqtsingleapplication {
-#     nogui {
-#         CONFIG += qtsinglecoreapplication
-#     } else {
-#         CONFIG += qtsingleapplication
-#     }
-# } else {
-#     nogui {
-#         include(qtsingleapplication/qtsinglecoreapplication.pri)
-#     } else {
-#         include(qtsingleapplication/qtsingleapplication.pri)
-#     }
-# }
 
 # upgrade code
 list(APPEND QBT_APP_HEADERS upgrade.h)
 list(APPEND QBT_TARGET_LIBRARIES qbt_base)
 
-if (GUI)
+if (Qt5Widgets_FOUND)
     list(APPEND QBT_TARGET_LIBRARIES qbt_searchengine qbt_gui)
     include_directories(../gui
         ${CMAKE_CURRENT_BINARY_DIR}/../gui
     )
-endif (GUI)
+endif (Qt5Widgets_FOUND)
 
 if (WEBUI)
     list(APPEND QBT_TARGET_LIBRARIES qbt_webui)
@@ -143,18 +129,18 @@ if (APPLE)
 endif (APPLE)
 
 add_executable(qBittorrent ${QBT_APP_HEADERS} ${QBT_APP_SOURCES} ${QBT_QM_FILES} ${QBT_APP_RESOURCE_SOURCE})
-if (GUI)
+if (Qt5Widgets_FOUND)
     set_target_properties(qBittorrent
         PROPERTIES
             OUTPUT_NAME qbittorrent
             WIN32_EXECUTABLE True
     )
-else (GUI)
+else (Qt5Widgets_FOUND)
     set_target_properties(qBittorrent
         PROPERTIES
             OUTPUT_NAME qbittorrent-nox
     )
-endif (GUI)
+endif (Qt5Widgets_FOUND)
 
 set_target_properties(qBittorrent
     PROPERTIES
@@ -186,6 +172,6 @@ install(TARGETS qBittorrent
     BUNDLE  DESTINATION .
     COMPONENT runtime)
 
-if (GUI AND APPLE)
+if (Qt5Widgets_FOUND AND APPLE)
     include(bundle)
-endif (GUI AND APPLE)
+endif (Qt5Widgets_FOUND AND APPLE)

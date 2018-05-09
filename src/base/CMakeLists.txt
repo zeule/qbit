@@ -142,12 +142,12 @@ target_link_libraries(qbt_base PRIVATE ZLIB::ZLIB PUBLIC LibtorrentRasterbar::Li
 target_link_qt_components(qbt_base PUBLIC Core Network Xml)
 target_include_directories(qbt_base PUBLIC "${qbit_BINARY_DIR}/src") # for config.h
 
-if (GUI)
+if (Qt5Widgets_FOUND)
     target_link_libraries(qbt_base PUBLIC Qt5::Gui Qt5::Widgets)
-endif (GUI)
+endif (Qt5Widgets_FOUND)
 
-if (DBUS)
-    target_link_qt_components(qbt_base PRIVATE DBus)
+if (Qt5Dbus_FOUND)
+    target_link_libraries(qbt_base PRIVATE Qt5::DBus)
 endif ()
 
 if (APPLE)
