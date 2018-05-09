@@ -34,6 +34,8 @@
 
 #include "theme/colortheme.h"
 
+#include <boost/math/special_functions/relative_difference.hpp>
+
 PieceAvailabilityBar::PieceAvailabilityBar(QWidget *parent)
     : base {parent}
 {
@@ -89,7 +91,7 @@ QVector<float> PieceAvailabilityBar::intToFloatVector(const QVector<int> &vecin,
         // case when (15.2 >= x < 17.8)
         else {
             // subcase (15.2 >= x < 16)
-            if (x2 != fromR) {
+            if (boost::math::relative_difference(x2, fromR) > 1) {
                 if (vecin[x2])
                     value += (1.0 - (fromR - fromC)) * vecin[x2];
                 ++x2;

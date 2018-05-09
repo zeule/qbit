@@ -64,6 +64,8 @@
 #include "transferlistsortmodel.h"
 #include "updownratiodlg.h"
 
+#include <boost/math/special_functions/relative_difference.hpp>
+
 #ifdef Q_OS_MAC
 #include "macutilities.h"
 #endif
@@ -665,7 +667,7 @@ void TransferListWidget::setMaxRatioSelectedTorrents()
 
     bool useGlobalValue = true;
     if (torrents.count() == 1)
-        useGlobalValue = (torrents[0]->ratioLimit() == BitTorrent::TorrentHandle::USE_GLOBAL_RATIO)
+        useGlobalValue = (boost::math::epsilon_difference(torrents[0]->ratioLimit(), BitTorrent::TorrentHandle::USE_GLOBAL_RATIO) < 1)
                 && (torrents[0]->seedingTimeLimit() == BitTorrent::TorrentHandle::USE_GLOBAL_SEEDING_TIME);
 
     UpDownRatioDlg dlg(useGlobalValue, currentMaxRatio, BitTorrent::TorrentHandle::MAX_RATIO,

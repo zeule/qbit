@@ -66,6 +66,7 @@
 #include "trackerentry.h"
 
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/math/special_functions/relative_difference.hpp>
 
 const QString QB_EXT {".!qB"};
 
@@ -967,7 +968,7 @@ qulonglong TorrentHandle::eta() const
         return static_cast<qulonglong>(qMin(ratioEta, seedingTimeEta));
     }
 
-    if (!speedAverage.download) return MAX_ETA;
+    if (!(speedAverage.download > 0)) return MAX_ETA;
 
     return (wantedSize() - completedSize()) / speedAverage.download;
 }
@@ -1134,7 +1135,7 @@ qreal TorrentHandle::distributedCopies() const
 
 qreal TorrentHandle::maxRatio() const
 {
-    if (m_ratioLimit == USE_GLOBAL_RATIO)
+    if (boost::math::epsilon_difference(m_ratioLimit, USE_GLOBAL_RATIO) < 1)
         return m_session->globalMaxRatio();
 
     return m_ratioLimit;
@@ -1549,10 +1550,7 @@ void TorrentHandle::handleTorrentCheckedAlert(libtorrent::torrent_checked_alert 
 
     updateStatus();
 
-    if ((progress() < 1.0) && (wantedSize() > 0))
-        m_hasSeedStatus = false;
-    else if (progress() == 1.0)
-        m_hasSeedStatus = true;
+    m_hasSeedStatus = progress() >= 1.0; // progress() returns 0 if wantedSize() == 0
 
     adjustActualSavePath();
     manageIncompleteFiles();
@@ -1932,7 +1930,7 @@ void TorrentHandle::setRatioLimit(qreal limit)
     else if (limit > MAX_RATIO)
         limit = MAX_RATIO;
 
-    if (m_ratioLimit != limit) {
+    if (boost::math::epsilon_difference(m_ratioLimit, limit) > 1) {
         m_ratioLimit = limit;
         m_needSaveResumeData = true;
         m_session->handleTorrentShareLimitChanged(this);

@@ -43,6 +43,8 @@
 #include "base/preferences.h"
 #include "base/unicodestrings.h"
 
+#include <boost/math/special_functions/relative_difference.hpp>
+
 #ifdef Q_OS_WIN
 #include <QProxyStyle>
 #endif
@@ -141,7 +143,7 @@ void TransferListDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
         const qreal ratio = index.data().toDouble();
         if (hideValues && (ratio <= 0))
             break;
-        QString str = ((ratio == -1) || (ratio > BitTorrent::TorrentHandle::MAX_RATIO)) ? QString::fromUtf8(C_INFINITY) : Utils::String::fromDouble(ratio, 2);
+        QString str = ((boost::math::epsilon_difference(ratio, -1) < 1) || (ratio > BitTorrent::TorrentHandle::MAX_RATIO)) ? QString::fromUtf8(C_INFINITY) : Utils::String::fromDouble(ratio, 2);
         opt.displayAlignment = Qt::AlignRight | Qt::AlignVCenter;
         QItemDelegate::drawDisplay(painter, opt, opt.rect, str);
         break;
@@ -161,7 +163,7 @@ void TransferListDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
         QStyleOptionProgressBar newopt;
         qreal progress = index.data().toDouble() * 100.;
         newopt.rect = opt.rect;
-        newopt.text = ((progress == 100.0) ? QString("100%") : Utils::String::fromDouble(progress, 1) + "%");
+        newopt.text = ((progress >= 100.0) ? QString("100%") : Utils::String::fromDouble(progress, 1) + "%");
         newopt.progress = static_cast<int>(progress);
         newopt.maximum = 100;
         newopt.minimum = 0;

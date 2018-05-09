@@ -35,6 +35,8 @@
 #include "ui_updownratiodlg.h"
 #include "utils.h"
 
+#include <boost/math/special_functions/relative_difference.hpp>
+
 UpDownRatioDlg::UpDownRatioDlg(bool useDefault, qreal initialRatioValue,
                                qreal maxRatioValue, int initialTimeValue,
                                int maxTimeValue, QWidget *parent)
@@ -46,7 +48,7 @@ UpDownRatioDlg::UpDownRatioDlg(bool useDefault, qreal initialRatioValue,
     if (useDefault) {
         m_ui->useDefaultButton->setChecked(true);
     }
-    else if ((initialRatioValue == -1.) && (initialTimeValue == -1)) {
+    else if ((boost::math::epsilon_difference(initialRatioValue, -1.) < 1) && (initialTimeValue == -1)) {
         m_ui->noLimitButton->setChecked(true);
         initialRatioValue = BitTorrent::Session::instance()->globalMaxRatio();
         initialTimeValue = BitTorrent::Session::instance()->globalMaxSeedingMinutes();

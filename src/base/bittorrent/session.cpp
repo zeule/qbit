@@ -102,6 +102,7 @@
 #include "trackerentry.h"
 
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/math/special_functions/relative_difference.hpp>
 
 #ifdef Q_OS_WIN
 #include <iphlpapi.h>
@@ -974,7 +975,7 @@ void Session::setGlobalMaxRatio(qreal ratio)
     if (ratio < 0)
         ratio = -1.;
 
-    if (ratio != globalMaxRatio()) {
+    if (boost::math::epsilon_difference(ratio, globalMaxRatio()) > 1) {
         m_globalMaxRatio = ratio;
         updateSeedingLimitTimer();
     }
@@ -1759,10 +1760,10 @@ void Session::processShareLimits()
 
     foreach (TorrentHandle *const torrent, m_torrents) {
         if (torrent->isSeed() && !torrent->isForced()) {
-            if (torrent->ratioLimit() != TorrentHandle::NO_RATIO_LIMIT) {
+            if (boost::math::epsilon_difference(torrent->ratioLimit(), TorrentHandle::NO_RATIO_LIMIT) > 1) {
                 const qreal ratio = torrent->realRatio();
                 qreal ratioLimit = torrent->ratioLimit();
-                if (ratioLimit == TorrentHandle::USE_GLOBAL_RATIO)
+                if (boost::math::epsilon_difference(ratioLimit, TorrentHandle::USE_GLOBAL_RATIO) < 1)
                     // If Global Max Ratio is really set...
                     ratioLimit = globalMaxRatio();
 
@@ -3478,7 +3479,7 @@ bool Session::isKnownTorrent(const InfoHash &hash) const
 
 void Session::updateSeedingLimitTimer()
 {
-    if ((globalMaxRatio() == TorrentHandle::NO_RATIO_LIMIT) && !hasPerTorrentRatioLimit()
+    if ((boost::math::epsilon_difference(globalMaxRatio(), TorrentHandle::NO_RATIO_LIMIT) < 2) && !hasPerTorrentRatioLimit()
         && (globalMaxSeedingMinutes() == TorrentHandle::NO_SEEDING_TIME_LIMIT) && !hasPerTorrentSeedingTimeLimit()) {
         if (m_seedingLimitTimer->isActive())
             m_seedingLimitTimer->stop();

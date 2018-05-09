@@ -36,6 +36,8 @@
 #include "torrentmodel.h"
 #include "transferlistsortmodel.h"
 
+#include <boost/math/special_functions/relative_difference.hpp>
+
 TransferListSortModel::TransferListSortModel(QObject *parent)
     : QSortFilterProxyModel(parent)
 {
@@ -196,8 +198,8 @@ bool TransferListSortModel::lessThan(const QModelIndex &left, const QModelIndex 
         const qreal vL = left.data().toDouble();
         const qreal vR = right.data().toDouble();
 
-        if (vL == -1) return false;
-        if (vR == -1) return true;
+        if (boost::math::epsilon_difference(vL, -1) < 1) return false;
+        if (boost::math::epsilon_difference(vR, -1) < 1) return true;
 
         return vL < vR;
     }

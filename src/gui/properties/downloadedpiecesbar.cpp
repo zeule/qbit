@@ -34,6 +34,8 @@
 
 #include "theme/colortheme.h"
 
+#include <boost/math/special_functions/relative_difference.hpp>
+
 DownloadedPiecesBar::DownloadedPiecesBar(QWidget *parent)
     : base {parent}
     , m_dlPieceColor {0, 0xd0, 0}
@@ -81,7 +83,7 @@ QVector<float> DownloadedPiecesBar::bitfieldToFloatVector(const QBitArray &vecin
         // case when (15.2 >= x < 17.8)
         else {
             // subcase (15.2 >= x < 16)
-            if (x2 != fromR) {
+            if (boost::math::relative_difference(x2,fromR) > 1) {
                 if (vecin[x2])
                     value += 1.0 - (fromR - fromC);
                 ++x2;
@@ -134,7 +136,8 @@ bool DownloadedPiecesBar::updateImage(QImage &image)
     for (int x = 0; x < scaledPieces.size(); ++x) {
         float piecesToValue = scaledPieces.at(x);
         float piecesToValueDl = scaledPiecesDl.at(x);
-        if (piecesToValueDl != 0) {
+        Q_ASSERT(piecesToValueDl >= 0);
+        if (piecesToValueDl > 0) {
             float fillRatio = piecesToValue + piecesToValueDl;
             float ratio = piecesToValueDl / fillRatio;
 
