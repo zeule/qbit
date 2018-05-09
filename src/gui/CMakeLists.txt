@@ -194,7 +194,7 @@ torrentcreatordlg.ui
 shutdownconfirmdlg.ui
 )
 
-qbt_target_sources(about.qrc theme/builtinthemes.qrc)
+qbt_target_sources(qBittorrent PRIVATE about.qrc theme/builtinthemes.qrc)
 
 add_library(qbt_gui STATIC ${QBT_GUI_HEADERS} ${QBT_GUI_SOURCES} ${QBT_GUI_FORMS})
 target_link_libraries(qbt_gui qbt_lineedit qbt_powermanagement qbt_rss qbt_properties qbt_searchengine

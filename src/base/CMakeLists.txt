@@ -1,6 +1,6 @@
 find_package(ZLIB 1.2.5.2 REQUIRED)
 
-set(QBT_BASE_HEADERS
+add_library(qbt_base STATIC
 bittorrent/addtorrentparams.h
 bittorrent/cachestatus.h
 bittorrent/infohash.h
@@ -72,9 +72,6 @@ torrentfilter.h
 tristatebool.h
 types.h
 unicodestrings.h
-)
-
-set(QBT_BASE_SOURCES
 bittorrent/infohash.cpp
 bittorrent/magneturi.cpp
 bittorrent/peerinfo.cpp
@@ -137,9 +134,13 @@ torrentfilter.cpp
 tristatebool.cpp
 )
 
-add_library(qbt_base STATIC ${QBT_BASE_HEADERS} ${QBT_BASE_SOURCES})
-target_link_libraries(qbt_base PRIVATE ZLIB::ZLIB PUBLIC LibtorrentRasterbar::LibTorrent)
-target_link_qt_components(qbt_base PUBLIC Core Network Xml)
+target_link_libraries(qbt_base
+    PRIVATE
+        ZLIB::ZLIB
+    PUBLIC
+        LibtorrentRasterbar::LibTorrent
+        Qt5::Core Qt5::Network Qt5::Xml
+)
 target_include_directories(qbt_base PUBLIC "${qbit_BINARY_DIR}/src") # for config.h
 
 if (Qt5Widgets_FOUND)

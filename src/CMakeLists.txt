@@ -6,7 +6,6 @@ include(MacroQbtCompilerSettings)
 qbt_set_compiler_options()
 
 include(CheckIncludeFileCXX)
-include(MacroLinkQtComponents)
 include(QbtTargetSources)
 
 find_package(Boost 1.56 REQUIRED)
@@ -31,10 +30,6 @@ set_package_properties(Qt5DBus PROPERTIES
     PURPOSE "Enables communication with other system components (e.g. notification service) via D-Bus. "
     TYPE RECOMMENDED
 )
-
-if (Qt5Widgets_FOUND)
-    set(QBT_USE_GUI True)
-endif()
 
 set(CMAKE_AUTOMOC True)
 list(APPEND CMAKE_AUTORCC_OPTIONS -compress 9 -threshold 5)
