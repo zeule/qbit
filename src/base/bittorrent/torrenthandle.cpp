@@ -1550,7 +1550,7 @@ void TorrentHandle::handleTorrentCheckedAlert(const libtorrent::torrent_checked_
 
     updateStatus();
 
-    m_hasSeedStatus = progress() >= 1.0; // progress() returns 0 if wantedSize() == 0
+    m_hasSeedStatus = progress() >= 1.0 || wantedSize() == 0; // progress() returns 0 if wantedSize() == 0
 
     adjustActualSavePath();
     manageIncompleteFiles();
