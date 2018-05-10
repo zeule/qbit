@@ -138,7 +138,7 @@ target_link_libraries(qbt_base
     PRIVATE
         ZLIB::ZLIB
     PUBLIC
-        LibtorrentRasterbar::LibTorrent
+        Libtorrent::torrent-rasterbar
         Qt5::Core Qt5::Network Qt5::Xml
 )
 target_include_directories(qbt_base PUBLIC "${qbit_BINARY_DIR}/src") # for config.h
