@@ -1,7 +1,7 @@
 /*
  * Bittorrent Client using Qt and libtorrent.
- * Copyright (C) 2011  Christian Kandeler
- * Copyright (C) 2011  Christophe Dumez <chris@qbittorrent.org>
+ * Copyright (C) 2018  Eugene Shalygin <eugene.shalygin@gmail.com>
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -26,42 +26,55 @@
  * exception statement from your version.
  */
 
-#ifndef UPDOWNRATIODLG_H
-#define UPDOWNRATIODLG_H
+#ifndef QBT_BITTORRENT_INDEX_H
+#define QBT_BITTORRENT_INDEX_H
 
-#include <QDialog>
+#include <libtorrent/units.hpp>
+#include <libtorrent/version.hpp>
 
-#include <chrono>
-
-namespace Ui
+namespace BitTorrent
 {
-    class UpDownRatioDlg;
+#if LIBTORRENT_VERSION_NUM >= 10200
+    inline libtorrent::file_index_t makeFileIndex(libtorrent::file_index_t::underlying_type index)
+    {
+        return static_cast<libtorrent::file_index_t>(index);
+    }
+
+    inline libtorrent::piece_index_t makePieceIndex(libtorrent::piece_index_t::underlying_type index)
+    {
+        return static_cast<libtorrent::piece_index_t>(index);
+    }
+
+    inline libtorrent::file_index_t::underlying_type indexValue(libtorrent::file_index_t index)
+    {
+        return static_cast<libtorrent::file_index_t::underlying_type>(index);
+    }
+
+    inline libtorrent::piece_index_t::underlying_type indexValue(libtorrent::piece_index_t index)
+    {
+        return static_cast<libtorrent::piece_index_t::underlying_type>(index);
+    }
+#else
+    inline int makeFileIndex(int index)
+    {
+        return index;
+    }
+
+    inline int makePieceIndex(int index)
+    {
+        return index;
+    }
+
+    inline int indexValue(int index)
+    {
+        return index;
+    }
+
+    inline int indexValue(int index)
+    {
+        return index;
+    }
+#endif
 }
 
-class UpDownRatioDlg : public QDialog
-{
-    Q_OBJECT
-
-public:
-    UpDownRatioDlg(bool useDefault, qreal initialValue, qreal maxValue,
-            std::chrono::minutes initialTimeValue, std::chrono::minutes maxTimeValue,
-            QWidget *parent = nullptr);
-    ~UpDownRatioDlg();
-
-    bool useDefault() const;
-    qreal ratio() const;
-    std::chrono::minutes seedingTime() const;
-
-public slots:
-    void accept();
-
-private slots:
-    void handleRatioTypeChanged();
-    void enableRatioSpin();
-    void enableTimeSpin();
-
-private:
-    Ui::UpDownRatioDlg *m_ui;
-};
-
-#endif // UPDOWNRATIODLG_H
+#endif

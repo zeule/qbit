@@ -852,7 +852,7 @@ void OptionsDialog::saveOptions()
     session->setAddTrackersEnabled(m_ui->checkEnableAddTrackers->isChecked());
     session->setAdditionalTrackers(m_ui->textTrackers->toPlainText());
     session->setGlobalMaxRatio(getMaxRatio());
-    session->setGlobalMaxSeedingMinutes(getMaxSeedingMinutes());
+    session->setGlobalMaxSeedingMinutes(std::chrono::minutes(getMaxSeedingMinutes()));
     session->setMaxRatioAction(static_cast<MaxRatioAction>(m_ui->comboRatioLimitAct->currentIndex()));
     // End Bittorrent preferences
 
@@ -1268,18 +1268,18 @@ void OptionsDialog::loadOptions()
         m_ui->checkMaxRatio->setChecked(false);
         m_ui->spinMaxRatio->setEnabled(false);
     }
-    if (session->globalMaxSeedingMinutes() >= 0) {
+    if (session->globalMaxSeedingMinutes().count() >= 0) {
         // Enable
         m_ui->checkMaxSeedingMinutes->setChecked(true);
         m_ui->spinMaxSeedingMinutes->setEnabled(true);
-        m_ui->spinMaxSeedingMinutes->setValue(session->globalMaxSeedingMinutes());
+        m_ui->spinMaxSeedingMinutes->setValue(session->globalMaxSeedingMinutes().count());
     }
     else {
         // Disable
         m_ui->checkMaxSeedingMinutes->setChecked(false);
         m_ui->spinMaxSeedingMinutes->setEnabled(false);
     }
-    m_ui->comboRatioLimitAct->setEnabled((session->globalMaxSeedingMinutes() >= 0) || (session->globalMaxRatio() >= 0.));
+    m_ui->comboRatioLimitAct->setEnabled((session->globalMaxSeedingMinutes().count() >= 0) || (session->globalMaxRatio() >= 0.));
     m_ui->comboRatioLimitAct->setCurrentIndex(session->maxRatioAction());
     // End Bittorrent preferences
 

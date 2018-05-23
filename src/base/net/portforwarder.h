@@ -29,6 +29,11 @@
 #ifndef NET_PORTFORWARDER_H
 #define NET_PORTFORWARDER_H
 
+#include <libtorrent/version.hpp>
+#if LIBTORRENT_VERSION_NUM >= 10200
+#include <libtorrent/portmap.hpp>
+#endif
+
 #include <QHash>
 #include <QObject>
 
@@ -64,7 +69,11 @@ namespace Net
 
         bool m_active;
         libtorrent::session *m_provider;
+#if LIBTORRENT_VERSION_NUM < 10200
         QHash<quint16, int> m_mappedPorts;
+#else
+        QHash<quint16, libtorrent::port_mapping_t> m_mappedPorts;
+#endif
 
         static PortForwarder *m_instance;
     };

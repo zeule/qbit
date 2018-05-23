@@ -32,6 +32,7 @@
 
 #include <libtorrent/version.hpp>
 
+#include <chrono>
 #include <vector>
 
 #include <QFile>
@@ -59,6 +60,9 @@
 #include "sessionstatus.h"
 #include "torrentinfo.h"
 
+#if __has_include(<libtorrent/fwd.hpp>)
+#include <libtorrent/fwd.hpp>
+#else
 namespace libtorrent
 {
     class session;
@@ -107,6 +111,8 @@ namespace libtorrent
     struct session_stats_alert;
 #endif
 }
+
+#endif
 
 class QThread;
 class QTimer;
@@ -297,8 +303,8 @@ namespace BitTorrent
 
         qreal globalMaxRatio() const;
         void setGlobalMaxRatio(qreal ratio);
-        int globalMaxSeedingMinutes() const;
-        void setGlobalMaxSeedingMinutes(int minutes);
+        std::chrono::minutes globalMaxSeedingMinutes() const;
+        void setGlobalMaxSeedingMinutes(std::chrono::minutes minutes);
         bool isDHTEnabled() const;
         void setDHTEnabled(bool enabled);
         bool isLSDEnabled() const;
@@ -381,7 +387,9 @@ namespace BitTorrent
         void setDiskCacheTTL(int ttl);
         bool useOSCache() const;
         void setUseOSCache(bool use);
+#if LIBTORRENT_VERSION_NUM < 10200
         bool isGuidedReadCacheEnabled() const;
+#endif
         void setGuidedReadCacheEnabled(bool enabled);
         bool isCoalesceReadWriteEnabled() const;
         void setCoalesceReadWriteEnabled(bool enabled);

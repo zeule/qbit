@@ -80,7 +80,9 @@ enum AdvSettingsRows
     DISK_CACHE,
     DISK_CACHE_TTL,
     OS_CACHE,
+#if LIBTORRENT_VERSION_NUM < 10200
     GUIDED_READ_CACHE,
+#endif
 #if LIBTORRENT_VERSION_NUM >= 10107
     COALESCE_RW,
 #endif
@@ -311,9 +313,11 @@ void AdvancedSettings::loadAdvancedSettings()
     // Enable OS cache
     cb_os_cache.setChecked(session->useOSCache());
     addRow(OS_CACHE, tr("Enable OS cache"), &cb_os_cache);
+#if LIBTORRENT_VERSION_NUM < 10200
     // Guided read cache
     cbGuidedReadCache.setChecked(session->isGuidedReadCacheEnabled());
     addRow(GUIDED_READ_CACHE, tr("Guided read cache"), &cbGuidedReadCache);
+#endif
     // Coalesce reads & writes
     cbCoalesceRW.setChecked(session->isCoalesceReadWriteEnabled());
 #if LIBTORRENT_VERSION_NUM >= 10107

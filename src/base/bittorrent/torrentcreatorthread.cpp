@@ -46,6 +46,7 @@
 #include <QFileInfo>
 #include <QHash>
 
+#include "base/bittorrent/private/index.h"
 #include "base/global.h"
 #include "base/utils/fs.h"
 #include "base/utils/misc.h"
@@ -166,7 +167,7 @@ void TorrentCreatorThread::run()
 
         // calculate the hash for all pieces
         libt::set_piece_hashes(newTorrent, Utils::Fs::toNativePath(parentPath).toStdString()
-            , [this, &newTorrent](const int n) { sendProgressSignal(n, newTorrent.num_pieces()); });
+            , [this, &newTorrent](const auto n) { sendProgressSignal(indexValue(n), newTorrent.num_pieces()); });
         // Set qBittorrent as creator and add user comment to
         // torrent_info structure
         newTorrent.set_creator(creatorStr.toUtf8().constData());

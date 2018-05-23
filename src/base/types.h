@@ -30,8 +30,14 @@
 #define TYPES_H
 
 #include <QMap>
+#include <QMetaType>
 
-const qlonglong MAX_ETA = 8640000;
+#include <chrono>
+
+Q_DECLARE_METATYPE(std::chrono::seconds)
+Q_DECLARE_METATYPE(std::chrono::minutes)
+
+const std::chrono::seconds MAX_ETA {8640000};
 
 enum class ShutdownDialogAction
 {

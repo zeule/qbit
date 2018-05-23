@@ -40,6 +40,7 @@
 #include "base/utils/misc.h"
 #include "base/utils/fs.h"
 #include "base/utils/string.h"
+#include "private/index.h"
 #include "infohash.h"
 #include "trackerentry.h"
 
@@ -204,7 +205,7 @@ int TorrentInfo::pieceLength() const
 int TorrentInfo::pieceLength(int index) const
 {
     if (!isValid()) return -1;
-    return m_nativeInfo->piece_size(index);
+    return m_nativeInfo->piece_size(makePieceIndex(index));
 }
 
 int TorrentInfo::piecesCount() const
@@ -216,7 +217,7 @@ int TorrentInfo::piecesCount() const
 QString TorrentInfo::filePath(int index) const
 {
     if (!isValid()) return QString();
-    return Utils::Fs::fromNativePath(QString::fromStdString(m_nativeInfo->files().file_path(index)));
+    return Utils::Fs::fromNativePath(QString::fromStdString(m_nativeInfo->files().file_path(makeFileIndex(index))));
 }
 
 QStringList TorrentInfo::filePaths() const
@@ -236,19 +237,19 @@ QString TorrentInfo::fileName(int index) const
 QString TorrentInfo::origFilePath(int index) const
 {
     if (!isValid()) return QString();
-    return Utils::Fs::fromNativePath(QString::fromStdString(m_nativeInfo->orig_files().file_path(index)));
+    return Utils::Fs::fromNativePath(QString::fromStdString(m_nativeInfo->orig_files().file_path(makeFileIndex(index))));
 }
 
 qlonglong TorrentInfo::fileSize(int index) const
 {
     if (!isValid()) return -1;
-    return m_nativeInfo->files().file_size(index);
+    return m_nativeInfo->files().file_size(makeFileIndex(index));
 }
 
 qlonglong TorrentInfo::fileOffset(int index) const
 {
     if (!isValid()) return -1;
-    return m_nativeInfo->files().file_offset(index);
+    return m_nativeInfo->files().file_offset(makeFileIndex(index));
 }
 
 QList<TrackerEntry> TorrentInfo::trackers() const
@@ -299,11 +300,14 @@ QVector<int> TorrentInfo::fileIndicesForPiece(int pieceIndex) const
         return QVector<int>();
 
     std::vector<libt::file_slice> files(
-        nativeInfo()->map_block(pieceIndex, 0, nativeInfo()->piece_size(pieceIndex)));
+        nativeInfo()->map_block(makePieceIndex(pieceIndex), 0, nativeInfo()->piece_size(makePieceIndex(pieceIndex))));
     QVector<int> res;
     res.reserve(int(files.size()));
     std::transform(files.begin(), files.end(), std::back_inserter(res),
-        [](const libt::file_slice &s) { return s.file_index; });
+        [](const libt::file_slice &s)
+        {
+            return indexValue(s.file_index);
+        });
 
     return res;
 }
@@ -321,7 +325,7 @@ QVector<QByteArray> TorrentInfo::pieceHashes() const
 #if LIBTORRENT_VERSION_NUM < 10200
         hashes += { m_nativeInfo->hash_for_piece_ptr(i), libtorrent::sha1_hash::size };
 #else
-        hashes += { m_nativeInfo->hash_for_piece_ptr(i), libtorrent::sha1_hash::size() };
+        hashes += { m_nativeInfo->hash_for_piece_ptr(makePieceIndex(i)), libtorrent::sha1_hash::size() };
 #endif
 
     return hashes;
@@ -351,8 +355,8 @@ TorrentInfo::PieceRange TorrentInfo::filePieces(int fileIndex) const
     }
 
     const libt::file_storage &files = nativeInfo()->files();
-    const auto fileSize = files.file_size(fileIndex);
-    const auto firstOffset = files.file_offset(fileIndex);
+    const auto fileSize = files.file_size(makeFileIndex(fileIndex));
+    const auto firstOffset = files.file_offset(makeFileIndex(fileIndex));
     return makeInterval(static_cast<int>(firstOffset / pieceLength()),
                         static_cast<int>((firstOffset + fileSize - 1) / pieceLength()));
 }
@@ -360,7 +364,7 @@ TorrentInfo::PieceRange TorrentInfo::filePieces(int fileIndex) const
 void TorrentInfo::renameFile(int index, const QString &newPath)
 {
     if (!isValid()) return;
-    nativeInfo()->rename_file(index, Utils::Fs::toNativePath(newPath).toStdString());
+    nativeInfo()->rename_file(makeFileIndex(index), Utils::Fs::toNativePath(newPath).toStdString());
 }
 
 int BitTorrent::TorrentInfo::fileIndex(const QString& fileName) const
@@ -405,7 +409,7 @@ void TorrentInfo::stripRootFolder()
     if (files.name() != testName) {
         files.set_name(testName);
         for (int i = 0; i < files.num_files(); ++i)
-            files.rename_file(i, files.file_path(i));
+            files.rename_file(makeFileIndex(i), files.file_path(makeFileIndex(i)));
     }
 
     files.set_name("");

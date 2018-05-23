@@ -419,6 +419,7 @@ void PropertiesWidget::reloadPreferences()
 
 void PropertiesWidget::loadDynamicData()
 {
+    using namespace std::chrono_literals;
     // Refresh only if the torrent handle is valid and visible
     if (!m_torrent || (m_mainWindow->currentTabWidget() != m_transferList) || (m_state != VISIBLE)) return;
 
@@ -450,7 +451,7 @@ void PropertiesWidget::loadDynamicData()
                                            .arg(m_torrent->connectionsCount())
                                            .arg(m_torrent->connectionsLimit() < 0 ? QString::fromUtf8(C_INFINITY) : QString::number(m_torrent->connectionsLimit())));
 
-            m_ui->labelETAVal->setText(Utils::Misc::userFriendlyDuration(boost::numeric_cast<qlonglong>(m_torrent->eta())));
+            m_ui->labelETAVal->setText(Utils::Misc::userFriendlyDuration(m_torrent->eta()));
 
             // Update next announce time
             m_ui->labelReannounceInVal->setText(Utils::Misc::userFriendlyDuration(m_torrent->nextAnnounce()));
@@ -469,11 +470,11 @@ void PropertiesWidget::loadDynamicData()
 
             m_ui->labelDlSpeedVal->setText(tr("%1 (%2 avg.)", "%1 and %2 are speed rates, e.g. 200KiB/s (100KiB/s avg.)")
                 .arg(Utils::Misc::friendlyUnit(m_torrent->downloadPayloadRate(), true)
-                    , Utils::Misc::friendlyUnit(m_torrent->totalDownload() / (1 + m_torrent->activeTime() - m_torrent->finishedTime()), true)));
+                    , Utils::Misc::friendlyUnit(m_torrent->totalDownload() / (1s + m_torrent->activeTime() - m_torrent->finishedTime()).count(), true)));
 
             m_ui->labelUpSpeedVal->setText(tr("%1 (%2 avg.)", "%1 and %2 are speed rates, e.g. 200KiB/s (100KiB/s avg.)")
                 .arg(Utils::Misc::friendlyUnit(m_torrent->uploadPayloadRate(), true)
-                    , Utils::Misc::friendlyUnit(m_torrent->totalUpload() / (1 + m_torrent->activeTime()), true)));
+                    , Utils::Misc::friendlyUnit(m_torrent->totalUpload() / (1s + m_torrent->activeTime()).count(), true)));
 
             m_ui->labelLastSeenCompleteVal->setText(m_torrent->lastSeenComplete().isValid() ? m_torrent->lastSeenComplete().toString(Qt::DefaultLocaleShortDate) : tr("Never"));
 
