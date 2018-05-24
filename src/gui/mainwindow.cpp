@@ -125,12 +125,12 @@ namespace
 #define SETTINGS_KEY(name) "GUI/" name
 
     // ExecutionLog properties keys
-#define EXECUTIONLOG_SETTINGS_KEY(name) SETTINGS_KEY("Log/") name
+#define EXECUTIONLOG_SETTINGS_KEY(name) QStringLiteral(SETTINGS_KEY("Log/") name)
     const QString KEY_EXECUTIONLOG_ENABLED = EXECUTIONLOG_SETTINGS_KEY("Enabled");
     const QString KEY_EXECUTIONLOG_TYPES = EXECUTIONLOG_SETTINGS_KEY("Types");
 
     // Notifications properties keys
-#define NOTIFICATIONS_SETTINGS_KEY(name) SETTINGS_KEY("Notifications/") name
+#define NOTIFICATIONS_SETTINGS_KEY(name) QStringLiteral(SETTINGS_KEY("Notifications/") name)
     const QString KEY_NOTIFICATIONS_ENABLED = NOTIFICATIONS_SETTINGS_KEY("Enabled");
     const QString KEY_NOTIFICATIONS_TORRENTADDED = NOTIFICATIONS_SETTINGS_KEY("TorrentAdded");
 
@@ -379,7 +379,7 @@ MainWindow::MainWindow(QWidget *parent)
     on_actionWarningMessages_triggered(m_ui->actionWarningMessages->isChecked());
     on_actionCriticalMessages_triggered(m_ui->actionCriticalMessages->isChecked());
     if (m_ui->actionSearchWidget->isChecked())
-        QTimer::singleShot(0, this, SLOT(on_actionSearchWidget_triggered()));
+        QTimer::singleShot(0, this, &MainWindow::on_actionSearchWidget_triggered);
 
     // Auto shutdown actions
     QActionGroup *autoShutdownGroup = new QActionGroup(this);
@@ -1217,7 +1217,7 @@ bool MainWindow::event(QEvent *e)
                 if (!hasModalWindow) {
                     qDebug("Minimize to Tray enabled, hiding!");
                     e->ignore();
-                    QTimer::singleShot(0, this, SLOT(hide()));
+                    QTimer::singleShot(0, this, &QWidget::hide);
                     return true;
                 }
             }

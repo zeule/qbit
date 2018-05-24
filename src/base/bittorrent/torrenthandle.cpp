@@ -74,7 +74,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/math/special_functions/relative_difference.hpp>
 
-const QString QB_EXT {".!qB"};
+const QString QB_EXT {QStringLiteral(".!qB")};
 
 namespace libt = libtorrent;
 using namespace BitTorrent;
@@ -528,15 +528,19 @@ int TorrentHandle::piecesHave() const
 
 qreal TorrentHandle::progress() const
 {
-    if (!m_nativeStatus.total_wanted)
-        return 0.;
+    if (!isChecking()) {
+        if (!m_nativeStatus.total_wanted)
+            return 0.;
 
-    if (m_nativeStatus.total_wanted_done == m_nativeStatus.total_wanted)
-        return 1.;
+        if (m_nativeStatus.total_wanted_done == m_nativeStatus.total_wanted)
+            return 1.;
 
-    float progress = static_cast<float>(m_nativeStatus.total_wanted_done) / m_nativeStatus.total_wanted;
-    Q_ASSERT((progress >= 0.f) && (progress <= 1.f));
-    return progress;
+        qreal progress = static_cast<qreal>(m_nativeStatus.total_wanted_done) / m_nativeStatus.total_wanted;
+        Q_ASSERT((progress >= 0.f) && (progress <= 1.f));
+        return progress;
+    }
+
+    return m_nativeStatus.progress;
 }
 
 QString TorrentHandle::category() const
@@ -759,7 +763,8 @@ bool TorrentHandle::isActive() const
             || m_state == TorrentState::Downloading
             || m_state == TorrentState::ForcedDownloading
             || m_state == TorrentState::Uploading
-            || m_state == TorrentState::ForcedUploading;
+            || m_state == TorrentState::ForcedUploading
+            || m_state == TorrentState::Moving;
 }
 
 bool TorrentHandle::isInactive() const
@@ -809,30 +814,27 @@ bool TorrentHandle::hasFirstLastPiecePriority() const
     if (!hasMetadata())
         return m_needsToSetFirstLastPiecePriority;
 
-    // Get int first media file
-    const auto fp = filePriorities();
+#if LIBTORRENT_VERSION_NUM < 10200
+    const int dont_download = 0;
+    const int top_priority = 7;
+    const std::vector<int> filePriorities = nativeHandle().file_priorities();
+#else
+    using libt::dont_download;
+    using libt::top_priority;
+    const std::vector<libt::download_priority_t> filePriorities = nativeHandle().get_file_priorities();
+#endif
 
-    TorrentInfo::PieceRange extremities;
-    bool found = false;
-    const int count = fp.size();
-    for (int i = 0; i < count; ++i) {
-        const QString ext = Utils::Fs::fileExtension(filePath(i));
-        if (Utils::Misc::isPreviewable(ext) && (fp[i] > 0)) {
-            extremities = info().filePieces(i);
-            found = true;
-            break;
-        }
+    for (std::size_t i = 0; i < filePriorities.size(); ++i) {
+        if (filePriorities[i] <= dont_download)
+            continue;
+
+        const TorrentInfo::PieceRange extremities = info().filePieces(i);
+        const int firstPiecePrio = nativeHandle().piece_priority(extremities.first());
+        const int lastPiecePrio = nativeHandle().piece_priority(extremities.last());
+        return ((firstPiecePrio == top_priority) && (lastPiecePrio == top_priority));
     }
 
-    if (!found) return false; // No media file
-
-    const auto first = m_nativeHandle.piece_priority(makePieceIndex(extremities.first()));
-    const auto last = m_nativeHandle.piece_priority(makePieceIndex(extremities.last()));
-#if LIBTORRENT_VERSION_NUM < 10200
-    return ((first == 7) && (last == 7));
-#else
-    return ((first == libt::top_priority) && (last == libt::top_priority));
-#endif
+    return false;
 }
 
 TorrentState TorrentHandle::state() const
@@ -842,7 +844,10 @@ TorrentState TorrentHandle::state() const
 
 void TorrentHandle::updateState()
 {
-    if (isPaused()) {
+    if (isMoveInProgress()) {
+        m_state = TorrentState::Moving;
+    }
+    else if (isPaused()) {
         if (hasMissingFiles())
             m_state = TorrentState::MissingFiles;
         else if (hasError())
@@ -1377,48 +1382,47 @@ void TorrentHandle::toggleSequentialDownload()
     setSequentialDownload(!isSequentialDownload());
 }
 
-void TorrentHandle::setFirstLastPiecePriority(bool b)
+void TorrentHandle::setFirstLastPiecePriority(const bool enabled)
 {
     if (!hasMetadata()) {
-        m_needsToSetFirstLastPiecePriority = b;
+        m_needsToSetFirstLastPiecePriority = enabled;
         return;
     }
 
 #if LIBTORRENT_VERSION_NUM < 10200
-    std::vector<int> fp = m_nativeHandle.file_priorities();
-    std::vector<int> pp = m_nativeHandle.piece_priorities();
+    std::vector<int> filePriorities = m_nativeHandle.file_priorities();
+    std::vector<int> piecePriorities = m_nativeHandle.piece_priorities();
     const int dont_download = 0;
     const int top_priority = 7;
 #else
-    std::vector<libt::download_priority_t> fp = m_nativeHandle.get_file_priorities();
-    std::vector<libt::download_priority_t> pp = m_nativeHandle.get_piece_priorities();
+    std::vector<libt::download_priority_t> filePriorities = m_nativeHandle.get_file_priorities();
+    std::vector<libt::download_priority_t> piecePriorities = m_nativeHandle.get_piece_priorities();
     using libt::dont_download;
     using libt::top_priority;
 #endif
 
-    // Download first and last pieces first for all media files in the torrent
-    const std::size_t nbfiles = fp.size();
-    for (std::size_t index = 0; index < nbfiles; ++index) {
-        const QString path = filePath(index);
-        const QString ext = Utils::Fs::fileExtension(path);
-        if (Utils::Misc::isPreviewable(ext) && (fp[index] > dont_download)) {
-            qDebug() << "File" << path << "is previewable, toggle downloading of first/last pieces first";
+    // Download first and last pieces first for every file in the torrent
+    for (std::size_t index = 0; index < filePriorities.size(); ++index) {
+        const auto filePrio = filePriorities[index];
+        if (filePrio <= dont_download)
+            continue;
 
-            // Determine the priority to set
-            auto prio = b ? top_priority : fp[index];
+        // Determine the priority to set
+        const int newPrio = enabled ? top_priority : filePrio;
+        const TorrentInfo::PieceRange extremities = info().filePieces(index);
 
-            TorrentInfo::PieceRange extremities = info().filePieces(index);
-
-            // worst case: AVI index = 1% of total file size (at the end of the file)
-            int nNumPieces = ceil(fileSize(index) * 0.01 / pieceLength());
-            for (int i = 0; i < nNumPieces; ++i) {
-                pp[boost::numeric_cast<std::size_t>(extremities.first() + i)] = prio;
-                pp[boost::numeric_cast<std::size_t>(extremities.last() - i)] = prio;
-            }
+        // worst case: AVI index = 1% of total file size (at the end of the file)
+        const int nNumPieces = std::ceil(fileSize(index) * 0.01 / pieceLength());
+        for (int i = 0; i < nNumPieces; ++i) {
+            piecePriorities[boost::numeric_cast<std::size_t>(extremities.first() + i)] = newPrio;
+            piecePriorities[boost::numeric_cast<std::size_t>(extremities.last() - i)] = newPrio;
         }
     }
 
-    m_nativeHandle.prioritize_pieces(pp);
+    m_nativeHandle.prioritize_pieces(piecePriorities);
+
+    LogMsg(tr("Download first and last piece first: %1, torrent: '%2'")
+        .arg((enabled ? tr("On") : tr("Off")), name()));
 }
 
 void TorrentHandle::toggleFirstLastPiecePriority()
@@ -1484,6 +1488,7 @@ void TorrentHandle::moveStorage(const QString &newPath, bool overwrite)
 #endif
         m_moveStorageInfo.oldPath = oldPath;
         m_moveStorageInfo.newPath = newPath;
+        updateState();
     }
 }
 
@@ -1550,8 +1555,8 @@ void TorrentHandle::handleStorageMovedAlert(const libtorrent::storage_moved_aler
         return;
     }
 
-    qDebug("Torrent is successfully moved from %s to %s"
-        , qUtf8Printable(m_moveStorageInfo.oldPath), qUtf8Printable(m_moveStorageInfo.newPath));
+    LogMsg(tr("Successfully moved torrent: %1. New path: %2").arg(name(), m_moveStorageInfo.newPath));
+
     const QDir oldDir {m_moveStorageInfo.oldPath};
     if ((oldDir == QDir(m_session->torrentTempPath(info())))
             && (oldDir != QDir(m_session->tempPath()))) {
@@ -1560,9 +1565,10 @@ void TorrentHandle::handleStorageMovedAlert(const libtorrent::storage_moved_aler
         qDebug() << "Removing torrent temp folder:" << m_moveStorageInfo.oldPath;
         Utils::Fs::smartRemoveEmptyFolderTree(m_moveStorageInfo.oldPath);
     }
-    updateStatus();
 
     m_moveStorageInfo.newPath.clear();
+    updateStatus();
+
     if (!m_moveStorageInfo.queuedPath.isEmpty()) {
         moveStorage(m_moveStorageInfo.queuedPath, m_moveStorageInfo.queuedOverwrite);
         m_moveStorageInfo.queuedPath.clear();
@@ -1588,6 +1594,8 @@ void TorrentHandle::handleStorageMovedFailedAlert(const libtorrent::storage_move
         .arg(name(), QString::fromStdString(p->message())), Log::CRITICAL);
 
     m_moveStorageInfo.newPath.clear();
+    updateStatus();
+
     if (!m_moveStorageInfo.queuedPath.isEmpty()) {
         moveStorage(m_moveStorageInfo.queuedPath, m_moveStorageInfo.queuedOverwrite);
         m_moveStorageInfo.queuedPath.clear();

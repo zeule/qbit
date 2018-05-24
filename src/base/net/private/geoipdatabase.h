@@ -29,14 +29,12 @@
 #ifndef GEOIPDATABASE_H
 #define GEOIPDATABASE_H
 
-#include <QtGlobal>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QVariant>
 
-class QHostAddress;
-class QString;
 class QByteArray;
+class QHostAddress;
 
 struct DataFieldDescriptor;
 

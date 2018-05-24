@@ -154,6 +154,8 @@ namespace BitTorrent
         PausedDownloading,
         PausedUploading,
 
+        Moving,
+
         MissingFiles,
         Error
     };
@@ -336,7 +338,7 @@ namespace BitTorrent
         void setName(const QString &name);
         void setSequentialDownload(bool b);
         void toggleSequentialDownload();
-        void setFirstLastPiecePriority(bool b);
+        void setFirstLastPiecePriority(bool enabled);
         void toggleFirstLastPiecePriority();
         void pause();
         void resume(bool forced = false);

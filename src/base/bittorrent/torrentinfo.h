@@ -39,11 +39,11 @@
 
 #include "base/indexrange.h"
 
-class QString;
-class QUrl;
-class QDateTime;
-class QStringList;
 class QByteArray;
+class QDateTime;
+class QString;
+class QStringList;
+class QUrl;
 
 namespace BitTorrent
 {
@@ -107,6 +107,7 @@ namespace BitTorrent
 
         void renameFile(int index, const QString &newPath);
 
+        QString rootFolder() const;
         bool hasRootFolder() const;
         void stripRootFolder();
 
