@@ -1,3 +1,5 @@
+find_package(Qt5 COMPONENTS Widgets) # to conditionally install desktop-related files
+
 set(ADDITIONAL_THEME_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/theme/Classic.colortheme
     ${CMAKE_CURRENT_SOURCE_DIR}/theme/AlternativeDark.colortheme
