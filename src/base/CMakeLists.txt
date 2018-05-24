@@ -147,7 +147,7 @@ if (Qt5Widgets_FOUND)
     target_link_libraries(qbt_base PUBLIC Qt5::Gui Qt5::Widgets)
 endif (Qt5Widgets_FOUND)
 
-if (Qt5Dbus_FOUND)
+if (Qt5DBus_FOUND)
     target_link_libraries(qbt_base PRIVATE Qt5::DBus)
 endif ()
 
