@@ -174,5 +174,6 @@ install(TARGETS qBittorrent
     COMPONENT runtime)
 
 if (Qt5Widgets_FOUND AND APPLE)
+    find_package(Qt5 REQUIRED COMPONENTS Svg)
     include(bundle)
 endif (Qt5Widgets_FOUND AND APPLE)
