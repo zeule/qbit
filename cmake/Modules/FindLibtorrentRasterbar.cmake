@@ -108,7 +108,7 @@ else()
     if(LibtorrentRasterbar_ENCRYPTION_INDEX GREATER -1)
         find_package(OpenSSL QUIET REQUIRED)
         set(LibtorrentRasterbar_LIBRARIES ${LibtorrentRasterbar_LIBRARIES} ${OPENSSL_LIBRARIES})
-        set(LibtorrentRasterbar_INCLUDE_DIRS ${LibtorrentRasterbar_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIRS})
+        set(LibtorrentRasterbar_INCLUDE_DIRS ${LibtorrentRasterbar_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
         set(LibtorrentRasterbar_OPENSSL_ENABLED ON)
     endif()
 
@@ -127,6 +127,14 @@ else()
 
     if (LibtorrentRasterbar_FOUND AND NOT TARGET LibtorrentRasterbar::torrent-rasterbar)
         add_library(LibtorrentRasterbar::torrent-rasterbar SHARED IMPORTED)
+        # LibtorrentRasterbar_DEFINITIONS contains mix of -D, -f, and possible -std options
+        # let's split them into definitions and options
+        set(LibtorrentRasterbar_defines "${LibtorrentRasterbar_DEFINITIONS}")
+        set(LibtorrentRasterbar_options "${LibtorrentRasterbar_DEFINITIONS}")
+        list(FILTER LibtorrentRasterbar_defines INCLUDE REGEX "(^|;)-D.+")
+        list(FILTER LibtorrentRasterbar_options EXCLUDE REGEX "(^|;)-D.+")
+        # remove '-D' from LibtorrentRasterbar_defines
+        string(REGEX REPLACE "(^|;)(-D)" "\\1" LibtorrentRasterbar_defines "${LibtorrentRasterbar_defines}")
 
         set_target_properties(LibtorrentRasterbar::torrent-rasterbar PROPERTIES
             IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
@@ -134,7 +142,8 @@ else()
             INTERFACE_INCLUDE_DIRECTORIES "${LibtorrentRasterbar_INCLUDE_DIRS}"
             INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${LibtorrentRasterbar_INCLUDE_DIRS}"
             INTERFACE_LINK_LIBRARIES "${LibtorrentRasterbar_LIBRARIES}"
-            INTERFACE_COMPILE_DEFINITIONS "${LibtorrentRasterbar_DEFINITIONS}"
+            INTERFACE_COMPILE_DEFINITIONS "${LibtorrentRasterbar_defines}"
+            INTERFACE_COMPILE_OPTIONS "${LibtorrentRasterbar_options}"
         )
     endif()
 endif()
