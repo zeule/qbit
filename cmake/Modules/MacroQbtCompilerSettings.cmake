@@ -52,19 +52,19 @@ macro(qbt_set_compiler_options)
             endif(${GLIBC_VERSION})
         endif (CMAKE_SYSTEM_NAME MATCHES Linux)
 
-        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
             # Clang 5.0 still doesn't support -Wstrict-null-sentinel
             check_cxx_compiler_flag(-Wstrict-null-sentinel _STRICT_NULL_SENTINEL_IS_SUPPORTED)
             if (_STRICT_NULL_SENTINEL_IS_SUPPORTED)
                 list(APPEND _GCC_COMMON_CXX_FLAGS "-Wstrict-null-sentinel")
             endif (_STRICT_NULL_SENTINEL_IS_SUPPORTED)
 
-            # Code should be improved to render this not needed
+            # Code should be improved to render this unneeded
             list(APPEND _GCC_COMMON_CXX_FLAGS "-Wno-error=unused-function -Wno-error=inconsistent-missing-override")
-        else ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        else ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
             # GCC supports it
             list(APPEND _GCC_COMMON_CXX_FLAGS "-Wstrict-null-sentinel")
-        endif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        endif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
         string(REPLACE ";" " " _GCC_COMMON_C_AND_CXX_FLAGS_STRING "${_GCC_COMMON_C_AND_CXX_FLAGS}")
         string(REPLACE ";" " " _GCC_COMMON_CXX_FLAGS_STRING "${_GCC_COMMON_CXX_FLAGS}")
