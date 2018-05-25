@@ -89,6 +89,10 @@ before_install:
 
       COMPILER_VERSION=7
       export CXX="${CXX}-${COMPILER_VERSION}" CC="${CC}-${COMPILER_VERSION}"
+      # There is an outdated cmake in /usr/local/cmake-<version> which we don't want to use
+      # but /usr/local/cmake-<version>/bin is in $PATH, therefore
+      # remove all paths containing 'cmake' to use the executable from /usr/bin
+      export PATH=`echo ${PATH} | awk -v RS=: -v ORS=: '/cmake/ {next} {print}'`
     fi
 
   # print settings
