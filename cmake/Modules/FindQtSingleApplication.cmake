@@ -68,10 +68,23 @@ IF (QtSingleApplication_LIBRARY AND QtSingleApplication_INCLUDE_DIR)
 ENDIF (QtSingleApplication_LIBRARY AND QtSingleApplication_INCLUDE_DIR)
 
 IF (QtSingleApplication_FOUND)
-  IF (NOT QtSingleApplication_FIND_QUIETLY)
-    MESSAGE(STATUS "Found QtSingleApplication: ${QtSingleApplication_LIBRARY}")
-    MESSAGE(STATUS "         includes: ${QtSingleApplication_INCLUDE_DIR}")
-  ENDIF (NOT QtSingleApplication_FIND_QUIETLY)
+    IF (NOT QtSingleApplication_FIND_QUIETLY)
+        MESSAGE(STATUS "Found QtSingleApplication: ${QtSingleApplication_LIBRARY}")
+        MESSAGE(STATUS "         includes: ${QtSingleApplication_INCLUDE_DIR}")
+    ENDIF (NOT QtSingleApplication_FIND_QUIETLY)
+    if(NOT TARGET QtSingleApplication::QtSingleApplication)
+        add_library(QtSingleApplication::QtSingleApplication UNKNOWN IMPORTED)
+        set_target_properties(QtSingleApplication::QtSingleApplication PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${QtSingleApplication_INCLUDE_DIR}"
+            INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${QtSingleApplication_INCLUDE_DIR}"
+        )
+        if(EXISTS "${QtSingleApplication_LIBRARY}")
+        set_target_properties(QtSingleApplication::QtSingleApplication PROPERTIES
+            IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+            IMPORTED_LOCATION "${QtSingleApplication_LIBRARY}")
+        endif()
+    endif(NOT TARGET QtSingleApplication::QtSingleApplication)
+
 ELSE (QtSingleApplication_FOUND)
   IF (QtSingleApplication_FIND_REQUIRED)
     MESSAGE(FATAL_ERROR "Could not find QtSingleApplication library")
@@ -79,16 +92,3 @@ ELSE (QtSingleApplication_FOUND)
 ENDIF (QtSingleApplication_FOUND)
 
 MARK_AS_ADVANCED(QtSingleApplication_INCLUDE_DIR QtSingleApplication_LIBRARY)
-
-if(NOT TARGET QtSingleApplication::QtSingleApplication)
-    add_library(QtSingleApplication::QtSingleApplication UNKNOWN IMPORTED)
-    set_target_properties(QtSingleApplication::QtSingleApplication PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${QtSingleApplication_INCLUDE_DIR}"
-        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${QtSingleApplication_INCLUDE_DIR}"
-    )
-    if(EXISTS "${QtSingleApplication_LIBRARY}")
-    set_target_properties(QtSingleApplication::QtSingleApplication PROPERTIES
-        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-        IMPORTED_LOCATION "${QtSingleApplication_LIBRARY}")
-    endif()
-endif(NOT TARGET QtSingleApplication::QtSingleApplication)
