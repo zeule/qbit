@@ -163,7 +163,11 @@ QDateTime TorrentInfo::creationDate() const
 {
     if (!isValid()) return QDateTime();
     const auto t = m_nativeInfo->creation_date();
+#if LIBTORRENT_VERSION_NUM < 10200
+    return t ? QDateTime::fromTime_t(*t) : QDateTime();
+#else
     return t ? QDateTime::fromTime_t(t) : QDateTime();
+#endif
 }
 
 QString TorrentInfo::creator() const

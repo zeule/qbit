@@ -52,7 +52,7 @@ namespace
     bool isEntryFailing(const libtorrent::announce_entry& entry)
     {
 #if LIBTORRENT_VERSION_NUM < 10200
-        return entry.fails > 0
+        return entry.fails > 0;
 #else
         return std::any_of(entry.endpoints.begin(), entry.endpoints.end(),
             [](const libtorrent::announce_endpoint& aep) { return aep.fails > 0; }

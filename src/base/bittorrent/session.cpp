@@ -4288,7 +4288,7 @@ namespace
     std::pair<libt::address, int> alertAddressAndPort(const AlertType* a)
     {
 #if LIBTORRENT_VERSION_NUM < 10200
-        return std::make_pair(a->endpoint.address(), a->endpoint().port());
+        return std::make_pair(a->endpoint.address(), a->endpoint.port());
 #else
         return std::make_pair(a->address, a->port);
 #endif
@@ -4420,9 +4420,9 @@ void Session::handleSessionStatsAlert(libt::session_stats_alert *p)
     const auto dhtDownload = counters[m_metricIndices.dht.dhtBytesIn];
     const auto dhtUpload = counters[m_metricIndices.dht.dhtBytesOut];
 
-    auto calcRate = [interval](quint64 previous, qint64 current)
+    auto calcRate = [interval](auto previous, auto current)
     {
-        Q_ASSERT(current >= boost::numeric_cast<qint64>(previous));
+        Q_ASSERT(boost::numeric_cast<qint64>(current) >= boost::numeric_cast<qint64>(previous));
         return static_cast<quint64>((boost::numeric_cast<quint64>(current) - previous) / interval);
     };
 

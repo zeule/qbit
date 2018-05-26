@@ -1721,9 +1721,18 @@ void TorrentHandle::handleTorrentResumedAlert(const libtorrent::torrent_resumed_
 
 void TorrentHandle::handleSaveResumeDataAlert(const libtorrent::save_resume_data_alert *p)
 {
+    const auto getAlertResumeData = [](const libtorrent::save_resume_data_alert *p)
+    {
+#if LIBTORRENT_VERSION_NUM < 10200
+        return *(p->resume_data);
+#else
+        return libt::write_resume_data(p->params);
+#endif
+    };
+
     const bool useDummyResumeData = !p;
 
-    libtorrent::entry resumeData = useDummyResumeData ? libtorrent::entry() : libt::write_resume_data(p->params);
+    libtorrent::entry resumeData = useDummyResumeData ? libtorrent::entry() : getAlertResumeData(p);
     if (useDummyResumeData) {
         resumeData["qBt-magnetUri"] = toMagnetUri().toStdString();
         resumeData["qBt-paused"] = isPaused();
