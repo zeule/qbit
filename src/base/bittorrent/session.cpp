@@ -153,7 +153,7 @@ namespace
     {
         return QString::fromStdString(str);
     }
-#ifdef HAVE_LIBTORRENT_STRING_VIEW_HPP
+#if __has_include(<libtorrent/string_view.hpp>)
     // ... if libtorrent uses string_view, we need the second overload only in this file.
     inline QString fromStdString(const libtorrent::string_view& str)
     {

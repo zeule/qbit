@@ -4,14 +4,10 @@ set(CMAKE_CXX_STANDARD "17")
 include(MacroQbtCompilerSettings)
 qbt_set_compiler_options()
 
-include(CheckIncludeFileCXX)
 include(QbtTargetSources)
 
 find_package(Boost 1.56 REQUIRED)
 find_package(LibtorrentRasterbar REQUIRED)
-
-set(CMAKE_REQUIRED_INCLUDES ${LibtorrentRasterbar_INCLUDE_DIR})
-check_include_file_cxx(libtorrent/string_view.hpp HAVE_LIBTORRENT_STRING_VIEW_HPP)
 
 # Qt
 set(requiredQtVersion 5.9)
