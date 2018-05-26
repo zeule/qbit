@@ -29,8 +29,10 @@
 #ifndef QBT_BITTORRENT_INDEX_H
 #define QBT_BITTORRENT_INDEX_H
 
-#include <libtorrent/units.hpp>
 #include <libtorrent/version.hpp>
+#if LIBTORRENT_VERSION_NUM >= 10200
+#include <libtorrent/units.hpp>
+#endif
 
 namespace BitTorrent
 {
@@ -61,11 +63,6 @@ namespace BitTorrent
     }
 
     inline int makePieceIndex(int index)
-    {
-        return index;
-    }
-
-    inline int indexValue(int index)
     {
         return index;
     }
