@@ -829,8 +829,8 @@ bool TorrentHandle::hasFirstLastPiecePriority() const
             continue;
 
         const TorrentInfo::PieceRange extremities = info().filePieces(i);
-        const int firstPiecePrio = nativeHandle().piece_priority(extremities.first());
-        const int lastPiecePrio = nativeHandle().piece_priority(extremities.last());
+        const auto firstPiecePrio = nativeHandle().piece_priority(makePieceIndex(extremities.first()));
+        const auto lastPiecePrio = nativeHandle().piece_priority(makePieceIndex(extremities.last()));
         return ((firstPiecePrio == top_priority) && (lastPiecePrio == top_priority));
     }
 
@@ -1408,7 +1408,7 @@ void TorrentHandle::setFirstLastPiecePriority(const bool enabled)
             continue;
 
         // Determine the priority to set
-        const int newPrio = enabled ? top_priority : filePrio;
+        const auto newPrio = enabled ? top_priority : filePrio;
         const TorrentInfo::PieceRange extremities = info().filePieces(index);
 
         // worst case: AVI index = 1% of total file size (at the end of the file)
