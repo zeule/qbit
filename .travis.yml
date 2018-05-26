@@ -134,7 +134,7 @@ install:
         git clone --depth 1 --branch ${lt_branch} https://github.com/arvidn/libtorrent.git .
         mkdir -p cbuild/debug
         pushd cbuild/debug
-        cmake -DCMAKE_BUILD_TYPE=Debug "${MY_CMAKE_OPENSSL_HINT}" -G Ninja ../..
+        cmake -DCMAKE_BUILD_TYPE=Debug -Ddeprecated-functions=OFF "${MY_CMAKE_OPENSSL_HINT}" -G Ninja ../..
         cmake --build . && sudo cmake --build . --target install
         popd
         popd
@@ -148,7 +148,6 @@ install:
 script:
   - if [ "$TRAVIS_BRANCH" = "$coverity_branch" ]; then exit ; fi # skip usual build when running coverity scan
   - |
-    export CXXFLAGS="-DTORRENT_NO_DEPRECATE"
     cd "$TRAVIS_BUILD_DIR"
     mkdir build
     cd build
