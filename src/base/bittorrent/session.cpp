@@ -2230,15 +2230,15 @@ bool Session::addTorrent_impl(AddTorrentData addData, const MagnetUri &magnetUri
         p.storage_mode = libt::storage_mode_sparse;
 #if LIBTORRENT_VERSION_NUM < 10200
     p.flags |= libt::add_torrent_params::flag_paused; // Start in pause
-    p.flags &= ~libt::add_torrent_params::flag_auto_managed; // Because it is added in paused state
-    p.flags &= ~libt::add_torrent_params::flag_duplicate_is_error; // Already checked
+    p.flags &= static_cast<decltype(p.flags)>(~libt::add_torrent_params::flag_auto_managed); // Because it is added in paused state
+    p.flags &= static_cast<decltype(p.flags)>(~libt::add_torrent_params::flag_duplicate_is_error); // Already checked
 
     // Seeding mode
     // Skip checking and directly start seeding (new in libtorrent v0.15)
     if (addData.skipChecking)
         p.flags |= libt::add_torrent_params::flag_seed_mode;
     else
-        p.flags &= ~libt::add_torrent_params::flag_seed_mode;
+        p.flags &= static_cast<decltype(p.flags)>(~libt::add_torrent_params::flag_seed_mode);
 #else
     p.flags |= libt::torrent_flags::paused; // Start in pause
     p.flags |= libt::torrent_flags::auto_managed; // Because it is added in paused state
@@ -2331,8 +2331,8 @@ bool Session::loadMetadata(const MagnetUri &magnetUri)
 
     // Forced start
 #if LIBTORRENT_VERSION_NUM < 10200
-    p.flags &= ~libt::add_torrent_params::flag_paused;
-    p.flags &= ~libt::add_torrent_params::flag_auto_managed;
+    p.flags &= static_cast<decltype(p.flags)>(~libt::add_torrent_params::flag_paused);
+    p.flags &= static_cast<decltype(p.flags)>(~libt::add_torrent_params::flag_auto_managed);
 #else
     p.flags &= ~libt::torrent_flags::paused;
     p.flags &= ~libt::torrent_flags::auto_managed;
