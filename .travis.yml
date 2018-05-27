@@ -17,6 +17,9 @@ env:
     - coverity_branch: coverity_scan
 
 matrix:
+  exclude:
+    - os: osx
+      env: lt_branch=RC_1_1 # does not build due to the absent auto_ptr in xcode9.3
 
 branches:
   except:
