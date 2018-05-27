@@ -1548,7 +1548,7 @@ void MainWindow::updateGUI()
 #else
     if (status.payloadDownloadRate > 0)
         QtMac::setBadgeLabelText(tr("%1/s", "s is a shorthand for seconds")
-            .arg(Utils::Misc::friendlyUnit(status.payloadDownloadRate)));
+            .arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadDownloadRate))));
     else if (!QtMac::badgeLabelText().isEmpty())
         QtMac::setBadgeLabelText("");
 #endif // Q_OS_MAC
