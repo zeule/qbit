@@ -1114,7 +1114,7 @@ std::chrono::seconds TorrentHandle::timeSinceUpload() const
 #if LIBTORRENT_VERSION_NUM < 10200
     return std::chrono::seconds(m_nativeStatus.time_since_upload);
 #else
-    return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - m_nativeStatus.last_upload);
+    return std::chrono::duration_cast<std::chrono::seconds>(libt::clock_type::now() - m_nativeStatus.last_upload);
 #endif
 }
 
@@ -1123,7 +1123,7 @@ std::chrono::seconds TorrentHandle::timeSinceDownload() const
 #if LIBTORRENT_VERSION_NUM < 10200
     return std::chrono::seconds(m_nativeStatus.time_since_download);
 #else
-    return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - m_nativeStatus.last_download);
+    return std::chrono::duration_cast<std::chrono::seconds>(libt::clock_type::now() - m_nativeStatus.last_download);
 #endif
 }
 
