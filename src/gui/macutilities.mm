@@ -60,13 +60,13 @@ namespace MacUtils
         SEL shouldHandle = sel_registerName("applicationShouldHandleReopen:hasVisibleWindows:");
 
         if (class_getInstanceMethod(delClass, shouldHandle)) {
-            if (class_replaceMethod(delClass, shouldHandle, (IMP)dockClickHandler, "B@:"))
+            if (class_replaceMethod(delClass, shouldHandle, static_cast<IMP>(dockClickHandler), "B@:"))
                 qDebug("Registered dock click handler (replaced original method)");
             else
                 qWarning("Failed to replace method for dock click handler");
         }
         else {
-            if (class_addMethod(delClass, shouldHandle, (IMP)dockClickHandler, "B@:"))
+            if (class_addMethod(delClass, shouldHandle, static_cast<IMP>(dockClickHandler), "B@:"))
                 qDebug("Registered dock click handler");
             else
                 qWarning("Failed to register dock click handler");
@@ -88,7 +88,7 @@ namespace MacUtils
     void openFiles(const QSet<QString> &pathsList)
     {
         @autoreleasepool {
-            NSMutableArray *pathURLs = [NSMutableArray arrayWithCapacity:pathsList.size()];
+            NSMutableArray *pathURLs = [NSMutableArray arrayWithCapacity:static_cast<unsigned>(pathsList.size())];
 
             for (const auto &path : pathsList)
                 [pathURLs addObject:[NSURL fileURLWithPath:path.toNSString()]];

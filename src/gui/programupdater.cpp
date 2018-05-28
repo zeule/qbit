@@ -39,6 +39,8 @@
 #include "base/net/downloadhandler.h"
 #include "programupdater.h"
 
+#include "config.h"
+
 namespace
 {
     const QString RSS_URL {QStringLiteral("https://www.fosshub.com/software/feedqBittorent")};
