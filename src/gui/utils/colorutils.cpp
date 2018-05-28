@@ -38,7 +38,7 @@
 
 #ifdef __clang__
 #pragma clang diagnostic push
-#pragma clanf diagnostic ignored "-Wfloat-equal"
+#pragma clang diagnostic ignored "-Wfloat-equal"
 #endif
 
 // BEGIN internal helper functions
