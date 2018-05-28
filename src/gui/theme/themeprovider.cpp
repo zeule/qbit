@@ -220,7 +220,7 @@ void Theme::ThemeProvider::setCurrentTheme(Kind kind, const QString &themeName)
             SettingsStorage::instance()->storeValue(selectedColorThemeKey, themeName);
         }
         catch (Serialization::DeserializationError &er) {
-            qCInfo(theme) << "Could not load color theme '" << themeName << "': " << er.what();
+            qCInfo(theme, "Could not load color theme '%s': %s", qUtf8Printable(themeName), er.what());
             throw;
         }
         break;
@@ -233,7 +233,7 @@ void Theme::ThemeProvider::setCurrentTheme(Kind kind, const QString &themeName)
             SettingsStorage::instance()->storeValue(selectedFontThemeKey, themeName);
         }
         catch (Serialization::DeserializationError &er) {
-            qCInfo(theme) << "Could not load font theme '" << themeName << "': " << er.what();
+            qCInfo(theme, "Could not load color theme '%s': %s", qUtf8Printable(themeName), er.what());
             throw;
         }
         break;
