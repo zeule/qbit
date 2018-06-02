@@ -1,8 +1,6 @@
 project(qbt_executable)
 
-add_executable(qBittorrent)
-
-target_sources(qBittorrent PRIVATE
+add_executable(qBittorrent
 application.h
 cmdoptions.h
 filelogger.h

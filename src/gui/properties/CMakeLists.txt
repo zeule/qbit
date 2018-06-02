@@ -30,10 +30,10 @@ speedwidget.cpp
 speedplotview.cpp
 )
 
-target_link_libraries(qbt_properties PUBLIC qbt_base Qt5::Widgets)
+target_link_libraries(qbt_properties PUBLIC qbt_base qbt_lineedit Qt5::Widgets)
 target_include_directories(qbt_properties
     PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ../lineedit/src/
 )

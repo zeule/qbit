@@ -4,3 +4,4 @@ src/lineedit.h
 )
 
 target_link_libraries(qbt_lineedit PUBLIC Qt5::Widgets)
+target_include_directories(qbt_lineedit PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)

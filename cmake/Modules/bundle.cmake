@@ -18,4 +18,6 @@ elseif(WIN32)
 endif()
 
 get_target_property(exe qBittorrent OUTPUT_NAME)
-install_qt5_executable("${exe}${sfx}" "${plugins}" "" "" "")
+get_target_property(libtorrent_location LibtorrentRasterbar::torrent-rasterbar LOCATION)
+get_filename_component(libtorrent_lib_dir "${libtorrent_location}" DIRECTORY)
+install_qt5_executable("${exe}${sfx}" "${plugins}" "" "${libtorrent_lib_dir}" "")

@@ -37,6 +37,11 @@ macro(qbt_set_compiler_options)
             list(APPEND _GCC_COMMON_CXX_FLAGS "-Wpedantic")
         endif (_PEDANTIC_IS_SUPPORTED)
 
+        check_cxx_compiler_flag(-Wformat-security _WFORMAT_SECURITY_IS_SUPPORTED)
+        if (_WFORMAT_SECURITY_IS_SUPPORTED)
+            list(APPEND _GCC_COMMON_C_AND_CXX_FLAGS -Wformat-security)
+        endif()
+
         if (CMAKE_SYSTEM_NAME MATCHES Linux)
             # if Glibc version is 2.20 or higher, set -D_DEFAULT_SOURCE
             include(MacroGlibcDetect)

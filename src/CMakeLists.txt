@@ -28,6 +28,11 @@ set_package_properties(Qt5DBus PROPERTIES
 
 set(CMAKE_AUTOMOC True)
 list(APPEND CMAKE_AUTORCC_OPTIONS -compress 9 -threshold 5)
+if (APPLE)
+    # Workaround CMake bug (autogen does not pass required parameters to moc)
+    # Relevant issue: https://gitlab.kitware.com/cmake/cmake/issues/18041
+    list(APPEND CMAKE_AUTOMOC_MOC_OPTIONS -DQ_OS_MAC -DQ_OS_DARWIN)
+endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -35,10 +40,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_definitions(-DQT_NO_CAST_TO_ASCII)
 # Efficient construction for QString & QByteArray (Qt >= 4.8)
 add_definitions(-DQT_USE_QSTRINGBUILDER)
-
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-    add_compile_options(-Wformat -Wformat-security)
-endif ()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Project is built in DEBUG mode.")

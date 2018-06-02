@@ -5,6 +5,7 @@ powermanagement.cpp
 
 target_link_libraries(qbt_powermanagement PUBLIC Qt5::Core)
 set_target_properties(qbt_powermanagement PROPERTIES AUTOUIC False AUTORCC False)
+target_include_directories(qbt_powermanagement PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (UNIX AND Qt5DBus_FOUND)
     find_package(X11)

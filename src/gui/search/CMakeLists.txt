@@ -20,5 +20,9 @@ set(QBT_SEARCHENGINE_RESOURCES
 # search.qrc
 )
 
-target_link_libraries(qbt_searchengine PUBLIC qbt_base)
-target_include_directories(qbt_searchengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../lineedit/src)
+target_link_libraries(qbt_searchengine
+    PUBLIC
+        qbt_base
+    PRIVATE
+        qbt_lineedit
+)
