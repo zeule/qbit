@@ -6,24 +6,17 @@ os:
 osx_image: xcode9.3
 
 env:
-  matrix:
-    - lt_branch=master gui=1 webui=1
-    - lt_branch=RC_1_1 gui=1 webui=1
-    - lt_branch=master gui=0 webui=1
-    - lt_branch=master webui=0
-  global:
-    - secure: "OI9CUjj4lTb0HwwIZU5PbECU3hLlAL6KC8KsbwohG8/O3j5fLcnmDsK4Ad9us5cC39sS11Jcd1kDP2qRcCuST/glVNhLkcjKkiQerOfd5nQ/qL4JYfz/1mfP5mdpz9jHKzpLUIG+TXkbSTjP6VVmsb5KPT+3pKEdRFZB+Pu9+J8="
-    - coverity_branch: coverity_scan
+  - lt_branch=master
+  - lt_branch=RC_1_1
+  - gui=1
+  - gui=0
+  - webui=1
+  - webui=0
 
 matrix:
   exclude:
     - os: osx
-      env: lt_branch=RC_1_1 gui=1 webui=1# does not build due to the absent auto_ptr in xcode >= 9.3
-
-branches:
-  except:
-    - search_encoding_windows
-    - v2_9_x
+      env: lt_branch=RC_1_1 gui=1 webui=1 # does not build due to the absent auto_ptr in xcode >= 9.3
 
 notifications:
   email:
