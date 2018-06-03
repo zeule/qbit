@@ -31,10 +31,6 @@
 
 #include <algorithm>
 
-#ifdef Q_OS_WIN
-#include <memory>
-#endif
-
 #include <QAtomicInt>
 #include <QDebug>
 #include <QFileInfo>
@@ -43,24 +39,10 @@
 #include <QProcess>
 #include <QSysInfo>
 
-#include "base/bittorrent/session.h"
-#include "base/bittorrent/torrenthandle.h"
-#include "base/iconprovider.h"
-#include "base/logger.h"
-#include "base/net/downloadmanager.h"
-#include "base/net/geoipmanager.h"
-#include "base/net/proxyconfigurationmanager.h"
-#include "base/net/smtp.h"
-#include "base/preferences.h"
-#include "base/profile.h"
-#include "base/rss/rss_autodownloader.h"
-#include "base/rss/rss_session.h"
-#include "base/scanfoldersmodel.h"
-#include "base/settingsstorage.h"
-#include "base/utils/fs.h"
-#include "base/utils/misc.h"
-#include "base/utils/string.h"
-#include "filelogger.h"
+#ifdef Q_OS_WIN
+#include <memory>
+#include <Shellapi.h>
+#endif
 
 #ifndef DISABLE_GUI
 
@@ -86,9 +68,24 @@
 #include <cstdio>
 #endif // DISABLE_GUI
 
-#ifdef Q_OS_WIN
-#include <Shellapi.h>
-#endif
+#include "base/bittorrent/session.h"
+#include "base/bittorrent/torrenthandle.h"
+#include "base/iconprovider.h"
+#include "base/logger.h"
+#include "base/net/downloadmanager.h"
+#include "base/net/geoipmanager.h"
+#include "base/net/proxyconfigurationmanager.h"
+#include "base/net/smtp.h"
+#include "base/preferences.h"
+#include "base/profile.h"
+#include "base/rss/rss_autodownloader.h"
+#include "base/rss/rss_session.h"
+#include "base/scanfoldersmodel.h"
+#include "base/settingsstorage.h"
+#include "base/utils/fs.h"
+#include "base/utils/misc.h"
+#include "base/utils/string.h"
+#include "filelogger.h"
 
 #ifndef DISABLE_WEBUI
 #include "webui/webui.h"
@@ -108,7 +105,7 @@ namespace
     const QString KEY_FILELOGGER_AGE = FILELOGGER_SETTINGS_KEY("Age");
     const QString KEY_FILELOGGER_AGETYPE = FILELOGGER_SETTINGS_KEY("AgeType");
 
-    //just a shortcut
+    // just a shortcut
     inline SettingsStorage *settings() { return  SettingsStorage::instance(); }
 
     const QString LOG_FOLDER("logs");
@@ -267,12 +264,12 @@ void Application::setFileLoggerAge(const int value)
 int Application::fileLoggerAgeType() const
 {
     int val = settings()->loadValue(KEY_FILELOGGER_AGETYPE, 1).toInt();
-    return (val < 0 || val > 2) ? 1 : val;
+    return ((val < 0) || (val > 2)) ? 1 : val;
 }
 
 void Application::setFileLoggerAgeType(const int value)
 {
-    settings()->storeValue(KEY_FILELOGGER_AGETYPE, (value < 0 || value > 2) ? 1 : value);
+    settings()->storeValue(KEY_FILELOGGER_AGETYPE, ((value < 0) || (value > 2)) ? 1 : value);
 }
 
 void Application::processMessage(const QString &message)
@@ -344,12 +341,12 @@ void Application::runExternalProgram(const BitTorrent::TorrentHandle *torrent) c
 void Application::sendNotificationEmail(const BitTorrent::TorrentHandle *torrent)
 {
     // Prepare mail content
-    const QString content = tr("Torrent name: %1").arg(torrent->name()) + "\n"
-        + tr("Torrent size: %1").arg(Utils::Misc::friendlyUnit(torrent->wantedSize())) + "\n"
+    const QString content = tr("Torrent name: %1").arg(torrent->name()) + '\n'
+        + tr("Torrent size: %1").arg(Utils::Misc::friendlyUnit(torrent->wantedSize())) + '\n'
         + tr("Save path: %1").arg(torrent->savePath()) + "\n\n"
         + tr("The torrent was downloaded in %1.", "The torrent was downloaded in 1 hour and 20 seconds")
             .arg(Utils::Misc::userFriendlyDuration(torrent->activeTime())) + "\n\n\n"
-        + tr("Thank you for using qBittorrent.") + "\n";
+        + tr("Thank you for using qBittorrent.") + '\n';
 
     // Send the notification email
     const Preferences *pref = Preferences::instance();
@@ -534,7 +531,7 @@ int Application::exec(const QStringList &params)
 
 #ifdef DISABLE_GUI
 #ifndef DISABLE_WEBUI
-    Preferences* const pref = Preferences::instance();
+    Preferences *const pref = Preferences::instance();
     // Display some information to the user
     const QString mesg = QString("\n******** %1 ********\n").arg(tr("Information"))
         + tr("To control qBittorrent, access the Web UI at %1")
@@ -630,7 +627,7 @@ bool Application::notify(QObject *receiver, QEvent *event)
 
 void Application::initializeTranslation()
 {
-    Preferences* const pref = Preferences::instance();
+    Preferences *const pref = Preferences::instance();
     // Load translation
     QString localeStr = pref->getLocale();
 
@@ -696,7 +693,7 @@ void Application::cleanup()
 
 #ifndef DISABLE_GUI
     if (m_window) {
-        // Hide the window and not leave it on screen as
+        // Hide the window and don't leave it on screen as
         // unresponsive. Also for Windows take the WinId
         // after it's hidden, because hide() may cause a
         // WinId change.

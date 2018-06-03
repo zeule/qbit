@@ -30,6 +30,7 @@
 
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QPixmapCache>
 #include <QScreen>
 #include <QStyle>
 #include <QWidget>
@@ -45,16 +46,21 @@ void Utils::Gui::resize(QWidget *widget, const QSize &newSize)
 
 qreal Utils::Gui::screenScalingFactor(const QWidget *widget)
 {
+    if (!widget)
+        return 1;
+
 #ifdef Q_OS_WIN
     const int screen = qApp->desktop()->screenNumber(widget);
     return (QApplication::screens()[screen]->logicalDotsPerInch() / 96);
+#elif defined(Q_OS_MAC)
+    return 1;
 #else
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
     return widget->devicePixelRatioF();
 #else
     return widget->devicePixelRatio();
 #endif
-#endif  // Q_OS_WIN
+#endif
 }
 
 QPixmap Utils::Gui::scaledPixmap(const QPixmap &pixmap, const QWidget *widget, const int height)
@@ -63,10 +69,23 @@ QPixmap Utils::Gui::scaledPixmap(const QPixmap &pixmap, const QWidget *widget, c
     return pixmap.scaledToHeight(scaledHeight, Qt::SmoothTransformation);
 }
 
-
 QPixmap Utils::Gui::scaledPixmap(const QString &path, const QWidget *widget, const int height)
 {
     return scaledPixmap(QPixmap(path), widget, height);
+}
+
+QPixmap Utils::Gui::scaledPixmapSvg(const QString &path, const QWidget *widget, const int baseHeight)
+{
+    const int scaledHeight = baseHeight * Utils::Gui::screenScalingFactor(widget);
+    const QString normalizedKey = path + "@" + QString::number(scaledHeight);
+
+    QPixmap pm;
+    QPixmapCache cache;
+    if (!cache.find(normalizedKey, &pm)) {
+        pm = QIcon(path).pixmap(scaledHeight);
+        cache.insert(normalizedKey, pm);
+    }
+    return pm;
 }
 
 QSize Utils::Gui::smallIconSize(const QWidget *widget)

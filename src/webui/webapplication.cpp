@@ -99,8 +99,8 @@ namespace
 
     void translateDocument(const QString &locale, QString &data)
     {
-        const QRegExp regex("QBT_TR\\((([^\\)]|\\)(?!QBT_TR))+)\\)QBT_TR(\\[CONTEXT=([a-zA-Z_][a-zA-Z0-9_]*)\\])");
-        const QRegExp mnemonic("\\(?&([a-zA-Z]?\\))?");
+        const QRegularExpression regex("QBT_TR\\((([^\\)]|\\)(?!QBT_TR))+)\\)QBT_TR(\\[CONTEXT=([a-zA-Z_][a-zA-Z0-9_]*)\\])");
+        const QRegularExpression mnemonic("\\(?&([a-zA-Z]?\\))?");
 
         const bool isTranslationNeeded = !locale.startsWith("en")
             || locale.startsWith("en_AU") || locale.startsWith("en_GB");
@@ -108,23 +108,24 @@ namespace
         int i = 0;
         bool found = true;
         while (i < data.size() && found) {
-            i = regex.indexIn(data, i);
+            QRegularExpressionMatch regexMatch;
+            i = data.indexOf(regex, i, &regexMatch);
             if (i >= 0) {
-                const QString word = regex.cap(1);
-                const QString context = regex.cap(4);
+                const QString word = regexMatch.captured(1);
+                const QString context = regexMatch.captured(4);
 
                 QString translation = isTranslationNeeded
                     ? qApp->translate(context.toUtf8().constData(), word.toUtf8().constData(), nullptr, 1)
                     : word;
 
                 // Remove keyboard shortcuts
-                translation.replace(mnemonic, "");
+                translation.remove(mnemonic);
 
                 // Use HTML code for quotes to prevent issues with JS
                 translation.replace('\'', "&#39;");
                 translation.replace('\"', "&#34;");
 
-                data.replace(i, regex.matchedLength(), translation);
+                data.replace(i, regexMatch.capturedLength(), translation);
                 i += translation.length();
             }
             else {
@@ -430,6 +431,10 @@ void WebApplication::configure()
         m_currentLocale = newLocale;
         m_translatedFiles.clear();
     }
+
+    m_isClickjackingProtectionEnabled = pref->isWebUiClickjackingProtectionEnabled();
+    m_isCSRFProtectionEnabled = pref->isWebUiCSRFProtectionEnabled();
+    m_isHttpsEnabled = pref->isWebUiHttpsEnabled();
 }
 
 void WebApplication::registerAPIController(const QString &scope, APIController *controller)
@@ -514,9 +519,11 @@ Http::Response WebApplication::processRequest(const Http::Request &request, cons
     clear();
 
     try {
-        // block cross-site requests
-        if (isCrossSiteRequest(m_request) || !validateHostHeader(m_domainList))
+        // block suspicious requests
+        if ((m_isCSRFProtectionEnabled && isCrossSiteRequest(m_request))
+            || !validateHostHeader(m_domainList)) {
             throw UnauthorizedHTTPError();
+        }
 
         sessionInitialize();
         doProcessRequest();
@@ -527,11 +534,19 @@ Http::Response WebApplication::processRequest(const Http::Request &request, cons
             print(error.message(), Http::CONTENT_TYPE_TXT);
     }
 
-    // avoid clickjacking attacks
-    header(Http::HEADER_X_FRAME_OPTIONS, "SAMEORIGIN");
     header(Http::HEADER_X_XSS_PROTECTION, "1; mode=block");
     header(Http::HEADER_X_CONTENT_TYPE_OPTIONS, "nosniff");
-    header(Http::HEADER_CONTENT_SECURITY_POLICY, "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; object-src 'none';");
+
+    QString csp = QLatin1String("default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; object-src 'none'; form-action 'self';");
+    if (m_isClickjackingProtectionEnabled) {
+        header(Http::HEADER_X_FRAME_OPTIONS, "SAMEORIGIN");
+        csp += QLatin1String(" frame-ancestors 'self';");
+    }
+    if (m_isHttpsEnabled) {
+        csp += QLatin1String(" upgrade-insecure-requests;");
+    }
+
+    header(Http::HEADER_CONTENT_SECURITY_POLICY, csp);
 
     return response();
 }

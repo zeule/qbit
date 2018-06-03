@@ -1,6 +1,6 @@
 /*
  * Bittorrent Client using Qt and libtorrent.
- * Copyright (C) 2017  Vladimir Golovnev <glassez@yandex.ru>
+ * Copyright (C) 2006  Christophe Dumez <chris@qbittorrent.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,42 +26,33 @@
  * exception statement from your version.
  */
 
-#ifndef ARTICLELISTWIDGET_H
-#define ARTICLELISTWIDGET_H
+#ifndef DOWNLOADFROMURL_H
+#define DOWNLOADFROMURL_H
 
-#include <QHash>
-#include <QListWidget>
+#include <QDialog>
 
-namespace RSS
+namespace Ui
 {
-    class Article;
-    class Item;
+    class DownloadFromURLDialog;
 }
 
-class ArticleListWidget : public QListWidget
+class DownloadFromURLDialog : public QDialog
 {
     Q_OBJECT
+    Q_DISABLE_COPY(DownloadFromURLDialog)
 
 public:
-    explicit ArticleListWidget(QWidget *parent);
+    explicit DownloadFromURLDialog(QWidget *parent);
+    ~DownloadFromURLDialog();
 
-    RSS::Article *getRSSArticle(QListWidgetItem *item) const;
-    QListWidgetItem *mapRSSArticle(RSS::Article *rssArticle) const;
-
-    void setRSSItem(RSS::Item *rssItem, bool unreadOnly = false);
+signals:
+    void urlsReadyToBeDownloaded(const QStringList &torrentURLs);
 
 private slots:
-    void handleArticleAdded(RSS::Article *rssArticle);
-    void handleArticleRead(RSS::Article *rssArticle);
-    void handleArticleAboutToBeRemoved(RSS::Article *rssArticle);
+    void downloadButtonClicked();
 
 private:
-    void checkInvariant() const;
-    QListWidgetItem *createItem(RSS::Article *article) const;
-
-    RSS::Item *m_rssItem = nullptr;
-    bool m_unreadOnly = false;
-    QHash<RSS::Article *, QListWidgetItem *> m_rssArticleToListItemMapping;
+    Ui::DownloadFromURLDialog *m_ui;
 };
 
-#endif // ARTICLELISTWIDGET_H
+#endif

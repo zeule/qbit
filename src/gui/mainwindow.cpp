@@ -42,6 +42,8 @@
 #include <QMessageBox>
 #include <QMimeData>
 #include <QProcess>
+#include <QPushButton>
+#include <QRegularExpression>
 #include <QScrollBar>
 #include <QShortcut>
 #include <QSplitter>
@@ -75,7 +77,7 @@
 #include "base/utils/fs.h"
 #include "base/utils/misc.h"
 #include "cookiesdialog.h"
-#include "downloadfromurldlg.h"
+#include "downloadfromurldialog.h"
 #include "executionlog.h"
 #include "guiiconprovider.h"
 #include "hidabletabwidget.h"
@@ -164,11 +166,13 @@ MainWindow::MainWindow(QWidget *parent)
     // Setting icons
 #ifndef Q_OS_MAC
 #ifdef Q_OS_UNIX
-    if (GuiIconProvider::iconSet() == GuiIconProvider::IconSet::SystemTheme)
-        setWindowIcon(QIcon::fromTheme("qbittorrent", QIcon(":/icons/skin/qbittorrent32.png")));
-    else
+    const QIcon appLogo = GuiIconProvider::iconSet() == GuiIconProvider::IconSet::SystemTheme
+        ? QIcon::fromTheme("qbittorrent", QIcon(":/icons/skin/qbittorrent-tray.svg"))
+        : QIcon(":/icons/skin/qbittorrent-tray.svg");
+#else
+    const QIcon appLogo(":/icons/skin/qbittorrent-tray.svg");
 #endif // Q_OS_UNIX
-    setWindowIcon(QIcon(":/icons/skin/qbittorrent32.png"));
+    setWindowIcon(appLogo);
 #endif // Q_OS_MAC
 
 #if (defined(Q_OS_UNIX))
@@ -1602,8 +1606,8 @@ void MainWindow::downloadFromURLList(const QStringList &urlList)
 {
     const bool useTorrentAdditionDialog = AddNewTorrentDialog::isEnabled();
     foreach (QString url, urlList) {
-        if (((url.size() == 40) && !url.contains(QRegExp("[^0-9A-Fa-f]")))
-            || ((url.size() == 32) && !url.contains(QRegExp("[^2-7A-Za-z]"))))
+        if (((url.size() == 40) && !url.contains(QRegularExpression("[^0-9A-Fa-f]")))
+            || ((url.size() == 32) && !url.contains(QRegularExpression("[^2-7A-Za-z]"))))
             url = "magnet:?xt=urn:btih:" + url;
 
         if (useTorrentAdditionDialog)
@@ -1826,8 +1830,8 @@ void MainWindow::on_actionSearchWidget_triggered()
 void MainWindow::on_actionDownloadFromURL_triggered()
 {
     if (!m_downloadFromURLDialog) {
-        m_downloadFromURLDialog = new downloadFromURL(this);
-        connect(m_downloadFromURLDialog.data(), &downloadFromURL::urlsReadyToBeDownloaded, this, &MainWindow::downloadFromURLList);
+        m_downloadFromURLDialog = new DownloadFromURLDialog(this);
+        connect(m_downloadFromURLDialog.data(), &DownloadFromURLDialog::urlsReadyToBeDownloaded, this, &MainWindow::downloadFromURLList);
     }
 }
 
