@@ -6,25 +6,15 @@ os:
 osx_image: xcode9.3
 
 env:
-  matrix:
-    # Uncomment when Travis upgraded "Ubuntu 12.04 LTS" to a newer version whose repo will have a more up-to-date libtorrent package
-    #- lt_branch=dist gui=true
-    #- lt_branch=dist gui=false
-    - lt_branch=master gui=1
-    - lt_branch=RC_1_1 gui=1
-  global:
-    - secure: "OI9CUjj4lTb0HwwIZU5PbECU3hLlAL6KC8KsbwohG8/O3j5fLcnmDsK4Ad9us5cC39sS11Jcd1kDP2qRcCuST/glVNhLkcjKkiQerOfd5nQ/qL4JYfz/1mfP5mdpz9jHKzpLUIG+TXkbSTjP6VVmsb5KPT+3pKEdRFZB+Pu9+J8="
-    - coverity_branch: coverity_scan
+  - lt_branch=master gui=1 webui=1
+  - lt_branch=RC_1_1 gui=1 webui=1
+  - lt_branch=master gui=0 webui=1
+  - lt_branch=master gui=0 webui=0
 
 matrix:
   exclude:
     - os: osx
-      env: lt_branch=RC_1_1 # does not build due to the absent auto_ptr in xcode9.3
-
-branches:
-  except:
-    - search_encoding_windows
-    - v2_9_x
+      env: lt_branch=RC_1_1 gui=1 webui=1 # does not build due to the absent auto_ptr in xcode >= 9.3
 
 notifications:
   email:
@@ -154,7 +144,7 @@ script:
     cd "$TRAVIS_BUILD_DIR"
     mkdir build
     cd build
-    cmake -DCMAKE_DISABLE_FIND_PACKAGE_Qt5Widgets=$((1-gui)) -DCMAKE_INSTALL_PREFIX="$qbt_path" "$MY_CMAKE_OPENSSL_HINT" \
+    cmake -DCMAKE_DISABLE_FIND_PACKAGE_Qt5Widgets=$((1-gui)) -DWEBUI=$webui -DCMAKE_INSTALL_PREFIX="$qbt_path" "$MY_CMAKE_OPENSSL_HINT" \
         -G "Ninja" -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE  ..
   - cmake --build . && cmake --build . --target install
 
