@@ -12,8 +12,9 @@ find_package(LibtorrentRasterbar REQUIRED)
 # Qt
 set(requiredQtVersion 5.9)
 
-find_package(Qt5 ${requiredQtVersion} REQUIRED COMPONENTS Core Network Xml)
 find_package(Qt5 ${requiredQtVersion} OPTIONAL_COMPONENTS DBus Widgets)
+find_package(Qt5 ${requiredQtVersion} REQUIRED COMPONENTS Core Network Xml)
+
 set_package_properties(Qt5Widgets PROPERTIES
     DESCRIPTION "Set of components for creating classic desktop-style UIs for the Qt5 framework"
     PURPOSE "Enables qBittorrent GUI. Unneeded for headless configuration."
