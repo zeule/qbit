@@ -6,12 +6,10 @@ os:
 osx_image: xcode9.3
 
 env:
-  - lt_branch=master
-  - lt_branch=RC_1_1
-  - gui=1
-  - gui=0
-  - webui=1
-  - webui=0
+  - lt_branch=master gui=1 webui=1
+  - lt_branch=RC_1_1 gui=1 webui=1
+  - lt_branch=master gui=0 webui=1
+  - lt_branch=master gui=0 webui=0
 
 matrix:
   exclude:
