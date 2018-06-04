@@ -5,7 +5,6 @@
 
 #ifndef QBT_USE_GUI
 #define DISABLE_GUI
-#define DISABLE_COUNTRIES_RESOLUTION
 #endif
 
 #cmakedefine QBT_USE_WEBUI
@@ -24,6 +23,7 @@
 #define QBT_VERSION "v@qbit_VERSION@"
 #define QBT_VERSION_2 "@qbit_VERSION@"
 
+#cmakedefine DISABLE_COUNTRIES_RESOLUTION
 #cmakedefine PLASMA_INTEGRATION
 
 #endif

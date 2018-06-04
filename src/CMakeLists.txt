@@ -6,15 +6,14 @@ qbt_set_compiler_options()
 
 include(QbtTargetSources)
 
-find_package(Boost 1.56 REQUIRED)
+find_package(Boost ${requiredBoostVersion} REQUIRED)
 find_package(LibtorrentRasterbar REQUIRED)
-
-# Qt
-set(requiredQtVersion 5.9)
 
 find_package(Qt5 ${requiredQtVersion} REQUIRED COMPONENTS Core Network Xml)
 find_package(Qt5Widgets ${requiredQtVersion})
-find_package(Qt5DBus ${requiredQtVersion})
+if (Qt5Widgets_FOUND)
+    find_package(Qt5DBus ${requiredQtVersion})
+endif()
 
 set_package_properties(Qt5Widgets PROPERTIES
     DESCRIPTION "Set of components for creating classic desktop-style UIs for the Qt5 framework"
@@ -43,7 +42,7 @@ add_definitions(-DQT_NO_CAST_TO_ASCII)
 # Efficient construction for QString & QByteArray (Qt >= 4.8)
 add_definitions(-DQT_USE_QSTRINGBUILDER)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
     message(STATUS "Project is built in DEBUG mode.")
 else()
     message(STATUS "Project is built in RELEASE mode.")
@@ -53,6 +52,9 @@ endif()
 
 set(QBT_USE_GUI ${Qt5Widgets_FOUND})
 set(QBT_USE_WEBUI ${WEBUI})
+if(NOT COUNTRIES_RESOLUTION)
+    set(DISABLE_COUNTRIES_RESOLUTION True)
+endif()
 
 configure_file(config.h.cmakein ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 

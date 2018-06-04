@@ -1,14 +1,20 @@
-if (SYSTEMD)
-    find_package(Systemd)
-    if (SYSTEMD_FOUND)
+if (NOT Qt5Widgets_FOUND)
+    feature_option(SYSTEMD "Install systemd service file (headless only)" OFF)
+    if (SYSTEMD)
+        if (NOT Systemd_SERVICES_INSTALL_DIR)
+            find_package(Systemd)
+            if (NOT Systemd_FOUND)
+                message(FATAL_ERROR "Could not locate systemd services install dir."
+                " Either pass -DSystemd_SERVICES_INSTALL_DIR=/path/to/systemd/services option or install systemd pkg-config")
+            endif(NOT Systemd_FOUND)
+        endif(NOT Systemd_SERVICES_INSTALL_DIR)
         set(EXPAND_BINDIR ${CMAKE_INSTALL_FULL_BINDIR})
         configure_file(systemd/qbittorrent-nox@.service.in ${CMAKE_CURRENT_BINARY_DIR}/qbittorrent-nox@.service @ONLY)
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qbittorrent-nox@.service
-            DESTINATION ${SYSTEMD_SERVICES_INSTALL_DIR}
+            DESTINATION ${Systemd_SERVICES_INSTALL_DIR}
             COMPONENT data)
-    endif(SYSTEMD_FOUND)
-endif(SYSTEMD)
-
+    endif(SYSTEMD)
+endif()
 
 if (Qt5Widgets_FOUND)
     list(APPEND MAN_FILES ${qbit_SOURCE_DIR}/doc/qbittorrent.1)

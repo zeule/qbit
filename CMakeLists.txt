@@ -9,6 +9,10 @@ project(qbit
 include(GNUInstallDirs)
 include(FeatureSummary)
 
+# version requirements
+set(requiredBoostVersion 1.56)
+set(requiredQtVersion 5.9)
+
 if(WIN32)
     include(winconf)
 endif(WIN32)
@@ -18,15 +22,15 @@ macro(feature_option _name _description _default)
     add_feature_info(${_name} ${_name} "${_description}")
 endmacro()
 
-# we need options here, because they are used not only in "src" subdir, but in the "dist" dir too
+# we need options here, at the top level, because they are used not only in "src" subdir, but in the "dist" dir too
 include(CMakeDependentOption)
 
-feature_option(WEBUI "Enables built-in HTTP server for headless use" ON)
+feature_option(COUNTRIES_RESOLUTION "Enable resolving peers IP addresses to countries" ON)
 feature_option(STACKTRACE "Enable stacktraces" ON)
+feature_option(WEBUI "Enables built-in HTTP server for headless use" ON)
 
 if (UNIX)
     option(PLASMA_INTEGRATION "Enable KDE/Plasma integration" ON)
-    feature_option(SYSTEMD "Install the systemd service file (headless only)" OFF)
 endif(UNIX)
 
 add_subdirectory(src)
