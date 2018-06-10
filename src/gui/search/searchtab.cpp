@@ -377,7 +377,7 @@ void SearchTab::displayToggleColumnsMenu(const QPoint&)
     int visibleCols = 0;
     for (int i = 0; i < SearchSortModel::DL_LINK; i++) {
         if (!m_ui->resultsBrowser->isColumnHidden(i))
-            visibleCols++;
+            ++visibleCols;
 
         if (visibleCols > 1)
             break;

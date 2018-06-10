@@ -170,7 +170,7 @@ void PeerListWidget::displayToggleColumnsMenu(const QPoint &)
     int visibleCols = 0;
     for (int i = 0; i < PeerListDelegate::IP_HIDDEN; i++) {
         if (!isColumnHidden(i))
-            visibleCols++;
+            ++visibleCols;
 
         if (visibleCols > 1)
             break;

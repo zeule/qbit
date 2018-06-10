@@ -9,10 +9,16 @@ include(QbtTargetSources)
 find_package(Boost ${requiredBoostVersion} REQUIRED)
 find_package(LibtorrentRasterbar REQUIRED)
 
+if (Boost_VERSION VERSION_LESS 106000)
+    add_definitions(-DBOOST_NO_CXX11_RVALUE_REFERENCES)
+endif()
+
 find_package(Qt5 ${requiredQtVersion} REQUIRED COMPONENTS Core Network Xml)
 find_package(Qt5Widgets ${requiredQtVersion})
 if (Qt5Widgets_FOUND)
     find_package(Qt5DBus ${requiredQtVersion})
+else()
+    add_definitions(-DDISABLE_GUI)
 endif()
 
 set_package_properties(Qt5Widgets PROPERTIES
@@ -52,9 +58,6 @@ endif()
 
 set(QBT_USE_GUI ${Qt5Widgets_FOUND})
 set(QBT_USE_WEBUI ${WEBUI})
-if(NOT COUNTRIES_RESOLUTION)
-    set(DISABLE_COUNTRIES_RESOLUTION True)
-endif()
 
 configure_file(config.h.cmakein ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 

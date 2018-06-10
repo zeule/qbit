@@ -1,5 +1,3 @@
-project(qbt_executable)
-
 add_executable(qBittorrent
 application.h
 cmdoptions.h
@@ -56,11 +54,11 @@ qt5_add_resources(QBT_APP_RESOURCE_SOURCE ${QBT_APP_RESOURCES})
 
 if (WIN32)
     if (MINGW)
-        target_sources(qBittorrent ../qbittorrent_mingw.rc)
+        target_sources(qBittorrent PRIVATE ../qbittorrent_mingw.rc)
     else (MINGW)
-        target_sources(qBittorrent ../qbittorrent.rc)
+        target_sources(qBittorrent PRIVATE ../qbittorrent.rc)
     endif (MINGW)
-    target_sources(qBittorrent ../qbittorrent.exe.manifest)
+    target_sources(qBittorrent PRIVATE ../qbittorrent.exe.manifest)
 endif (WIN32)
 
 if (STACKTRACE)
@@ -77,10 +75,6 @@ endif (STACKTRACE)
 
 if (Qt5Widgets_FOUND)
     target_link_libraries(qBittorrent PRIVATE qbt_searchengine qbt_gui)
-    target_include_directories(qBittorrent PRIVATE
-        ../gui
-        ${CMAKE_CURRENT_BINARY_DIR}/../gui
-    )
     set_target_properties(qBittorrent
         PROPERTIES
             OUTPUT_NAME qbittorrent
@@ -172,6 +166,6 @@ install(TARGETS qBittorrent
     COMPONENT runtime)
 
 if (Qt5Widgets_FOUND AND APPLE)
-    find_package(Qt5 REQUIRED COMPONENTS Svg)
+    find_package(Qt5Svg REQUIRED)
     include(bundle)
 endif (Qt5Widgets_FOUND AND APPLE)

@@ -42,6 +42,7 @@
 #include <QDesktopServices>
 #include <QDesktopWidget>
 #include <QDialogButtonBox>
+#include <QEvent>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSystemTrayIcon>
@@ -54,6 +55,7 @@
 
 #include "app/application.h"
 #include "base/bittorrent/session.h"
+#include "base/global.h"
 #include "base/net/dnsupdater.h"
 #include "base/net/portforwarder.h"
 #include "base/net/proxyconfigurationmanager.h"
@@ -181,6 +183,18 @@ namespace
             res += QObject::tr("Located in: ") + entry.filePath;
         return res;
     }
+
+    class WheelEventEater : public QObject
+    {
+    public:
+        using QObject::QObject;
+
+    private:
+        bool eventFilter(QObject *, QEvent *event) override
+        {
+            return (event->type() == QEvent::Wheel);
+        }
+    };
 }
 
 // Constructor
@@ -569,6 +583,13 @@ OptionsDialog::OptionsDialog(QWidget *parent)
 
     m_ui->textTempPath->setDialogCaption(tr("Choose a save directory"));
     m_ui->textTempPath->setMode(FileSystemPathEdit::Mode::DirectorySave);
+
+    // disable mouse wheel event on widgets to avoid mis-selection
+    WheelEventEater *wheelEventEater = new WheelEventEater(this);
+    for (QComboBox *widget : copyAsConst(findChildren<QComboBox *>()))
+        widget->installEventFilter(wheelEventEater);
+    for (QSpinBox *widget : copyAsConst(findChildren<QSpinBox *>()))
+        widget->installEventFilter(wheelEventEater);
 
     loadWindowState();
     show();

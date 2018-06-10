@@ -13,6 +13,7 @@ include(FeatureSummary)
 set(requiredBoostVersion 1.56)
 set(requiredQtVersion 5.9)
 
+
 if(WIN32)
     include(winconf)
 endif(WIN32)

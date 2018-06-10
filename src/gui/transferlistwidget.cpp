@@ -723,7 +723,7 @@ void TransferListWidget::displayDLHoSMenu(const QPoint&)
     int visibleCols = 0;
     for (int i = 0; i<TorrentModel::NB_COLUMNS; i++) {
         if (!isColumnHidden(i))
-            visibleCols++;
+            ++visibleCols;
 
         if (visibleCols > 1)
             break;

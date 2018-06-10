@@ -1,7 +1,8 @@
 set(CMAKE_AUTORCC True)
 set(CMAKE_AUTOUIC True)
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(qbt_gui_headers INTERFACE)
+target_include_directories(qbt_gui_headers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(lineedit)
 add_subdirectory(properties)
@@ -157,9 +158,13 @@ target_link_libraries(qbt_gui
         qbt_lineedit qbt_powermanagement qbt_rss qbt_properties qbt_searchengine
         qbt_base
         QtSingleApplication::QtSingleApplication
+    PUBLIC
+        qbt_gui_headers
 )
 
-target_include_directories(qbt_gui PRIVATE ../app)
+target_include_directories(qbt_gui
+    PRIVATE ../app
+)
 
 if (UNIX AND Qt5DBus_FOUND)
    add_subdirectory(qtnotify)
