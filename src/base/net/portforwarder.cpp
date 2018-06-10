@@ -96,7 +96,7 @@ void PortForwarder::addPort(quint16 port)
 #if LIBTORRENT_VERSION_NUM < 10200
         m_mappedPorts.insert(port, 0);
 #else
-        m_mappedPorts.insert(port, libtorrent::port_mapping_t());
+        m_mappedPorts.insert(port, std::vector<libtorrent::port_mapping_t>());
 #endif
         if (m_active)
             m_mappedPorts[port] = m_provider->add_port_mapping(libt::session::tcp, port, port);
@@ -107,7 +107,13 @@ void PortForwarder::deletePort(quint16 port)
 {
     if (m_mappedPorts.contains(port)) {
         if (m_active)
+#if LIBTORRENT_VERSION_NUM < 10200
             m_provider->delete_port_mapping(m_mappedPorts[port]);
+#else
+            for (const auto& mapping: m_mappedPorts[port]) {
+                m_provider->delete_port_mapping(mapping);
+            }
+#endif
         m_mappedPorts.remove(port);
     }
 }

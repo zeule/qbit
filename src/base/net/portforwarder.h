@@ -72,7 +72,7 @@ namespace Net
 #if LIBTORRENT_VERSION_NUM < 10200
         QHash<quint16, int> m_mappedPorts;
 #else
-        QHash<quint16, libtorrent::port_mapping_t> m_mappedPorts;
+        QHash<quint16, std::vector<libtorrent::port_mapping_t>> m_mappedPorts;
 #endif
 
         static PortForwarder *m_instance;
