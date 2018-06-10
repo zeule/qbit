@@ -17,8 +17,6 @@ find_package(Qt5 ${requiredQtVersion} REQUIRED COMPONENTS Core Network Xml)
 find_package(Qt5Widgets ${requiredQtVersion})
 if (Qt5Widgets_FOUND)
     find_package(Qt5DBus ${requiredQtVersion})
-else()
-    add_definitions(-DDISABLE_GUI)
 endif()
 
 set_package_properties(Qt5Widgets PROPERTIES
