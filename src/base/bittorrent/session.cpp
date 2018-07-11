@@ -1299,7 +1299,9 @@ void Session::configure(libtorrent::settings_pack &settingsPack)
 
         m_useProxy = (proxyConfig.type != Net::ProxyType::None);
     }
+#if LIBTORRENT_VERSION_NUM < 10200
     settingsPack.set_bool(libt::settings_pack::force_proxy, m_useProxy ? isForceProxyEnabled() : false);
+#endif
 
     settingsPack.set_bool(libt::settings_pack::announce_to_all_trackers, announceToAllTrackers());
     settingsPack.set_bool(libt::settings_pack::announce_to_all_tiers, announceToAllTiers());
