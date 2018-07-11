@@ -1,5 +1,5 @@
 /*
- * Bittorrent Client using Qt4 and libtorrent.
+ * Bittorrent Client using Qt and libtorrent.
  * Copyright (C) 2010  Christophe Dumez <chris@qbittorrent.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -63,11 +63,10 @@ ProgramUpdater::ProgramUpdater(QObject *parent, bool invokedByUser)
 
 void ProgramUpdater::checkForUpdates()
 {
-    Net::DownloadHandler *handler = Net::DownloadManager::instance()->downloadUrl(
-                RSS_URL, false, 0, false,
-                // Don't change this User-Agent. In case our updater goes haywire,
-                // the filehost can identify it and contact us.
-                "qBittorrent/" QBT_VERSION_2 " ProgramUpdater (www.qbittorrent.org)");
+    // Don't change this User-Agent. In case our updater goes haywire,
+    // the filehost can identify it and contact us.
+    Net::DownloadHandler *handler = Net::DownloadManager::instance()->download(
+                Net::DownloadRequest(RSS_URL).userAgent("qBittorrent/" QBT_VERSION_2 " ProgramUpdater (www.qbittorrent.org)"));
     connect(handler, static_cast<void (Net::DownloadHandler::*)(const QString &, const QByteArray &)>(&Net::DownloadHandler::downloadFinished)
             , this, &ProgramUpdater::rssDownloadFinished);
     connect(handler, &Net::DownloadHandler::downloadFailed, this, &ProgramUpdater::rssDownloadFailed);

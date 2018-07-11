@@ -49,9 +49,9 @@
 #include "guiiconprovider.h"
 #include "peerlistdelegate.h"
 #include "peerlistsortmodel.h"
-#include "peersadditiondlg.h"
+#include "peersadditiondialog.h"
 #include "propertieswidget.h"
-#include "speedlimitdlg.h"
+#include "speedlimitdialog.h"
 
 PeerListWidget::PeerListWidget(PropertiesWidget *parent)
     : QTreeView(parent)
@@ -247,7 +247,7 @@ void PeerListWidget::showPeerListMenu(const QPoint &)
     if (!act) return;
 
     if (act == addPeerAct) {
-        QList<BitTorrent::PeerAddress> peersList = PeersAdditionDlg::askForPeers(this);
+        QList<BitTorrent::PeerAddress> peersList = PeersAdditionDialog::askForPeers(this);
         int peerCount = 0;
         foreach (const BitTorrent::PeerAddress &addr, peersList) {
             if (torrent->connectPeer(addr)) {
@@ -303,12 +303,12 @@ void PeerListWidget::copySelectedPeers()
         int row = m_proxyModel->mapToSource(index).row();
         QString ip = m_listModel->data(m_listModel->index(row, PeerListDelegate::IP_HIDDEN)).toString();
         QString myport = m_listModel->data(m_listModel->index(row, PeerListDelegate::PORT)).toString();
-        if (ip.indexOf(".") == -1) // IPv6
+        if (ip.indexOf('.') == -1) // IPv6
             selectedPeers << "[" + ip + "]:" + myport;
         else // IPv4
             selectedPeers << ip + ":" + myport;
     }
-    QApplication::clipboard()->setText(selectedPeers.join("\n"));
+    QApplication::clipboard()->setText(selectedPeers.join('\n'));
 }
 
 void PeerListWidget::clear()
@@ -339,7 +339,7 @@ void PeerListWidget::loadPeers(BitTorrent::TorrentHandle *const torrent, bool fo
     if (!torrent) return;
 
     QList<BitTorrent::PeerInfo> peers = torrent->peers();
-    QSet<QString> oldeersSet = m_peerItems.keys().toSet();
+    QSet<QString> oldPeersSet = m_peerItems.keys().toSet();
 
     foreach (const BitTorrent::PeerInfo &peer, peers) {
         BitTorrent::PeerAddress addr = peer.address();
@@ -349,7 +349,7 @@ void PeerListWidget::loadPeers(BitTorrent::TorrentHandle *const torrent, bool fo
         if (m_peerItems.contains(peerIp)) {
             // Update existing peer
             updatePeer(peerIp, torrent, peer);
-            oldeersSet.remove(peerIp);
+            oldPeersSet.remove(peerIp);
             if (forceHostnameResolution && m_resolver)
                 m_resolver->resolve(peerIp);
         }
@@ -363,7 +363,7 @@ void PeerListWidget::loadPeers(BitTorrent::TorrentHandle *const torrent, bool fo
         }
     }
     // Delete peers that are gone
-    QSetIterator<QString> it(oldeersSet);
+    QSetIterator<QString> it(oldPeersSet);
     while (it.hasNext()) {
         const QString &ip = it.next();
         m_missingFlags.remove(ip);

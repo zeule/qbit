@@ -188,7 +188,7 @@ initializeWindows = function() {
             var orig = torrentsHaveSameShareRatio ? shareRatio : "";
             new MochaUI.Window({
                 id: 'shareRatioPage',
-                title: "QBT_TR(Torrent Upload/Download Ratio Limiting)QBT_TR[CONTEXT=UpDownRatioDlg]",
+                title: "QBT_TR(Torrent Upload/Download Ratio Limiting)QBT_TR[CONTEXT=UpDownRatioDialog]",
                 loadMethod: 'iframe',
                 contentURL: 'shareratio.html?hashes=' + hashes.join("|") + '&orig=' + orig,
                 scrollbars: false,
@@ -403,18 +403,21 @@ initializeWindows = function() {
     setLocationFN = function() {
         var hashes = torrentsTable.selectedRowsIds();
         if (hashes.length) {
+            var hash = hashes[0];
+            var row = torrentsTable.rows[hash];
+            var path = encodeURIComponent(row.full_data.save_path);
             new MochaUI.Window({
                 id: 'setLocationPage',
                 title: "QBT_TR(Set location)QBT_TR[CONTEXT=TransferListWidget]",
                 loadMethod: 'iframe',
-                contentURL: 'setlocation.html?hashes=' + hashes.join('|'),
+                contentURL: 'setlocation.html?hashes=' + hashes.join('|') + '&path=' + path,
                 scrollbars: false,
                 resizable: false,
                 maximizable: false,
                 paddingVertical: 0,
                 paddingHorizontal: 0,
-                width: 250,
-                height: 100
+                width: 400,
+                height: 130
             });
         }
     };

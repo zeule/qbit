@@ -41,7 +41,7 @@
 #include "base/bittorrent/torrenthandle.h"
 #include "base/utils/misc.h"
 #include "guiiconprovider.h"
-#include "speedlimitdlg.h"
+#include "speedlimitdialog.h"
 #include "utils.h"
 
 #include <boost/numeric/conversion/cast.hpp>

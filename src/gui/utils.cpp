@@ -60,7 +60,7 @@ qreal Utils::Gui::screenScalingFactor(const QWidget *widget)
 #else
     return widget->devicePixelRatio();
 #endif
-#endif
+#endif // Q_OS_WIN
 }
 
 QPixmap Utils::Gui::scaledPixmap(const QPixmap &pixmap, const QWidget *widget, const int height)

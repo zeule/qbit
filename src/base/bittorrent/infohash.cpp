@@ -26,7 +26,6 @@
  * exception statement from your version.
  */
 
-#include <QHash>
 #include "infohash.h"
 
 #include <libtorrent/version.hpp>

@@ -45,7 +45,6 @@
 #include <QMimeDatabase>
 #include <QMimeType>
 #include <QRegExp>
-#include <QTimer>
 #include <QUrl>
 
 #include "base/global.h"

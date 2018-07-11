@@ -465,6 +465,10 @@ var DynamicTable = new Class({
         return '';
     },
 
+    isRowSelected: function(rowId) {
+        return this.selectedRows.contains(rowId);
+    },
+
     altRow: function() {
         if (!MUI.ieLegacySupport)
             return;
@@ -481,7 +485,7 @@ var DynamicTable = new Class({
     },
 
     selectAll: function() {
-        this.selectedRows.empty();
+        this.deselectAll();
 
         var trs = this.tableBody.getElements('tr');
         for (var i = 0; i < trs.length; ++i) {
@@ -497,14 +501,36 @@ var DynamicTable = new Class({
     },
 
     selectRow: function(rowId) {
-        this.deselectAll();
         this.selectedRows.push(rowId);
+        this.setRowClass();
+        this.onSelectedRowChanged();
+    },
+
+    deselectRow: function(rowId) {
+        this.selectedRows.erase(rowId);
+        this.setRowClass();
+        this.onSelectedRowChanged();
+    },
+
+    selectRows: function(rowId1, rowId2) {
+        this.deselectAll();
+        if (rowId1 === rowId2) {
+            this.selectRow(rowId1);
+            return;
+        }
+
+        var select = false;
+        var that = this;
         this.tableBody.getElements('tr').each(function(tr) {
-            if (tr.rowId == rowId)
-                tr.addClass('selected');
-            else
-                tr.removeClass('selected');
+            if ((tr.rowId == rowId1) || (tr.rowId == rowId2)) {
+                select = !select;
+                that.selectedRows.push(tr.rowId);
+            }
+            else if (select) {
+                that.selectedRows.push(tr.rowId);
+            }
         });
+        this.setRowClass();
         this.onSelectedRowChanged();
     },
 
@@ -514,6 +540,16 @@ var DynamicTable = new Class({
         this.tableBody.getElements('tr').each(function(tr) {
             if (rowIds.indexOf(tr.rowId) > -1)
                 tr.addClass('selected');
+        });
+    },
+
+    setRowClass: function() {
+        var that = this;
+        this.tableBody.getElements('tr').each(function(tr) {
+            if (that.isRowSelected(tr.rowId))
+                tr.addClass('selected');
+            else
+                tr.removeClass('selected');
         });
     },
 
@@ -604,56 +640,29 @@ var DynamicTable = new Class({
 
                 tr._this = this;
                 tr.addEvent('contextmenu', function(e) {
-                    if (!this._this.selectedRows.contains(this.rowId))
+                    if (!this._this.isRowSelected(this.rowId)) {
+                        this._this.deselectAll();
                         this._this.selectRow(this.rowId);
+                    }
                     return true;
                 });
                 tr.addEvent('click', function(e) {
                     e.stop();
-                    if (e.control) {
-                        // CTRL key was pressed
-                        if (this._this.selectedRows.contains(this.rowId)) {
-                            // remove it
-                            this._this.selectedRows.erase(this.rowId);
-                            // Remove selected style
-                            this.removeClass('selected');
-                        }
-                        else {
-                            this._this.selectedRows.push(this.rowId);
-                            // Add selected style
-                            this.addClass('selected');
-                        }
+                    if (e.control || e.meta) {
+                        // CTRL/CMD ⌘ key was pressed
+                        if (this._this.isRowSelected(this.rowId))
+                            this._this.deselectRow(this.rowId);
+                        else
+                            this._this.selectRow(this.rowId);
+                    }
+                    else if (e.shift && (this._this.selectedRows.length == 1)) {
+                        // Shift key was pressed
+                        this._this.selectRows(this._this.getSelectedRowId(), this.rowId);
                     }
                     else {
-                        if (e.shift && this._this.selectedRows.length == 1) {
-                            // Shift key was pressed
-                            var first_row_id = this._this.selectedRows[0];
-                            var last_row_id = this.rowId;
-                            this._this.selectedRows.empty();
-                            var trs = this._this.tableBody.getElements('tr');
-                            var select = false;
-                            for (var i = 0; i < trs.length; ++i) {
-                                var tr = trs[i];
-
-                                if ((tr.rowId == first_row_id) || (tr.rowId == last_row_id)) {
-                                    this._this.selectedRows.push(tr.rowId);
-                                    tr.addClass('selected');
-                                    select = !select;
-                                }
-                                else {
-                                    if (select) {
-                                        this._this.selectedRows.push(tr.rowId);
-                                        tr.addClass('selected');
-                                    }
-                                    else
-                                        tr.removeClass('selected');
-                                }
-                            }
-                        }
-                        else {
-                            // Simple selection
-                            this._this.selectRow(this.rowId);
-                        }
+                        // Simple selection
+                        this._this.deselectAll();
+                        this._this.selectRow(this.rowId);
                     }
                     return false;
                 });
@@ -719,7 +728,7 @@ var DynamicTable = new Class({
     },
 
     clear: function() {
-        this.selectedRows.empty();
+        this.deselectAll();
         this.rows.empty();
         var trs = this.tableBody.getElements('tr');
         while (trs.length > 0) {
@@ -743,35 +752,35 @@ var TorrentsTable = new Class({
     initColumns: function() {
         this.newColumn('priority', '', '#', 30, true);
         this.newColumn('state_icon', 'cursor: default', '', 22, true);
-        this.newColumn('name', '', 'QBT_TR(Name)QBT_TR[CONTEXT=TorrentModel]', 200, true);
-        this.newColumn('size', '', 'QBT_TR(Size)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('total_size', '', 'QBT_TR(Total Size)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('progress', '', 'QBT_TR(Done)QBT_TR[CONTEXT=TorrentModel]', 85, true);
-        this.newColumn('status', '', 'QBT_TR(Status)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('num_seeds', '', 'QBT_TR(Seeds)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('num_leechs', '', 'QBT_TR(Peers)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('dlspeed', '', 'QBT_TR(Down Speed)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('upspeed', '', 'QBT_TR(Up Speed)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('eta', '', 'QBT_TR(ETA)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('ratio', '', 'QBT_TR(Ratio)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('category', '', 'QBT_TR(Category)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('tags', '', 'QBT_TR(Tags)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('added_on', '', 'QBT_TR(Added On)QBT_TR[CONTEXT=TorrentModel]', 100, true);
-        this.newColumn('completion_on', '', 'QBT_TR(Completed On)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('tracker', '', 'QBT_TR(Tracker)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('dl_limit', '', 'QBT_TR(Down Limit)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('up_limit', '', 'QBT_TR(Up Limit)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('downloaded', '', 'QBT_TR(Downloaded)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('uploaded', '', 'QBT_TR(Uploaded)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('downloaded_session', '', 'QBT_TR(Session Download)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('uploaded_session', '', 'QBT_TR(Session Upload)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('amount_left', '', 'QBT_TR(Remaining)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('time_active', '', 'QBT_TR(Time Active)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('save_path', '', 'QBT_TR(Save path)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('completed', '', 'QBT_TR(Completed)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('max_ratio', '', 'QBT_TR(Ratio Limit)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('seen_complete', '', 'QBT_TR(Last Seen Complete)QBT_TR[CONTEXT=TorrentModel]', 100, false);
-        this.newColumn('last_activity', '', 'QBT_TR(Last Activity)QBT_TR[CONTEXT=TorrentModel]', 100, false);
+        this.newColumn('name', '', 'QBT_TR(Name)QBT_TR[CONTEXT=TransferListModel]', 200, true);
+        this.newColumn('size', '', 'QBT_TR(Size)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('total_size', '', 'QBT_TR(Total Size)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('progress', '', 'QBT_TR(Done)QBT_TR[CONTEXT=TransferListModel]', 85, true);
+        this.newColumn('status', '', 'QBT_TR(Status)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('num_seeds', '', 'QBT_TR(Seeds)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('num_leechs', '', 'QBT_TR(Peers)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('dlspeed', '', 'QBT_TR(Down Speed)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('upspeed', '', 'QBT_TR(Up Speed)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('eta', '', 'QBT_TR(ETA)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('ratio', '', 'QBT_TR(Ratio)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('category', '', 'QBT_TR(Category)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('tags', '', 'QBT_TR(Tags)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('added_on', '', 'QBT_TR(Added On)QBT_TR[CONTEXT=TransferListModel]', 100, true);
+        this.newColumn('completion_on', '', 'QBT_TR(Completed On)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('tracker', '', 'QBT_TR(Tracker)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('dl_limit', '', 'QBT_TR(Down Limit)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('up_limit', '', 'QBT_TR(Up Limit)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('downloaded', '', 'QBT_TR(Downloaded)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('uploaded', '', 'QBT_TR(Uploaded)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('downloaded_session', '', 'QBT_TR(Session Download)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('uploaded_session', '', 'QBT_TR(Session Upload)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('amount_left', '', 'QBT_TR(Remaining)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('time_active', '', 'QBT_TR(Time Active)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('save_path', '', 'QBT_TR(Save path)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('completed', '', 'QBT_TR(Completed)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('max_ratio', '', 'QBT_TR(Ratio Limit)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('seen_complete', '', 'QBT_TR(Last Seen Complete)QBT_TR[CONTEXT=TransferListModel]', 100, false);
+        this.newColumn('last_activity', '', 'QBT_TR(Last Activity)QBT_TR[CONTEXT=TransferListModel]', 100, false);
 
         this.columns['state_icon'].onclick = '';
         this.columns['state_icon'].dataProperties[0] = 'state';
@@ -1199,6 +1208,7 @@ var TorrentsTable = new Class({
     setupTr: function(tr) {
         tr.addEvent('dblclick', function(e) {
             e.stop();
+            this._this.deselectAll();
             this._this.selectRow(this.rowId);
             var row = this._this.rows.get(this.rowId);
             var state = row['full_data'].state;

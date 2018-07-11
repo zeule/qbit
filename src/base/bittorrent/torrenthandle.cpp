@@ -1958,7 +1958,7 @@ void TorrentHandle::manageIncompleteFiles()
 {
     const bool isAppendExtensionEnabled = m_session->isAppendExtensionEnabled();
     QVector<qreal> fp = filesProgress();
-    if( fp.size() != filesCount() ) {
+    if (fp.size() != filesCount()) {
         qDebug() << "skip manageIncompleteFiles because of invalid torrent meta-data or empty file-progress";
         return;
     }

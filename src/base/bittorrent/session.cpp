@@ -38,7 +38,6 @@
 #include <string>
 
 #include <QCoreApplication>
-#include <QDateTime>
 #include <QDebug>
 #include <QDir>
 #include <QHostAddress>
@@ -298,6 +297,7 @@ Session::Session(QObject *parent)
     , m_IPFilterFile(BITTORRENT_SESSION_KEY("IPFilter"))
     , m_announceToAllTrackers(BITTORRENT_SESSION_KEY("AnnounceToAllTrackers"), false)
     , m_announceToAllTiers(BITTORRENT_SESSION_KEY("AnnounceToAllTiers"), true)
+    , m_asyncIOThreads(BITTORRENT_SESSION_KEY("AsyncIOThreadsCount"), 4)
     , m_diskCacheSize(BITTORRENT_SESSION_KEY("DiskCacheSize"), 64)
     , m_diskCacheTTL(BITTORRENT_SESSION_KEY("DiskCacheTTL"), 60)
     , m_useOSCache(BITTORRENT_SESSION_KEY("UseOSCache"), true)
@@ -354,7 +354,7 @@ Session::Session(QObject *parent)
     , m_altGlobalUploadSpeedLimit(BITTORRENT_SESSION_KEY("AlternativeGlobalUPSpeedLimit"), 10, lowerLimited(0))
     , m_isAltGlobalSpeedLimitEnabled(BITTORRENT_SESSION_KEY("UseAlternativeGlobalSpeedLimit"), false)
     , m_isBandwidthSchedulerEnabled(BITTORRENT_SESSION_KEY("BandwidthSchedulerEnabled"), false)
-    , m_saveResumeDataInterval(BITTORRENT_SESSION_KEY("SaveResumeDataInterval"), 3)
+    , m_saveResumeDataInterval(BITTORRENT_SESSION_KEY("SaveResumeDataInterval"), 60)
     , m_port(BITTORRENT_SESSION_KEY("Port"), 8999)
     , m_useRandomPort(BITTORRENT_SESSION_KEY("UseRandomPort"), false)
     , m_networkInterface(BITTORRENT_SESSION_KEY("Interface"))
@@ -546,11 +546,6 @@ Session::Session(QObject *parent)
     connect(m_refreshTimer, &QTimer::timeout, this, &Session::refresh);
     m_refreshTimer->start();
 
-    // Regular saving of fastresume data
-    m_resumeDataTimer = new QTimer(this);
-    m_resumeDataTimer->setInterval(boost::numeric_cast<int>(saveResumeDataInterval() * 60 * 1000));
-    connect(m_resumeDataTimer, &QTimer::timeout, this, [this]() { generateResumeData(); });
-
     m_statistics = new Statistics(this);
 
     updateSeedingLimitTimer();
@@ -572,7 +567,15 @@ Session::Session(QObject *parent)
     m_resumeDataSavingManager->moveToThread(m_ioThread);
     connect(m_ioThread, &QThread::finished, m_resumeDataSavingManager, &QObject::deleteLater);
     m_ioThread->start();
-    m_resumeDataTimer->start();
+
+    // Regular saving of fastresume data
+    m_resumeDataTimer = new QTimer(this);
+    connect(m_resumeDataTimer, &QTimer::timeout, this, [this]() { generateResumeData(); });
+    const int saveInterval = static_cast<int>(saveResumeDataInterval());
+    if (saveInterval > 0) {
+        m_resumeDataTimer->setInterval(saveInterval * 60 * 1000);
+        m_resumeDataTimer->start();
+    }
 
     // initialize PortForwarder instance
     Net::PortForwarder::initInstance(m_nativeSession);
@@ -1301,6 +1304,8 @@ void Session::configure(libtorrent::settings_pack &settingsPack)
     settingsPack.set_bool(libt::settings_pack::announce_to_all_trackers, announceToAllTrackers());
     settingsPack.set_bool(libt::settings_pack::announce_to_all_tiers, announceToAllTiers());
 
+    settingsPack.set_int(libt::settings_pack::aio_threads, asyncIOThreads());
+
     const int cacheSize = (diskCacheSize() > -1) ? (diskCacheSize() * 64) : -1;
     settingsPack.set_int(libt::settings_pack::cache_size, cacheSize);
     settingsPack.set_int(libt::settings_pack::cache_expiry, diskCacheTTL());
@@ -1839,11 +1844,10 @@ void Session::handleRedirectedToMagnet(const QString &url, const QString &magnet
 }
 
 // Add to BitTorrent session the downloaded torrent file
-void Session::handleDownloadFinished(const QString &url, const QString &filePath)
+void Session::handleDownloadFinished(const QString &url, const QByteArray &data)
 {
     emit downloadFromUrlFinished(url);
-    addTorrent_impl(m_downloadedTorrents.take(url), MagnetUri(), TorrentInfo::loadFromFile(filePath));
-    Utils::Fs::forceRemove(filePath); // remove temporary file
+    addTorrent_impl(m_downloadedTorrents.take(url), MagnetUri(), TorrentInfo::load(data));
 }
 
 // Return the torrent handle, given its hash
@@ -2075,10 +2079,11 @@ bool Session::addTorrent(QString source, const AddTorrentParams &params)
         return addTorrent_impl(params, magnetUri);
     }
     else if (Utils::Misc::isUrl(source)) {
-        Logger::instance()->addMessage(tr("Downloading '%1', please wait...", "e.g: Downloading 'xxx.torrent', please wait...").arg(source));
+        LogMsg(tr("Downloading '%1', please wait...", "e.g: Downloading 'xxx.torrent', please wait...").arg(source));
         // Launch downloader
-        Net::DownloadHandler *handler = Net::DownloadManager::instance()->downloadUrl(source, true, 10485760 /* 10MB */, true);
-        connect(handler, static_cast<void (Net::DownloadHandler::*)(const QString &, const QString &)>(&Net::DownloadHandler::downloadFinished)
+        Net::DownloadHandler *handler =
+                Net::DownloadManager::instance()->download(Net::DownloadRequest(source).limit(10485760 /* 10MB */).handleRedirectToMagnet(true));
+        connect(handler, static_cast<void (Net::DownloadHandler::*)(const QString &, const QByteArray &)>(&Net::DownloadHandler::downloadFinished)
                 , this, &Session::handleDownloadFinished);
         connect(handler, &Net::DownloadHandler::downloadFailed, this, &Session::handleDownloadFailed);
         connect(handler, &Net::DownloadHandler::redirectedToMagnet, this, &Session::handleRedirectedToMagnet);
@@ -2738,11 +2743,19 @@ uint Session::saveResumeDataInterval() const
     return m_saveResumeDataInterval;
 }
 
-void Session::setSaveResumeDataInterval(uint value)
+void Session::setSaveResumeDataInterval(const uint value)
 {
-    if (value != saveResumeDataInterval()) {
-        m_saveResumeDataInterval = value;
-        m_resumeDataTimer->setInterval(boost::numeric_cast<int>(value * 60 * 1000));
+    if (value == m_saveResumeDataInterval)
+        return;
+
+    m_saveResumeDataInterval = value;
+
+    if (value > 0) {
+        m_resumeDataTimer->setInterval(static_cast<int>(value) * 60 * 1000);
+        m_resumeDataTimer->start();
+    }
+    else {
+        m_resumeDataTimer->stop();
     }
 }
 
@@ -3049,6 +3062,20 @@ void Session::setAnnounceToAllTiers(bool val)
         m_announceToAllTiers = val;
         configureDeferred();
     }
+}
+
+int Session::asyncIOThreads() const
+{
+    return qBound(1, m_asyncIOThreads.value(), 1024);
+}
+
+void Session::setAsyncIOThreads(const int num)
+{
+    if (num == m_asyncIOThreads)
+        return;
+
+    m_asyncIOThreads = num;
+    configureDeferred();
 }
 
 int Session::diskCacheSize() const

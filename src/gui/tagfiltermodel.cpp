@@ -29,7 +29,6 @@
 #include "tagfiltermodel.h"
 
 #include <QDebug>
-#include <QHash>
 #include <QIcon>
 
 #include "base/bittorrent/session.h"
@@ -113,7 +112,7 @@ bool TagFilterModel::isSpecialItem(const QModelIndex &index)
 
 QVariant TagFilterModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid() || index.column() != 0)
+    if (!index.isValid() || (index.column() != 0))
         return QVariant();
 
     const int row = index.internalId();
@@ -214,7 +213,7 @@ void TagFilterModel::torrentTagAdded(BitTorrent::TorrentHandle *const torrent, c
     emit dataChanged(i, i);
 }
 
-void TagFilterModel::torrentTagRemoved(BitTorrent::TorrentHandle* const torrent, const QString &tag)
+void TagFilterModel::torrentTagRemoved(BitTorrent::TorrentHandle *const torrent, const QString &tag)
 {
     Q_ASSERT(torrent->tags().count() >= 0);
     if (torrent->tags().count() == 0)

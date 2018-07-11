@@ -1,6 +1,6 @@
 /*
  * Bittorrent Client using Qt and libtorrent.
- * Copyright (C) 2014  sledgehammer999 <sledgehammer999@qbittorrent.org>
+ * Copyright (C) 2014  sledgehammer999 <hammered999@gmail.com>
  * Copyright (C) 2006  Christophe Dumez <chris@qbittorrent.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -194,7 +194,7 @@ public:
     QString getWebUiUsername() const;
     void setWebUiUsername(const QString &username);
     QString getWebUiPassword() const;
-    void setWebUiPassword(const QString &new_password);
+    void setWebUiPassword(const QString &newPassword);
 
     // WebUI security
     bool isWebUiClickjackingProtectionEnabled() const;
