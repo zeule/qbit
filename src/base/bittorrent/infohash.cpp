@@ -28,6 +28,8 @@
 
 #include "infohash.h"
 
+#include <QHash>
+
 #include <libtorrent/version.hpp>
 #if LIBTORRENT_VERSION_NUM >= 10200
 #include <boost/lexical_cast.hpp>
@@ -106,5 +108,5 @@ bool InfoHash::operator!=(const InfoHash &other) const
 
 uint BitTorrent::qHash(const InfoHash &key, uint seed)
 {
-    return qHash(static_cast<QString>(key), seed);
+    return ::qHash(static_cast<QString>(key), seed);
 }
