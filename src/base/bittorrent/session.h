@@ -144,7 +144,7 @@ namespace BitTorrent
     class Tracker;
     class MagnetUri;
     class TrackerEntry;
-    struct AddTorrentData;
+    struct CreateTorrentParams;
 
     struct TorrentStatusReport
     {
@@ -488,6 +488,7 @@ namespace BitTorrent
 
         // TorrentHandle interface
         void handleTorrentShareLimitChanged(TorrentHandle *const torrent);
+        void handleTorrentNameChanged(TorrentHandle *const torrent);
         void handleTorrentSavePathChanged(TorrentHandle *const torrent);
         void handleTorrentCategoryChanged(TorrentHandle *const torrent, const QString &oldCategory);
         void handleTorrentTagAdded(TorrentHandle *const torrent, const QString &tag);
@@ -605,7 +606,7 @@ namespace BitTorrent
         void enableIPFilter();
         void disableIPFilter();
 
-        bool addTorrent_impl(AddTorrentData addData, const MagnetUri &magnetUri,
+        bool addTorrent_impl(CreateTorrentParams params, const MagnetUri &magnetUri,
                              TorrentInfo torrentInfo = TorrentInfo(),
                              const QByteArray &fastresumeData = QByteArray());
         bool findIncompleteFiles(TorrentInfo &torrentInfo, QString &savePath) const;
@@ -765,7 +766,7 @@ namespace BitTorrent
 
         QHash<InfoHash, TorrentInfo> m_loadedMetadata;
         QHash<InfoHash, TorrentHandle *> m_torrents;
-        QHash<InfoHash, AddTorrentData> m_addingTorrents;
+        QHash<InfoHash, CreateTorrentParams> m_addingTorrents;
         QHash<QString, AddTorrentParams> m_downloadedTorrents;
         QHash<InfoHash, RemovingTorrentData> m_removingTorrents;
         TorrentStatusReport m_torrentStatusReport;

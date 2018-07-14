@@ -93,10 +93,10 @@ namespace BitTorrent
     class TrackerEntry;
     struct AddTorrentParams;
 
-    struct AddTorrentData
+    struct CreateTorrentParams
     {
-        bool resumed;
-        // for both new and resumed torrents
+        bool restored; // is existing torrent job?
+        // for both new and restored torrents
         QString name;
         QString category;
         QSet<QString> tags;
@@ -107,18 +107,18 @@ namespace BitTorrent
         bool hasSeedStatus;
         bool skipChecking;
         bool hasRootFolder;
-        bool addForced;
-        bool addPaused;
+        bool forced;
+        bool paused;
         int uploadLimit;
         int downloadLimit;
         // for new torrents
         QVector<int> filePriorities;
-        // for resumed torrents
+        // for restored torrents
         qreal ratioLimit;
         std::chrono::minutes seedingTimeLimit;
 
-        AddTorrentData();
-        AddTorrentData(const AddTorrentParams &params);
+        CreateTorrentParams();
+        CreateTorrentParams(const AddTorrentParams &params);
     };
 
     struct TrackerInfo
@@ -175,7 +175,7 @@ namespace BitTorrent
         static const std::chrono::minutes MAX_SEEDING_TIME;
 
         TorrentHandle(Session *session, const libtorrent::torrent_handle &nativeHandle,
-                          const AddTorrentData &data);
+                          const CreateTorrentParams &params);
         ~TorrentHandle();
 
         bool isValid() const;
@@ -466,8 +466,9 @@ namespace BitTorrent
         bool m_needsToSetFirstLastPiecePriority;
 
         bool m_pauseAfterRecheck;
-        bool m_needSaveResumeData;
         QHash<QString, TrackerInfo> m_trackerInfos;
+
+        bool m_started = false;
     };
 }
 
