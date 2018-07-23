@@ -1405,9 +1405,6 @@ void MainWindow::loadPreferences()
 {
     Logger::instance()->addMessage(tr("Options were saved successfully."));
     const Preferences *const pref = Preferences::instance();
-#ifdef Q_OS_MAC
-    Q_UNUSED(configureSession);
-#else
     const bool newSystrayIntegration = pref->systrayIntegration();
     m_ui->actionLock->setVisible(newSystrayIntegration);
     if (newSystrayIntegration != (m_systrayIcon != 0)) {
