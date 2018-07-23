@@ -1405,6 +1405,7 @@ void MainWindow::loadPreferences()
 {
     Logger::instance()->addMessage(tr("Options were saved successfully."));
     const Preferences *const pref = Preferences::instance();
+#ifndef Q_OS_MAC
     const bool newSystrayIntegration = pref->systrayIntegration();
     m_ui->actionLock->setVisible(newSystrayIntegration);
     if (newSystrayIntegration != (m_systrayIcon != 0)) {
@@ -1429,8 +1430,8 @@ void MainWindow::loadPreferences()
 #else
         m_systrayIcon->setIcon(getSystrayIcon());
 #endif
-#endif
     }
+#endif
     // General
     if (pref->isToolbarDisplayed()) {
         m_ui->toolBar->setVisible(true);
