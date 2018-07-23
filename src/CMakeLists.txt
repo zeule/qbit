@@ -17,6 +17,15 @@ find_package(Qt5 ${requiredQtVersion} REQUIRED COMPONENTS Core Network Xml)
 find_package(Qt5Widgets ${requiredQtVersion})
 if (Qt5Widgets_FOUND)
     find_package(Qt5DBus ${requiredQtVersion})
+
+    # Look for KF5 components
+    find_package(ECM NO_MODULE)
+    if (ECM_FOUND)
+        set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+        find_package(KF5 COMPONENTS Notifications IconThemes)
+        set(HAVE_KF5NOTIFICATIONS KF5Notifications_FOUND)
+        set(HAVE_KF5ICONTHEMES KF5IconThemes_FOUND)
+    endif()
 endif()
 
 set_package_properties(Qt5Widgets PROPERTIES

@@ -29,6 +29,8 @@
 
 #include "guiiconprovider.h"
 
+#include "config.h"
+
 #include <fstream>
 #include <regex>
 #include <stdexcept>
@@ -51,10 +53,13 @@
 #include "theme/colortheme.h"
 #include "theme/themeprovider.h"
 
-
 #if (defined(Q_OS_UNIX) && !defined(Q_OS_MAC))
 #include <QDir>
 #include <QFile>
+#endif
+
+#ifdef HAVE_KF5ICONTHEMES
+#include <KIconLoader>
 #endif
 
 namespace
@@ -172,6 +177,15 @@ QIcon GuiIconProvider::getFlagIcon(const QString &countryIsoCode)
 {
     if (countryIsoCode.isEmpty()) return QIcon();
     return QIcon(":/icons/flags/" + countryIsoCode.toLower() + ".svg");
+}
+
+QString GuiIconProvider::getIconPath(const QString& iconId)
+{
+#ifdef HAVE_KF5ICONTHEMES
+    if (iconSet() == IconSet::SystemTheme)
+        return KIconLoader::global()->iconPath(iconId, KIconLoader::Desktop);
+#endif
+    return IconProvider::getIconPath(iconId);
 }
 
 QIcon GuiIconProvider::icon(BitTorrent::TorrentState state) const

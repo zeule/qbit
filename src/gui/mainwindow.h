@@ -36,6 +36,8 @@
 #include <QSystemTrayIcon>
 #endif
 
+#include "config.h"
+
 class QCloseEvent;
 class QFileSystemWatcher;
 class QSplitter;
@@ -56,6 +58,10 @@ class StatusBar;
 class TorrentCreatorDialog;
 class TransferListFiltersWidget;
 class TransferListWidget;
+
+#ifdef HAVE_KF5NOTIFICATIONS
+class KStatusNotifierItem;
+#endif
 
 namespace BitTorrent
 {
@@ -122,7 +128,7 @@ private slots:
     void displayExecutionLogTab();
     void focusSearchFilter();
     void updateGUI();
-    void loadPreferences(bool configureSession = true);
+    void loadPreferences();
     void addUnauthenticatedTracker(const QPair<BitTorrent::TorrentHandle *, QString> &tracker);
     void addTorrentFailed(const QString &error) const;
     void torrentNew(BitTorrent::TorrentHandle *const torrent) const;
@@ -184,11 +190,10 @@ private slots:
     void toolbarTextBeside();
     void toolbarTextUnder();
     void toolbarFollowSystem();
-#ifdef Q_OS_MAC
+#if defined Q_OS_MAC
     void on_actionCloseWindow_triggered();
-#else
+#elif !defined HAVE_KF5NOTIFICATIONS
     void toggleVisibility(const QSystemTrayIcon::ActivationReason reason = QSystemTrayIcon::Trigger);
-    void createSystrayDelayed();
     void updateTrayIconMenu();
 #endif
 
@@ -197,6 +202,9 @@ private:
     void setupDockClickHandler();
 #else
     void createTrayIcon();
+#if (defined(Q_OS_UNIX) && !defined(Q_OS_MAC))
+    QString getSystrayIconName() const;
+#endif
     QIcon getSystrayIcon() const;
 #endif
 #ifdef Q_OS_WIN
@@ -229,8 +237,11 @@ private:
     QPointer<TorrentCreatorDialog> m_createTorrentDlg;
     QPointer<DownloadFromURLDialog> m_downloadFromURLDialog;
 #ifndef Q_OS_MAC
+#ifdef HAVE_KF5NOTIFICATIONS
+    QPointer<KStatusNotifierItem> m_systrayIcon;
+#else
     QPointer<QSystemTrayIcon> m_systrayIcon;
-    QPointer<QTimer> m_systrayCreator;
+#endif
 #endif
     QPointer<QMenu> m_trayIconMenu;
     TransferListWidget *m_transferListWidget;

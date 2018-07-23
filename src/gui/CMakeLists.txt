@@ -194,6 +194,14 @@ if (PLASMA_INTEGRATION)
         )
 endif (PLASMA_INTEGRATION)
 
+if (KF5Notifications_FOUND)
+    target_link_libraries(qbt_gui PRIVATE KF5::Notifications)
+endif()
+
+if (KF5IconThemes_FOUND)
+    target_link_libraries(qbt_gui PRIVATE KF5::IconThemes)
+endif()
+
 qbt_target_sources(qBittorrent PRIVATE about.qrc theme/builtinthemes.qrc)
 
 if(WIN32)

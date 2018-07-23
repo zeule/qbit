@@ -26,5 +26,8 @@
 #cmakedefine DISABLE_COUNTRIES_RESOLUTION
 #cmakedefine PLASMA_INTEGRATION
 
+#cmakedefine HAVE_KF5NOTIFICATIONS
+#cmakedefine HAVE_KF5ICONTHEMES
+
 #endif
 
