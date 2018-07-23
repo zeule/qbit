@@ -1637,32 +1637,6 @@ void MainWindow::downloadFromURLList(const QStringList &urlList)
 
 #ifndef Q_OS_MAC
 #ifndef HAVE_KF5NOTIFICATIONS
-void MainWindow::createSystrayDelayed()
-{
-    static int timeout = 20;
-    if (QSystemTrayIcon::isSystemTrayAvailable()) {
-        // Ok, systray integration is now supported
-        // Create systray icon
-        createTrayIcon();
-        delete m_systrayCreator;
-    }
-    else {
-        if (timeout) {
-            // Retry a bit later
-            m_systrayCreator->start(2000);
-            --timeout;
-        }
-        else {
-            // Timed out, apparently system really does not
-            // support systray icon
-            delete m_systrayCreator;
-            // Disable it in program preferences to
-            // avoid trying at each startup
-            Preferences::instance()->setSystrayIntegration(false);
-        }
-    }
-}
-
 void MainWindow::updateTrayIconMenu()
 {
     m_ui->actionToggleVisibility->setText(isVisible() ? tr("Hide") : tr("Show"));
