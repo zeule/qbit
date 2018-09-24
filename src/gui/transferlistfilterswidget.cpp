@@ -150,9 +150,6 @@ StatusFilterWidget::StatusFilterWidget(QWidget *parent, TransferListWidget *tran
     QListWidgetItem *errored = new QListWidgetItem(this);
     errored->setData(Qt::DisplayRole, QVariant(tr("Errored (0)")));
 
-    updateStatusIcons();
-
-    connect(BitTorrent::Session::instance(), &BitTorrent::Session::torrentsUpdated, this, &StatusFilterWidget::updateTorrentNumbers);
     connect(GuiIconProvider::instance(), &GuiIconProvider::iconsChanged, this, &StatusFilterWidget::updateStatusIcons);
 
     const Preferences *const pref = Preferences::instance();
@@ -528,7 +525,7 @@ void TrackerFiltersList::torrentAboutToBeDeleted(BitTorrent::TorrentHandle *cons
 QString TrackerFiltersList::trackerFromRow(int row) const
 {
     Q_ASSERT(row > 1);
-    const QString &tracker = item(row)->text();
+    const QString tracker = item(row)->text();
     QStringList parts = tracker.split(' ');
     Q_ASSERT(parts.size() >= 2);
     parts.removeLast(); // Remove trailing number
@@ -574,7 +571,6 @@ QStringList TrackerFiltersList::getHashes(int row)
 TransferListFiltersWidget::TransferListFiltersWidget(QWidget *parent, TransferListWidget *transferList)
     : QFrame(parent)
     , m_transferList(transferList)
-    , m_trackerFilters(nullptr)
 {
     Preferences *const pref = Preferences::instance();
 

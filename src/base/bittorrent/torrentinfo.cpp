@@ -121,10 +121,18 @@ TorrentInfo TorrentInfo::loadFromFile(const QString &path, QString *error) noexc
         return TorrentInfo();
     }
 
-    const QByteArray data = file.read(fileSizeLimit);
+    QByteArray data;
+    try {
+        data = file.readAll();
+    }
+    catch (const std::bad_alloc &e) {
+        if (error)
+            *error = tr("Torrent file read error: %1").arg(e.what());
+        return TorrentInfo();
+    }
     if (data.size() != file.size()) {
         if (error)
-            *error = tr("Torrent file read error");
+            *error = tr("Torrent file read error: size mismatch");
         return TorrentInfo();
     }
 
@@ -351,12 +359,12 @@ TorrentInfo::PieceRange TorrentInfo::filePieces(int fileIndex) const
 
     const libt::file_storage &files = nativeInfo()->files();
     const auto fileSize = files.file_size(makeFileIndex(fileIndex));
-    const auto firstOffset = files.file_offset(makeFileIndex(fileIndex));
-    return makeInterval(static_cast<int>(firstOffset / pieceLength()),
-                        static_cast<int>((firstOffset + fileSize - 1) / pieceLength()));
+    const auto fileOffset = files.file_offset(makeFileIndex(fileIndex));
+    return makeInterval(static_cast<int>(fileOffset / pieceLength()),
+                        static_cast<int>((fileOffset + fileSize - 1) / pieceLength()));
 }
 
-void TorrentInfo::renameFile(int index, const QString &newPath)
+void TorrentInfo::renameFile(const int index, const QString &newPath)
 {
     if (!isValid()) return;
     nativeInfo()->rename_file(makeFileIndex(index), Utils::Fs::toNativePath(newPath).toStdString());

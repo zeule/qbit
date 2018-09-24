@@ -39,11 +39,12 @@
 #include "base/http/irequesthandler.h"
 #include "base/http/responsebuilder.h"
 #include "base/http/types.h"
+#include "base/utils/net.h"
 #include "base/utils/version.h"
 
-constexpr Utils::Version<int, 3, 2> API_VERSION {2, 0, 1};
-constexpr int COMPAT_API_VERSION = 19;
-constexpr int COMPAT_API_VERSION_MIN = 18;
+constexpr Utils::Version<int, 3, 2> API_VERSION {2, 1, 0};
+constexpr int COMPAT_API_VERSION = 21;
+constexpr int COMPAT_API_VERSION_MIN = 21;
 
 class APIController;
 class WebApplication;
@@ -133,7 +134,6 @@ private:
     QSet<QString> m_publicAPIs;
     bool m_isAltUIUsed = false;
     QString m_rootFolder;
-    QStringList m_domainList;
 
     struct TranslatedFile
     {
@@ -143,7 +143,12 @@ private:
     QMap<QString, TranslatedFile> m_translatedFiles;
     QString m_currentLocale;
 
+    bool m_isLocalAuthEnabled;
+    bool m_isAuthSubnetWhitelistEnabled;
+    QList<Utils::Net::Subnet> m_authSubnetWhitelist;
+
     // security related
+    QStringList m_domainList;
     bool m_isClickjackingProtectionEnabled;
     bool m_isCSRFProtectionEnabled;
     bool m_isHttpsEnabled;

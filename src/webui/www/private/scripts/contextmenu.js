@@ -356,10 +356,10 @@ var TorrentsTableContextMenu = new Class({
         var categoryList = $('contextCategoryList');
         categoryList.empty();
         categoryList.appendChild(new Element('li', {
-            html: '<a href="javascript:torrentNewCategoryFN();"><img src="theme/list-add" alt="QBT_TR(New...)QBT_TR[CONTEXT=TransferListWidget]"/> QBT_TR(New...)QBT_TR[CONTEXT=TransferListWidget]</a>'
+            html: '<a href="javascript:torrentNewCategoryFN();"><img src="images/qbt-theme/list-add.svg" alt="QBT_TR(New...)QBT_TR[CONTEXT=TransferListWidget]"/> QBT_TR(New...)QBT_TR[CONTEXT=TransferListWidget]</a>'
         }));
         categoryList.appendChild(new Element('li', {
-            html: '<a href="javascript:torrentSetCategoryFN(0);"><img src="theme/edit-clear" alt="QBT_TR(Reset)QBT_TR[CONTEXT=TransferListWidget]"/> QBT_TR(Reset)QBT_TR[CONTEXT=TransferListWidget]</a>'
+            html: '<a href="javascript:torrentSetCategoryFN(0);"><img src="images/qbt-theme/edit-clear.svg" alt="QBT_TR(Reset)QBT_TR[CONTEXT=TransferListWidget]"/> QBT_TR(Reset)QBT_TR[CONTEXT=TransferListWidget]</a>'
         }));
 
         var sortedCategories = [];
@@ -372,7 +372,7 @@ var TorrentsTableContextMenu = new Class({
         Object.each(sortedCategories, function(categoryName) {
             var categoryHash = genHash(categoryName);
             var el = new Element('li', {
-                html: '<a href="javascript:torrentSetCategoryFN(\'' + categoryHash + '\');"><img src="theme/inode-directory"/> ' + escapeHtml(categoryName) + '</a>'
+                html: '<a href="javascript:torrentSetCategoryFN(\'' + categoryHash + '\');"><img src="images/qbt-theme/inode-directory.svg"/> ' + escapeHtml(categoryName) + '</a>'
             });
             if (first) {
                 el.addClass('separator');
@@ -387,9 +387,13 @@ var CategoriesFilterContextMenu = new Class({
     Extends: ContextMenu,
     updateMenuItems: function() {
         var id = this.options.element.id;
-        if (id != CATEGORIES_ALL && id != CATEGORIES_UNCATEGORIZED)
+        if ((id != CATEGORIES_ALL) && (id != CATEGORIES_UNCATEGORIZED)) {
+            this.showItem('EditCategory');
             this.showItem('DeleteCategory');
-        else
+        }
+        else {
+            this.hideItem('EditCategory');
             this.hideItem('DeleteCategory');
+        }
     }
 });

@@ -285,6 +285,8 @@
         <file>qbt-theme/gear32.svg</file>
         <file>qbt-theme/go-down.svg</file>
         <file>qbt-theme/go-up.svg</file>
+        <file>qbt-theme/go-bottom.svg</file>
+        <file>qbt-theme/go-top.svg</file>
         <file>qbt-theme/help-about.svg</file>
         <file>qbt-theme/help-contents.svg</file>
         <file>qbt-theme/inode-directory.svg</file>
@@ -312,8 +314,6 @@
         <file>qbt-theme/services.svg</file>
         <file>qbt-theme/speedometer.svg</file>
         <file>qbt-theme/system-log-out.svg</file>
-        <file>qbt-theme/go-bottom.svg</file>
-        <file>qbt-theme/go-top.svg</file>
         <file>qbt-theme/checked.svg</file>
         <file>qbt-theme/office-chart-line.svg</file>
         <file>qbt-theme/rss-config.svg</file>
@@ -347,9 +347,11 @@
         <file>skin/bg-panel-header.gif</file>
         <file>skin/checking.svg</file>
         <file>skin/collapse-expand.gif</file>
+        <file>skin/completed.svg</file>
         <file>skin/connected.svg</file>
         <file>skin/disconnected.svg</file>
         <file>skin/dock-tabs.gif</file>
+        <file>skin/download.svg</file>
         <file>skin/downloading.svg</file>
         <file>skin/error.svg</file>
         <file>skin/filteractive.svg</file>
@@ -364,6 +366,7 @@
         <file>skin/logo2.gif</file>
         <file>skin/mascot.png</file>
         <file>skin/paused.svg</file>
+        <file>skin/resumed.svg</file>
         <file>skin/qbittorrent-tray.svg</file>
         <file>skin/qbittorrent-tray-dark.svg</file>
         <file>skin/qbittorrent-tray-light.svg</file>
@@ -380,11 +383,9 @@
         <file>skin/tabs.gif</file>
         <file>skin/toolbox-divider.gif</file>
         <file>skin/toolbox-divider2.gif</file>
+        <file>skin/uploading.svg</file>
         <file>sphere.png</file>
         <file>sphere2.png</file>
         <file>url.png</file>
-        <file>skin/resumed.svg</file>
-        <file>skin/uploading.svg</file>
-        <file>skin/completed.svg</file>
     </qresource>
 </RCC>

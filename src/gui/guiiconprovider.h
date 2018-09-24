@@ -53,10 +53,10 @@ public:
     static void initInstance();
     static GuiIconProvider *instance();
 
-    QIcon getIcon(const QString &iconId);
-    QIcon getIcon(const QString &iconId, const QString &fallback);
-    QIcon getFlagIcon(const QString &countryIsoCode);
-    QString getIconPath(const QString &iconId) override;
+    QIcon getIcon(const QString &iconId) const;
+    QIcon getIcon(const QString &iconId, const QString &fallback) const;
+    QIcon getFlagIcon(const QString &countryIsoCode) const;
+    QString getIconPath(const QString &iconId) const override;
 
     QIcon icon(BitTorrent::TorrentState state) const;
 
@@ -81,7 +81,7 @@ private slots:
 
 private:
     explicit GuiIconProvider(QObject *parent = nullptr);
-    ~GuiIconProvider();
+    ~GuiIconProvider() override;
 
     Q_ENUM(IconSet)
 

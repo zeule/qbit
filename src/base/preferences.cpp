@@ -187,6 +187,16 @@ void Preferences::setMinimizeToTray(bool b)
     setValue("Preferences/General/MinimizeToTray", b);
 }
 
+bool Preferences::minimizeToTrayNotified() const
+{
+    return value("Preferences/General/MinimizeToTrayNotified", false).toBool();
+}
+
+void Preferences::setMinimizeToTrayNotified(bool b)
+{
+    setValue("Preferences/General/MinimizeToTrayNotified", b);
+}
+
 bool Preferences::closeToTray() const
 {
     return value("Preferences/General/CloseToTray", true).toBool();
@@ -195,6 +205,16 @@ bool Preferences::closeToTray() const
 void Preferences::setCloseToTray(bool b)
 {
     setValue("Preferences/General/CloseToTray", b);
+}
+
+bool Preferences::closeToTrayNotified() const
+{
+    return value("Preferences/General/CloseToTrayNotified", false).toBool();
+}
+
+void Preferences::setCloseToTrayNotified(bool b)
+{
+    setValue("Preferences/General/CloseToTrayNotified", b);
 }
 #endif
 
@@ -239,14 +259,24 @@ void Preferences::setSplashScreenDisabled(bool b)
 }
 
 // Preventing from system suspend while active torrents are presented.
-bool Preferences::preventFromSuspend() const
+bool Preferences::preventFromSuspendWhenDownloading() const
 {
-    return value("Preferences/General/PreventFromSuspend", false).toBool();
+    return value("Preferences/General/PreventFromSuspendWhenDownloading", false).toBool();
 }
 
-void Preferences::setPreventFromSuspend(bool b)
+void Preferences::setPreventFromSuspendWhenDownloading(bool b)
 {
-    setValue("Preferences/General/PreventFromSuspend", b);
+    setValue("Preferences/General/PreventFromSuspendWhenDownloading", b);
+}
+
+bool Preferences::preventFromSuspendWhenSeeding() const
+{
+    return value("Preferences/General/PreventFromSuspendWhenSeeding", false).toBool();
+}
+
+void Preferences::setPreventFromSuspendWhenSeeding(bool b)
+{
+    setValue("Preferences/General/PreventFromSuspendWhenSeeding", b);
 }
 
 #ifdef Q_OS_WIN
@@ -260,7 +290,7 @@ void Preferences::setWinStartup(bool b)
 {
     QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
     if (b) {
-        const QString binPath = "\"" + Utils::Fs::toNativePath(qApp->applicationFilePath()) + "\"";
+        const QString binPath = '"' + Utils::Fs::toNativePath(qApp->applicationFilePath()) + '"';
         settings.setValue("qBittorrent", binPath);
     }
     else {
@@ -504,7 +534,7 @@ void Preferences::setWebUiAuthSubnetWhitelist(QStringList subnets)
 
 QString Preferences::getServerDomains() const
 {
-    return value("Preferences/WebUI/ServerDomains", "*").toString();
+    return value("Preferences/WebUI/ServerDomains", QChar('*')).toString();
 }
 
 void Preferences::setServerDomains(const QString &str)
@@ -514,7 +544,7 @@ void Preferences::setServerDomains(const QString &str)
 
 QString Preferences::getWebUiAddress() const
 {
-    return value("Preferences/WebUI/Address", "*").toString().trimmed();
+    return value("Preferences/WebUI/Address", QChar('*')).toString().trimmed();
 }
 
 void Preferences::setWebUiAddress(const QString &addr)
@@ -979,7 +1009,7 @@ QString Preferences::getPythonPath()
     // Fallback: Detect python from default locations
     const QStringList dirs = QDir("C:/").entryList(QStringList("Python*"), QDir::Dirs, QDir::Name | QDir::Reversed);
     foreach (const QString &dir, dirs) {
-        const QString path("C:/" + dir + "/");
+        const QString path("C:/" + dir + '/');
         if (QFile::exists(path + "python.exe"))
             return path;
     }
@@ -1050,8 +1080,8 @@ void Preferences::setMagnetLinkAssoc(bool set)
 
     // Magnet association
     if (set) {
-        const QString commandStr = "\"" + qApp->applicationFilePath() + "\" \"%1\"";
-        const QString iconStr = "\"" + qApp->applicationFilePath() + "\",1";
+        const QString commandStr = '"' + qApp->applicationFilePath() + "\" \"%1\"";
+        const QString iconStr = '"' + qApp->applicationFilePath() + "\",1";
 
         settings.setValue("magnet/Default", "URL:Magnet link");
         settings.setValue("magnet/Content Type", "application/x-magnet");
@@ -1391,6 +1421,16 @@ void Preferences::setSearchTabHeaderState(const QByteArray &state)
     setValue("SearchTab/qt5/HeaderState", state);
 }
 
+bool Preferences::getRegexAsFilteringPatternForSearchJob() const
+{
+    return value("SearchTab/UseRegexAsFilteringPattern", false).toBool();
+}
+
+void Preferences::setRegexAsFilteringPatternForSearchJob(const bool checked)
+{
+    setValue("SearchTab/UseRegexAsFilteringPattern", checked);
+}
+
 QStringList Preferences::getSearchEngDisabled() const
 {
     return value("SearchEngines/disabledEngines").toStringList();
@@ -1481,6 +1521,16 @@ void Preferences::setTransHeaderState(const QByteArray &state)
     setValue("TransferList/qt5/HeaderState", state);
 }
 
+bool Preferences::getRegexAsFilteringPatternForTransferList() const
+{
+    return value("TransferList/UseRegexAsFilteringPattern", false).toBool();
+}
+
+void Preferences::setRegexAsFilteringPatternForTransferList(const bool checked)
+{
+    setValue("TransferList/UseRegexAsFilteringPattern", checked);
+}
+
 // From old RssSettings class
 bool Preferences::isRSSWidgetEnabled() const
 {
@@ -1544,6 +1594,8 @@ void Preferences::setSpeedWidgetGraphEnable(int id, const bool enable)
 
 void Preferences::upgrade()
 {
+    SettingsStorage *settingsStorage = SettingsStorage::instance();
+
     // Migrate single-value prefs to new section/name
     QList<QPair<QString, QString>> prefsToMigrate = {
         { "Preferences/General/Locale", "Appearance/Locale" },
@@ -1563,6 +1615,7 @@ void Preferences::upgrade()
         }
     }
 
+
     QStringList labels = value("TransferListFilters/customLabels").toStringList();
     if (!labels.isEmpty()) {
         QVariantMap categories = value("BitTorrent/Session/Categories").toMap();
@@ -1571,7 +1624,7 @@ void Preferences::upgrade()
                 categories[label] = "";
         }
         setValue("BitTorrent/Session/Categories", categories);
-        SettingsStorage::instance()->removeValue("TransferListFilters/customLabels");
+        settingsStorage->removeValue("TransferListFilters/customLabels");
     }
 
     SettingsStorage::instance()->removeValue("Preferences/Downloads/AppendLabel");
@@ -1582,8 +1635,15 @@ void Preferences::upgrade()
         // see GUiIconsProvider for the new key
         SettingsStorage::instance()->storeValue(QLatin1String("Appearance/IconSet"), QLatin1String("SystemTheme"));
     }
-    SettingsStorage::instance()->removeValue(UseSystemIconsOldKey);
+    settingsStorage->removeValue(UseSystemIconsOldKey);
 #endif
+
+    // Inhibit sleep based on running downloads/available seeds rather than network activity.
+    if (value("Preferences/General/PreventFromSuspend", false).toBool()) {
+        setPreventFromSuspendWhenDownloading(true);
+        setPreventFromSuspendWhenSeeding(true);
+    }
+    settingsStorage->removeValue("Preferences/General/PreventFromSuspend");
 }
 
 void Preferences::apply()

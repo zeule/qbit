@@ -69,6 +69,13 @@ QPixmap Utils::Gui::scaledPixmap(const QPixmap &pixmap, const QWidget *widget, c
     return pixmap.scaledToHeight(scaledHeight, Qt::SmoothTransformation);
 }
 
+QPixmap Utils::Gui::scaledPixmap(const QIcon& icon, const QWidget* widget, const int height)
+{
+    Q_ASSERT(height > 0);
+    const int scaledHeight = height * Utils::Gui::screenScalingFactor(widget);
+    return icon.pixmap(scaledHeight);
+}
+
 QPixmap Utils::Gui::scaledPixmap(const QString &path, const QWidget *widget, const int height)
 {
     return scaledPixmap(QPixmap(path), widget, height);
@@ -77,7 +84,7 @@ QPixmap Utils::Gui::scaledPixmap(const QString &path, const QWidget *widget, con
 QPixmap Utils::Gui::scaledPixmapSvg(const QString &path, const QWidget *widget, const int baseHeight)
 {
     const int scaledHeight = baseHeight * Utils::Gui::screenScalingFactor(widget);
-    const QString normalizedKey = path + "@" + QString::number(scaledHeight);
+    const QString normalizedKey = path + '@' + QString::number(scaledHeight);
 
     QPixmap pm;
     QPixmapCache cache;

@@ -39,16 +39,16 @@ namespace
 {
     QString getSpecialAllTag()
     {
-        static const QString *const ALL_TAG = new QString(" ");
-        Q_ASSERT(!BitTorrent::Session::isValidTag(*ALL_TAG));
-        return *ALL_TAG;
+        const QString ALL_TAG = QLatin1String(" ");
+        Q_ASSERT(!BitTorrent::Session::isValidTag(ALL_TAG));
+        return ALL_TAG;
     }
 
     QString getSpecialUntaggedTag()
     {
-        static const QString *const UNTAGGED_TAG = new QString("  ");
-        Q_ASSERT(!BitTorrent::Session::isValidTag(*UNTAGGED_TAG));
-        return *UNTAGGED_TAG;
+        const QString UNTAGGED_TAG = QLatin1String("  ");
+        Q_ASSERT(!BitTorrent::Session::isValidTag(UNTAGGED_TAG));
+        return UNTAGGED_TAG;
     }
 }
 
@@ -135,7 +135,7 @@ QVariant TagFilterModel::data(const QModelIndex &index, int role) const
 Qt::ItemFlags TagFilterModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
-        return 0;
+        return Qt::NoItemFlags;
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 

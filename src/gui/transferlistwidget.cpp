@@ -971,27 +971,23 @@ void TransferListWidget::displayListMenu(const QPoint&)
             oneHasMetadata = true;
         if (!torrent->isSeed()) {
             oneNotSeed = true;
-            if (torrent->hasMetadata()) {
-                if (first) {
-                    sequentialDownloadMode = torrent->isSequentialDownload();
-                    prioritizeFirstLast = torrent->hasFirstLastPiecePriority();
-                }
-                else {
-                    if (sequentialDownloadMode != torrent->isSequentialDownload())
-                        allSameSequentialDownloadMode = false;
-                    if (prioritizeFirstLast != torrent->hasFirstLastPiecePriority())
-                        allSamePrioFirstlast = false;
-                }
+            if (first) {
+                sequentialDownloadMode = torrent->isSequentialDownload();
+                prioritizeFirstLast = torrent->hasFirstLastPiecePriority();
+            }
+            else {
+                if (sequentialDownloadMode != torrent->isSequentialDownload())
+                    allSameSequentialDownloadMode = false;
+                if (prioritizeFirstLast != torrent->hasFirstLastPiecePriority())
+                    allSamePrioFirstlast = false;
             }
         }
         else {
             if (!oneNotSeed && allSameSuperSeeding && torrent->hasMetadata()) {
-                if (first) {
+                if (first)
                     superSeedingMode = torrent->superSeeding();
-                }
                 else if (superSeedingMode != torrent->superSeeding())
                     allSameSuperSeeding = false;
-
             }
         }
         if (!torrent->isForced())
@@ -1090,7 +1086,7 @@ void TransferListWidget::displayListMenu(const QPoint&)
         listMenu.addAction(&actionPreviewFile);
         addedPreviewAction = true;
     }
-    if (oneNotSeed && oneHasMetadata) {
+    if (oneNotSeed) {
         if (allSameSequentialDownloadMode) {
             actionSequentialDownload.setChecked(sequentialDownloadMode);
             listMenu.addAction(&actionSequentialDownload);
@@ -1196,7 +1192,9 @@ void TransferListWidget::applyTrackerFilter(const QStringList &hashes)
 
 void TransferListWidget::applyNameFilter(const QString &name)
 {
-    m_sortFilterModel->setFilterRegExp(QRegExp(name, Qt::CaseInsensitive, QRegExp::WildcardUnix));
+    const QRegExp::PatternSyntax patternSyntax = Preferences::instance()->getRegexAsFilteringPatternForTransferList()
+                ? QRegExp::RegExp : QRegExp::WildcardUnix;
+    m_sortFilterModel->setFilterRegExp(QRegExp(name, Qt::CaseInsensitive, patternSyntax));
 }
 
 void TransferListWidget::applyStatusFilter(int f)

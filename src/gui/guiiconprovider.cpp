@@ -53,11 +53,6 @@
 #include "theme/colortheme.h"
 #include "theme/themeprovider.h"
 
-#if (defined(Q_OS_UNIX) && !defined(Q_OS_MAC))
-#include <QDir>
-#include <QFile>
-#endif
-
 #ifdef HAVE_KF5ICONTHEMES
 #include <KIconLoader>
 #endif
@@ -122,6 +117,7 @@ void GuiIconProvider::SVGManipulator::replaceSVGFillColor(const QString& svgFile
                                 "$1$2" + newColor.name().toStdString() + "$3");
 }
 
+
 GuiIconProvider::GuiIconProvider(QObject *parent)
     : IconProvider {parent}
     , m_iconsTemporaryDir {temporaryDirForIcons()}
@@ -149,12 +145,12 @@ GuiIconProvider *GuiIconProvider::instance()
     return static_cast<GuiIconProvider *>(m_instance);
 }
 
-QIcon GuiIconProvider::getIcon(const QString &iconId)
+QIcon GuiIconProvider::getIcon(const QString &iconId) const
 {
     return getIcon(iconId, iconId);
 }
 
-QIcon GuiIconProvider::getIcon(const QString &iconId, const QString &fallback)
+QIcon GuiIconProvider::getIcon(const QString &iconId, const QString &fallback) const
 {
     const auto it = m_generatedIcons.find(iconId);
     if (it != m_generatedIcons.end()) {
@@ -170,16 +166,24 @@ QIcon GuiIconProvider::getIcon(const QString &iconId, const QString &fallback)
 #else
     Q_UNUSED(fallback)
 #endif
-    return QIcon(IconProvider::getIconPath(iconId));
+    // cache to avoid rescaling svg icons
+    static QHash<QString, QIcon> iconCache;
+    const auto iter = iconCache.find(iconId);
+    if (iter != iconCache.end())
+        return *iter;
+
+    const QIcon icon {IconProvider::getIconPath(iconId)};
+    iconCache[iconId] = icon;
+    return icon;
 }
 
-QIcon GuiIconProvider::getFlagIcon(const QString &countryIsoCode)
+QIcon GuiIconProvider::getFlagIcon(const QString &countryIsoCode) const
 {
     if (countryIsoCode.isEmpty()) return QIcon();
     return QIcon(":/icons/flags/" + countryIsoCode.toLower() + ".svg");
 }
 
-QString GuiIconProvider::getIconPath(const QString& iconId)
+QString GuiIconProvider::getIconPath(const QString& iconId) const
 {
 #ifdef HAVE_KF5ICONTHEMES
     if (iconSet() == IconSet::SystemTheme)

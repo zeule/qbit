@@ -66,7 +66,7 @@ StatusBar::StatusBar(QWidget *parent)
     m_connecStatusLblIcon->setFlat(true);
     m_connecStatusLblIcon->setFocusPolicy(Qt::NoFocus);
     m_connecStatusLblIcon->setCursor(Qt::PointingHandCursor);
-    m_connecStatusLblIcon->setIcon(QIcon(":/icons/skin/firewalled.png"));
+    m_connecStatusLblIcon->setIcon(QIcon(":/icons/skin/firewalled.svg"));
     m_connecStatusLblIcon->setToolTip(
         QString(QLatin1String("<b>%1</b><br><i>%2</i>")).arg(tr("Connection status:")
             , tr("No direct connections. This may indicate network configuration problems.")));
@@ -212,14 +212,14 @@ void StatusBar::updateSpeedLabels()
     QString speedLbl = Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.payloadDownloadRate), true);
     int speedLimit = BitTorrent::Session::instance()->downloadSpeedLimit();
     if (speedLimit)
-        speedLbl += " [" + Utils::Misc::friendlyUnit(speedLimit, true) + "]";
-    speedLbl += " (" + Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.totalPayloadDownload)) + ")";
+        speedLbl += " [" + Utils::Misc::friendlyUnit(speedLimit, true) + ']';
+    speedLbl += " (" + Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.totalPayloadDownload)) + ')';
     m_dlSpeedLbl->setText(speedLbl);
     speedLimit = BitTorrent::Session::instance()->uploadSpeedLimit();
     speedLbl = Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.payloadUploadRate), true);
     if (speedLimit)
-        speedLbl += " [" + Utils::Misc::friendlyUnit(speedLimit, true) + "]";
-    speedLbl += " (" + Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.totalPayloadUpload)) + ")";
+        speedLbl += " [" + Utils::Misc::friendlyUnit(speedLimit, true) + ']';
+    speedLbl += " (" + Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.totalPayloadUpload)) + ')';
     m_upSpeedLbl->setText(speedLbl);
 }
 

@@ -81,7 +81,7 @@ QVariant TransferListModel::headerData(int section, Qt::Orientation orientation,
     if (orientation == Qt::Horizontal) {
         if (role == Qt::DisplayRole) {
             switch (section) {
-            case TR_PRIORITY: return "#";
+            case TR_PRIORITY: return QChar('#');
             case TR_NAME: return tr("Name", "i.e: torrent name");
             case TR_SIZE: return tr("Size", "i.e: torrent size");
             case TR_PROGRESS: return tr("Done", "% Done");
@@ -230,8 +230,6 @@ QVariant TransferListModel::data(const QModelIndex &index, int role) const
         return QVariant::fromValue(torrent->timeSinceActivity());
     case TR_TOTAL_SIZE:
         return torrent->totalSize();
-    default:
-        return QVariant();
     }
 
     return QVariant();
@@ -273,7 +271,7 @@ void TransferListModel::addTorrent(BitTorrent::TorrentHandle *const torrent)
 
 Qt::ItemFlags TransferListModel::flags(const QModelIndex &index) const
 {
-    if (!index.isValid()) return 0;
+    if (!index.isValid()) return Qt::NoItemFlags;
 
     // Explicitly mark as editable
     return QAbstractListModel::flags(index) | Qt::ItemIsEditable;
@@ -281,7 +279,7 @@ Qt::ItemFlags TransferListModel::flags(const QModelIndex &index) const
 
 BitTorrent::TorrentHandle *TransferListModel::torrentHandle(const QModelIndex &index) const
 {
-    if (!index.isValid()) return 0;
+    if (!index.isValid()) return nullptr;
 
     return m_torrents.value(index.row());
 }

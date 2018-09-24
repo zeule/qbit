@@ -32,8 +32,7 @@
 
 #include <QDir>
 #include <QObject>
-
-class QString;
+#include <QString>
 
 class IconProvider : public QObject
 {
@@ -44,7 +43,7 @@ public:
     static void freeInstance();
     static IconProvider *instance();
 
-    virtual QString getIconPath(const QString &iconId);
+    virtual QString getIconPath(const QString &iconId) const;
 
 protected:
     explicit IconProvider(QObject *parent = nullptr);
