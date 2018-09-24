@@ -406,9 +406,9 @@ void TrackerListWidget::loadTrackers()
         const auto downloaded = std::accumulate(endpoints.begin(), endpoints.end(), 0, aDownloaded);
         item->setText(COL_DOWNLOADED, aDownloaded.empty() ? tr("N/A") : QString::number(downloaded));
 #elif LIBTORRENT_VERSION_NUM >= 10000
-        item->setText(COL_SEEDS, (entry.nativeEntry().scrape_complete) > 0 ? QString::number(entry.nativeEntry().scrape_complete) : tr("N/A")));
-        item->setText(COL_PEERS, (entry.nativeEntry().scrape_incomplete) > 0 ? QString::number(entry.nativeEntry().scrape_incomplete) : tr("N/A")));
-        item->setText(COL_DOWNLOADED, (entry.nativeEntry().scrape_downloaded) > 0 ? QString::number(entry.nativeEntry().scrape_downloaded) : tr("N/A")));
+        item->setText(COL_SEEDS, (entry.nativeEntry().scrape_complete) > 0 ? QString::number(entry.nativeEntry().scrape_complete) : tr("N/A"));
+        item->setText(COL_PEERS, (entry.nativeEntry().scrape_incomplete) > 0 ? QString::number(entry.nativeEntry().scrape_incomplete) : tr("N/A"));
+        item->setText(COL_DOWNLOADED, (entry.nativeEntry().scrape_downloaded) > 0 ? QString::number(entry.nativeEntry().scrape_downloaded) : tr("N/A"));
 #else
         item->setText(COL_SEEDS, tr("N/A"));
         item->setText(COL_PEERS, tr("N/A"));

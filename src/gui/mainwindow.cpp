@@ -1576,17 +1576,10 @@ void MainWindow::updateGUI()
         html += "qBittorrent";
         html += "</div>";
         html += "<div style='vertical-align: baseline; height: 18px;'>";
-<<<<<<< HEAD
-        html += "<img src='" + GuiIconProvider::instance()->getIconPath("cloud-download.svg") + "' height='1.2ex'/>&nbsp;" + tr("DL speed: %1", "e.g: Download speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadDownloadRate), true));
+        html += "<img src='" + GuiIconProvider::instance()->getIconPath("cloud-download.svg") + "' height='14'/>&nbsp;" + tr("DL speed: %1", "e.g: Download speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadDownloadRate), true));
         html += "</div>";
         html += "<div style='vertical-align: baseline; height: 18px;'>";
-        html += "<img src='" + GuiIconProvider::instance()->getIconPath("cloud-upload") +"' height='1.2ex'/>&nbsp;" + tr("UP speed: %1", "e.g: Upload speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadUploadRate), true));
-=======
-        html += "<img src=':/icons/skin/download.svg' height='14'/>&nbsp;" + tr("DL speed: %1", "e.g: Download speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(status.payloadDownloadRate, true));
-        html += "</div>";
-        html += "<div style='vertical-align: baseline; height: 18px;'>";
-        html += "<img src=':/icons/skin/seeding.svg' height='14'/>&nbsp;" + tr("UP speed: %1", "e.g: Upload speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(status.payloadUploadRate, true));
->>>>>>> qBittorrent/master
+        html += "<img src='" + GuiIconProvider::instance()->getIconPath("cloud-upload") +"' height='14'/>&nbsp;" + tr("UP speed: %1", "e.g: Upload speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadUploadRate), true));
         html += "</div>";
 #else
         // OSes such as Windows do not support html here
