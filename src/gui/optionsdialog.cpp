@@ -552,6 +552,7 @@ OptionsDialog::OptionsDialog(QWidget *parent)
     connect(m_ui->checkRSSEnable, &QCheckBox::toggled, this, &OptionsDialog::enableApplyButton);
     connect(m_ui->checkRSSAutoDownloaderEnable, &QCheckBox::toggled, this, &OptionsDialog::enableApplyButton);
     connect(m_ui->textSmartEpisodeFilters, &QPlainTextEdit::textChanged, this, &OptionsDialog::enableApplyButton);
+    connect(m_ui->checkSmartFilterDownloadRepacks, &QCheckBox::toggled, this, &OptionsDialog::enableApplyButton);
     connect(m_ui->spinRSSRefreshInterval, qSpinBoxValueChanged, this, &OptionsDialog::enableApplyButton);
     connect(m_ui->spinRSSMaxArticlesPerFeed, qSpinBoxValueChanged, this, &OptionsDialog::enableApplyButton);
     connect(m_ui->btnEditRules, &QPushButton::clicked, this, [this]() { AutomatedRssDownloader(this).exec(); });
@@ -789,6 +790,7 @@ void OptionsDialog::saveOptions()
     RSS::Session::instance()->setProcessingEnabled(m_ui->checkRSSEnable->isChecked());
     RSS::AutoDownloader::instance()->setProcessingEnabled(m_ui->checkRSSAutoDownloaderEnable->isChecked());
     RSS::AutoDownloader::instance()->setSmartEpisodeFilters(m_ui->textSmartEpisodeFilters->toPlainText().split('\n', QString::SplitBehavior::SkipEmptyParts));
+    RSS::AutoDownloader::instance()->setDownloadRepacks(m_ui->checkSmartFilterDownloadRepacks->isChecked());
 
     auto session = BitTorrent::Session::instance();
 
@@ -1031,6 +1033,7 @@ void OptionsDialog::loadOptions()
     m_ui->checkRSSEnable->setChecked(RSS::Session::instance()->isProcessingEnabled());
     m_ui->checkRSSAutoDownloaderEnable->setChecked(RSS::AutoDownloader::instance()->isProcessingEnabled());
     m_ui->textSmartEpisodeFilters->setPlainText(RSS::AutoDownloader::instance()->smartEpisodeFilters().join('\n'));
+    m_ui->checkSmartFilterDownloadRepacks->setChecked(RSS::AutoDownloader::instance()->downloadRepacks());
 
     m_ui->spinRSSRefreshInterval->setValue(boost::numeric_cast<int>(RSS::Session::instance()->refreshInterval()));
     m_ui->spinRSSMaxArticlesPerFeed->setValue(RSS::Session::instance()->maxArticlesPerFeed());

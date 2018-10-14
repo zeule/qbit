@@ -146,9 +146,6 @@ PropertiesWidget::PropertiesWidget(QWidget *parent, MainWindow *mainWindow, Tran
     // Peers list
     m_peerList = new PeerListWidget(this);
     m_ui->vBoxLayoutPeerPage->addWidget(m_peerList);
-    // Speed widget
-    m_speedWidget = new SpeedWidget(this);
-    m_ui->speedLayout->addWidget(m_speedWidget);
     // Tab bar
     m_tabBar = new PropTabBar();
     m_tabBar->setContentsMargins(0, 5, 0, 0);
@@ -178,6 +175,8 @@ PropertiesWidget::PropertiesWidget(QWidget *parent, MainWindow *mainWindow, Tran
             this, &PropertiesWidget::applyColorTheme);
     connect(&Theme::ThemeProvider::instance(), &Theme::ThemeProvider::fontThemeChanged,
             this, &PropertiesWidget::applyFontTheme);
+    configure();
+    connect(Preferences::instance(), &Preferences::changed, this, &PropertiesWidget::configure);
 }
 
 PropertiesWidget::~PropertiesWidget()
@@ -300,11 +299,6 @@ PeerListWidget *PropertiesWidget::getPeerList() const
 QTreeView *PropertiesWidget::getFilesList() const
 {
     return m_ui->filesList;
-}
-
-SpeedWidget *PropertiesWidget::getSpeedWidget() const
-{
-    return m_speedWidget;
 }
 
 void PropertiesWidget::updateSavePath(BitTorrent::TorrentHandle *const torrent)
@@ -813,6 +807,29 @@ void PropertiesWidget::openSelectedFile()
     if (selectedIndexes.size() != 1)
         return;
     openDoubleClickedFile(selectedIndexes.first());
+}
+
+void PropertiesWidget::configure()
+{
+    // Speed widget
+    if (Preferences::instance()->isSpeedWidgetEnabled()) {
+        if (!m_speedWidget || !qobject_cast<SpeedWidget *>(m_speedWidget)) {
+            m_ui->speedLayout->removeWidget(m_speedWidget);
+            delete m_speedWidget;
+            m_speedWidget = new SpeedWidget {this};
+            m_ui->speedLayout->addWidget(m_speedWidget);
+        }
+    }
+    else {
+        if (!m_speedWidget || !qobject_cast<QLabel *>(m_speedWidget)) {
+            m_ui->speedLayout->removeWidget(m_speedWidget);
+            delete m_speedWidget;
+            auto *label = new QLabel(tr("<center><b>Speed graphs are disabled</b><p>You may change this setting in Advanced Options </center>"), this);
+            label->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+            m_speedWidget = label;
+            m_ui->speedLayout->addWidget(m_speedWidget);
+        }
+    }
 }
 
 void PropertiesWidget::askWebSeed()
