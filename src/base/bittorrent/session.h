@@ -202,45 +202,50 @@ namespace BitTorrent
 #if LIBTORRENT_VERSION_NUM >= 10100
     struct SessionMetricIndices
     {
+#if LIBTORRENT_VERSION_NUM >= 10200
+        using IndexType = std::ptrdiff_t;
+#else
+        using IndexType = std::size_t;
+#endif
         struct
         {
-            std::size_t hasIncomingConnections = 0;
-            std::size_t sentPayloadBytes = 0;
-            std::size_t recvPayloadBytes = 0;
-            std::size_t sentBytes = 0;
-            std::size_t recvBytes = 0;
-            std::size_t sentIPOverheadBytes = 0;
-            std::size_t recvIPOverheadBytes = 0;
-            std::size_t sentTrackerBytes = 0;
-            std::size_t recvTrackerBytes = 0;
-            std::size_t recvRedundantBytes = 0;
-            std::size_t recvFailedBytes = 0;
+            IndexType hasIncomingConnections = 0;
+            IndexType sentPayloadBytes = 0;
+            IndexType recvPayloadBytes = 0;
+            IndexType sentBytes = 0;
+            IndexType recvBytes = 0;
+            IndexType sentIPOverheadBytes = 0;
+            IndexType recvIPOverheadBytes = 0;
+            IndexType sentTrackerBytes = 0;
+            IndexType recvTrackerBytes = 0;
+            IndexType recvRedundantBytes = 0;
+            IndexType recvFailedBytes = 0;
         } net;
 
         struct
         {
-            std::size_t numPeersConnected = 0;
-            std::size_t numPeersUpDisk = 0;
-            std::size_t numPeersDownDisk = 0;
+            IndexType numPeersConnected = 0;
+            IndexType numPeersUpDisk = 0;
+            IndexType numPeersDownDisk = 0;
         } peer;
 
         struct
         {
-            std::size_t dhtBytesIn = 0;
-            std::size_t dhtBytesOut = 0;
-            std::size_t dhtNodes = 0;
+            IndexType dhtBytesIn = 0;
+            IndexType dhtBytesOut = 0;
+            IndexType dhtNodes = 0;
         } dht;
 
         struct
         {
-            std::size_t diskBlocksInUse = 0;
-            std::size_t numBlocksRead = 0;
-            std::size_t numBlocksCacheHits = 0;
-            std::size_t writeJobs = 0;
-            std::size_t readJobs = 0;
-            std::size_t hashJobs = 0;
-            std::size_t queuedDiskJobs = 0;
-            std::size_t diskJobTime = 0;
+            IndexType diskBlocksInUse = 0;
+            IndexType numBlocksRead = 0;
+            IndexType numBlocksCacheHits = 0;
+            IndexType writeJobs = 0;
+            IndexType readJobs = 0;
+            IndexType hashJobs = 0;
+            IndexType queuedDiskJobs = 0;
+            IndexType diskJobTime = 0;
         } disk;
     };
 #endif

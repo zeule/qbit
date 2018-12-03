@@ -1146,11 +1146,11 @@ void Session::applyBandwidthLimits(libtorrent::settings_pack &settingsPack)
 
 void Session::initMetrics()
 {
-    const auto findMetricIndex = [](const char* indexName) -> std::size_t
+    const auto findMetricIndex = [](const char* indexName)
     {
         const auto res = libt::find_metric_idx(indexName);
         Q_ASSERT(res >= 0);
-        return static_cast<std::size_t>(res);
+        return res;
     };
     m_metricIndices.net.hasIncomingConnections = findMetricIndex("net.has_incoming_connections");
     m_metricIndices.net.sentPayloadBytes = findMetricIndex("net.sent_payload_bytes");
