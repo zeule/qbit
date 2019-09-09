@@ -29,27 +29,29 @@
 
 #include "application.h"
 
-#include <algorithm>
+#include <QtGlobal>
 
-#include <QAtomicInt>
-#include <QDebug>
-#include <QLibraryInfo>
-#include <QLocale>
-#include <QProcess>
-#include <QSysInfo>
+#include <algorithm>
 
 #ifdef Q_OS_WIN
 #include <memory>
+#include <Windows.h>
 #include <Shellapi.h>
 #endif
 
-#ifndef DISABLE_GUI
+#include <QAtomicInt>
+#include <QDebug>
+#include <QDir>
+#include <QLibraryInfo>
+#include <QProcess>
 
+#ifndef DISABLE_GUI
 #include "gui/guiiconprovider.h"
 #include "gui/theme/colorproviders.h"
 #include "gui/theme/fontproviders.h"
 #include "gui/theme/themeprovider.h"
 
+#include <QMessageBox>
 #ifdef Q_OS_WIN
 #include <QSessionManager>
 #include <QSharedMemory>
@@ -59,6 +61,7 @@
 #endif // Q_OS_MAC
 #include "addnewtorrentdialog.h"
 #include "gui/guiiconprovider.h"
+#include "gui/utils.h"
 #include "mainwindow.h"
 #include "shutdownconfirmdialog.h"
 #else // DISABLE_GUI
@@ -67,6 +70,7 @@
 
 #include "base/bittorrent/session.h"
 #include "base/bittorrent/torrenthandle.h"
+#include "base/exceptions.h"
 #include "base/iconprovider.h"
 #include "base/logger.h"
 #include "base/net/downloadmanager.h"
@@ -78,6 +82,7 @@
 #include "base/rss/rss_autodownloader.h"
 #include "base/rss/rss_session.h"
 #include "base/scanfoldersmodel.h"
+#include "base/search/searchpluginmanager.h"
 #include "base/settingsstorage.h"
 #include "base/utils/fs.h"
 #include "base/utils/misc.h"
@@ -127,9 +132,10 @@ Application::Application(const QString &id, int &argc, char **argv)
     qRegisterMetaType<Log::Msg>("Log::Msg");
 
     setApplicationName("qBittorrent");
+    setOrganizationDomain("qbittorrent.org");
     validateCommandLineParameters();
 
-    QString profileDir = m_commandLineArgs.portableMode
+    const QString profileDir = m_commandLineArgs.portableMode
         ? QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(DEFAULT_PORTABLE_MODE_PROFILE_DIR)
         : m_commandLineArgs.profileDir;
 
@@ -148,6 +154,7 @@ Application::Application(const QString &id, int &argc, char **argv)
 #if !defined(DISABLE_GUI)
     setAttribute(Qt::AA_UseHighDpiPixmaps, true);  // opt-in to the high DPI pixmap support
     setQuitOnLastWindowClosed(false);
+    setDesktopFileName("org.qbittorrent.qBittorrent");
 #endif
 
 #if defined(Q_OS_WIN) && !defined(DISABLE_GUI)
@@ -187,7 +194,7 @@ bool Application::isFileLoggerEnabled() const
     return settings()->loadValue(KEY_FILELOGGER_ENABLED, true).toBool();
 }
 
-void Application::setFileLoggerEnabled(bool value)
+void Application::setFileLoggerEnabled(const bool value)
 {
     if (value && !m_fileLogger)
         m_fileLogger = new FileLogger(fileLoggerPath(), isFileLoggerBackup(), fileLoggerMaxSize(), isFileLoggerDeleteOld(), fileLoggerAge(), static_cast<FileLogger::FileLogAgeType>(fileLoggerAgeType()));
@@ -214,7 +221,7 @@ bool Application::isFileLoggerBackup() const
     return settings()->loadValue(KEY_FILELOGGER_BACKUP, true).toBool();
 }
 
-void Application::setFileLoggerBackup(bool value)
+void Application::setFileLoggerBackup(const bool value)
 {
     if (m_fileLogger)
         m_fileLogger->setBackup(value);
@@ -226,7 +233,7 @@ bool Application::isFileLoggerDeleteOld() const
     return settings()->loadValue(KEY_FILELOGGER_DELETEOLD, true).toBool();
 }
 
-void Application::setFileLoggerDeleteOld(bool value)
+void Application::setFileLoggerDeleteOld(const bool value)
 {
     if (value && m_fileLogger)
         m_fileLogger->deleteOld(fileLoggerAge(), static_cast<FileLogger::FileLogAgeType>(fileLoggerAgeType()));
@@ -235,13 +242,13 @@ void Application::setFileLoggerDeleteOld(bool value)
 
 int Application::fileLoggerMaxSize() const
 {
-    int val = settings()->loadValue(KEY_FILELOGGER_MAXSIZEBYTES, DEFAULT_FILELOG_SIZE).toInt();
+    const int val = settings()->loadValue(KEY_FILELOGGER_MAXSIZEBYTES, DEFAULT_FILELOG_SIZE).toInt();
     return std::min(std::max(val, MIN_FILELOG_SIZE), MAX_FILELOG_SIZE);
 }
 
 void Application::setFileLoggerMaxSize(const int bytes)
 {
-    int clampedValue = std::min(std::max(bytes, MIN_FILELOG_SIZE), MAX_FILELOG_SIZE);
+    const int clampedValue = std::min(std::max(bytes, MIN_FILELOG_SIZE), MAX_FILELOG_SIZE);
     if (m_fileLogger)
         m_fileLogger->setMaxSize(clampedValue);
     settings()->storeValue(KEY_FILELOGGER_MAXSIZEBYTES, clampedValue);
@@ -249,7 +256,7 @@ void Application::setFileLoggerMaxSize(const int bytes)
 
 int Application::fileLoggerAge() const
 {
-    int val = settings()->loadValue(KEY_FILELOGGER_AGE, 1).toInt();
+    const int val = settings()->loadValue(KEY_FILELOGGER_AGE, 1).toInt();
     return std::min(std::max(val, 1), 365);
 }
 
@@ -260,7 +267,7 @@ void Application::setFileLoggerAge(const int value)
 
 int Application::fileLoggerAgeType() const
 {
-    int val = settings()->loadValue(KEY_FILELOGGER_AGETYPE, 1).toInt();
+    const int val = settings()->loadValue(KEY_FILELOGGER_AGETYPE, 1).toInt();
     return ((val < 0) || (val > 2)) ? 1 : val;
 }
 
@@ -271,7 +278,7 @@ void Application::setFileLoggerAgeType(const int value)
 
 void Application::processMessage(const QString &message)
 {
-    QStringList params = message.split(PARAMS_SEPARATOR, QString::SkipEmptyParts);
+    const QStringList params = message.split(PARAMS_SEPARATOR, QString::SkipEmptyParts);
     // If Application is not running (i.e., other
     // components are not ready) store params
     if (m_running)
@@ -347,7 +354,7 @@ void Application::sendNotificationEmail(const BitTorrent::TorrentHandle *torrent
 
     // Send the notification email
     const Preferences *pref = Preferences::instance();
-    Net::Smtp *smtp = new Net::Smtp(this);
+    auto *smtp = new Net::Smtp(this);
     smtp->sendMail(pref->getMailNotificationSender(),
                      pref->getMailNotificationEmail(),
                      tr("[qBittorrent] '%1' has finished downloading").arg(torrent->name()),
@@ -433,7 +440,7 @@ void Application::processParams(const QStringList &params)
     BitTorrent::AddTorrentParams torrentParams;
     TriStateBool skipTorrentDialog;
 
-    foreach (QString param, params) {
+    for (QString param : params) {
         param = param.trimmed();
 
         // Process strings indicating options specified by the user.
@@ -505,26 +512,42 @@ int Application::exec(const QStringList &params)
     GuiIconProvider::initInstance();
 #endif
 
-    BitTorrent::Session::initInstance();
-    connect(BitTorrent::Session::instance(), &BitTorrent::Session::torrentFinished, this, &Application::torrentFinished);
-    connect(BitTorrent::Session::instance(), &BitTorrent::Session::allTorrentsFinished, this, &Application::allTorrentsFinished, Qt::QueuedConnection);
+    try {
+        BitTorrent::Session::initInstance();
+        connect(BitTorrent::Session::instance(), &BitTorrent::Session::torrentFinished, this, &Application::torrentFinished);
+        connect(BitTorrent::Session::instance(), &BitTorrent::Session::allTorrentsFinished, this, &Application::allTorrentsFinished, Qt::QueuedConnection);
 
 #ifndef DISABLE_COUNTRIES_RESOLUTION
-    Net::GeoIPManager::initInstance();
+        Net::GeoIPManager::initInstance();
 #endif
-    ScanFoldersModel::initInstance(this);
+        ScanFoldersModel::initInstance(this);
 
 #ifndef DISABLE_WEBUI
-    m_webui = new WebUI;
+        m_webui = new WebUI;
 #ifdef DISABLE_GUI
-    if (m_webui->isErrored())
-        return 1;
-    connect(m_webui, &WebUI::fatalError, this, []() { QCoreApplication::exit(1); });
+        if (m_webui->isErrored())
+            return 1;
+        connect(m_webui, &WebUI::fatalError, this, []() { QCoreApplication::exit(1); });
 #endif // DISABLE_GUI
 #endif // DISABLE_WEBUI
 
-    new RSS::Session; // create RSS::Session singleton
-    new RSS::AutoDownloader; // create RSS::AutoDownloader singleton
+        new RSS::Session; // create RSS::Session singleton
+        new RSS::AutoDownloader; // create RSS::AutoDownloader singleton
+    }
+    catch (const RuntimeError &err) {
+#ifdef DISABLE_GUI
+        fprintf(stderr, "%s", err.what());
+#else
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setText(tr("Application failed to start."));
+        msgBox.setInformativeText(err.message());
+        msgBox.show(); // Need to be shown or to moveToCenter does not work
+        msgBox.move(Utils::Gui::screenCenter(&msgBox));
+        msgBox.exec();
+#endif
+        return 1;
+    }
 
 #ifdef DISABLE_GUI
 #ifndef DISABLE_WEBUI
@@ -532,12 +555,12 @@ int Application::exec(const QStringList &params)
     // Display some information to the user
     const QString mesg = QString("\n******** %1 ********\n").arg(tr("Information"))
         + tr("To control qBittorrent, access the Web UI at %1")
-            .arg(QString("http://localhost:") + QString::number(pref->getWebUiPort())) + '\n'
-        + tr("The Web UI administrator user name is: %1").arg(pref->getWebUiUsername()) + '\n';
+            .arg(QString("http://localhost:") + QString::number(pref->getWebUiPort())) + '\n';
     printf("%s", qUtf8Printable(mesg));
-    qDebug() << "Password:" << pref->getWebUiPassword();
-    if (pref->getWebUiPassword() == "f6fdffe48c908deb0f4c3bd36c032e72") {
-        const QString warning = tr("The Web UI administrator password is still the default one: %1").arg("adminadmin") + '\n'
+
+    if (pref->getWebUIPassword() == "ARQ77eY1NUZaQsuDHbIMCA==:0WMRkYTUWVT9wVvdDtHAjU9b3b7uB8NR1Gur2hmQCvCDpm39Q+PsJRJPaCU51dEiz+dTzh8qbPsL8WkFljQYFQ==") {
+        const QString warning = tr("The Web UI administrator username is: %1").arg(pref->getWebUiUsername()) + '\n'
+            + tr("The Web UI administrator password is still the default one: %1").arg("adminadmin") + '\n'
             + tr("This is a security risk, please consider changing your password from program preferences.") + '\n';
         printf("%s", qUtf8Printable(warning));
     }
@@ -563,7 +586,7 @@ int Application::exec(const QStringList &params)
 #ifdef Q_OS_WIN
 bool Application::isRunning()
 {
-    bool running = BaseApplication::isRunning();
+    const bool running = BaseApplication::isRunning();
     QSharedMemory *sharedMem = new QSharedMemory(id() + QLatin1String("-shared-memory-key"), this);
     if (!running) {
         // First instance creates shared memory and store PID
@@ -607,26 +630,13 @@ bool Application::event(QEvent *ev)
     }
 }
 #endif // Q_OS_MAC
-
-bool Application::notify(QObject *receiver, QEvent *event)
-{
-    try {
-        return QApplication::notify(receiver, event);
-    }
-    catch (const std::exception &e) {
-        qCritical() << "Exception thrown:" << e.what() << ", receiver: " << receiver->objectName();
-        receiver->dumpObjectInfo();
-    }
-
-    return false;
-}
 #endif // DISABLE_GUI
 
 void Application::initializeTranslation()
 {
     Preferences *const pref = Preferences::instance();
     // Load translation
-    QString localeStr = pref->getLocale();
+    const QString localeStr = pref->getLocale();
 
     if (m_qtTranslator.load(QLatin1String("qtbase_") + localeStr, QLibraryInfo::location(QLibraryInfo::TranslationsPath)) ||
         m_qtTranslator.load(QLatin1String("qt_") + localeStr, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
@@ -734,6 +744,7 @@ void Application::cleanup()
     delete m_fileLogger;
     Logger::freeInstance();
     IconProvider::freeInstance();
+    SearchPluginManager::freeInstance();
     Utils::Fs::removeDirRecursive(Utils::Fs::tempPath());
 
 #ifndef DISABLE_GUI

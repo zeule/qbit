@@ -1,6 +1,6 @@
 /*
  * Bittorrent Client using Qt and libtorrent.
- * Copyright (C) 2006  Christophe Dumez <chris@qbittorrent.org>
+ * Copyright (C) 2018  Thomas Piccirello <thomas.piccirello@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,35 +26,21 @@
  * exception statement from your version.
  */
 
-#ifndef TRACKERLOGINDIALOG_H
-#define TRACKERLOGINDIALOG_H
-
-#include <QDialog>
-
-#include "ui_trackerlogindialog.h"
+#include "downloadpriority.h"
 
 namespace BitTorrent
 {
-    class TorrentHandle;
+    bool isValidDownloadPriority(const DownloadPriority priority)
+    {
+        switch (priority) {
+        case BitTorrent::DownloadPriority::Ignored:
+        case BitTorrent::DownloadPriority::Normal:
+        case BitTorrent::DownloadPriority::High:
+        case BitTorrent::DownloadPriority::Maximum:
+        case BitTorrent::DownloadPriority::Mixed:
+            return true;
+        default:
+            return false;
+        }
+    }
 }
-
-class TrackerLoginDialog : public QDialog, private Ui::TrackerLoginDialog
-{
-    Q_OBJECT
-
-public:
-    TrackerLoginDialog(QWidget *parent, BitTorrent::TorrentHandle *const torrent);
-    ~TrackerLoginDialog();
-
-signals:
-    void trackerLoginCancelled(QPair<BitTorrent::TorrentHandle*, QString> tracker);
-
-private slots:
-    void loginButtonClicked();
-    void cancelButtonClicked();
-
-private:
-    BitTorrent::TorrentHandle *const m_torrent;
-};
-
-#endif // TRACKERLOGINDIALOG_H

@@ -30,14 +30,14 @@
 #include "transferlistmodel.h"
 
 #include <QApplication>
+#include <QDateTime>
 #include <QDebug>
 #include <QIcon>
 #include <QPalette>
 
 #include "base/bittorrent/session.h"
 #include "base/bittorrent/torrenthandle.h"
-#include "base/settingvalue.h"
-#include "base/torrentfilter.h"
+#include "base/global.h"
 #include "base/utils/fs.h"
 #include "guiiconprovider.h"
 #include "theme/colortheme.h"
@@ -49,7 +49,7 @@ TransferListModel::TransferListModel(QObject *parent)
 {
     // Load the torrents
     using namespace BitTorrent;
-    foreach (TorrentHandle *const torrent, Session::instance()->torrents())
+    for (TorrentHandle *const torrent : asConst(Session::instance()->torrents()))
         addTorrent(torrent);
 
     // Listen for torrent changes
@@ -112,7 +112,7 @@ QVariant TransferListModel::headerData(int section, Qt::Orientation orientation,
             case TR_LAST_ACTIVITY: return tr("Last Activity", "Time passed since a chunk was downloaded/uploaded");
             case TR_TOTAL_SIZE: return tr("Total Size", "i.e. Size including unwanted data");
             default:
-                return QVariant();
+                return {};
             }
         }
         else if (role == Qt::TextAlignmentRole) {
@@ -143,15 +143,15 @@ QVariant TransferListModel::headerData(int section, Qt::Orientation orientation,
         }
     }
 
-    return QVariant();
+    return {};
 }
 
 QVariant TransferListModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid()) return QVariant();
+    if (!index.isValid()) return {};
 
     BitTorrent::TorrentHandle *const torrent = m_torrents.value(index.row());
-    if (!torrent) return QVariant();
+    if (!torrent) return {};
 
     if ((role == Qt::DecorationRole) && (index.column() == TR_NAME))
         return GuiIconProvider::instance()->icon(torrent->state());
@@ -162,7 +162,7 @@ QVariant TransferListModel::data(const QModelIndex &index, int role) const
             : QGuiApplication::palette().color(QPalette::WindowText);
 
     if ((role != Qt::DisplayRole) && (role != Qt::UserRole))
-        return QVariant();
+        return {};
 
     switch (index.column()) {
     case TR_NAME:
@@ -232,7 +232,7 @@ QVariant TransferListModel::data(const QModelIndex &index, int role) const
         return torrent->totalSize();
     }
 
-    return QVariant();
+    return {};
 }
 
 bool TransferListModel::setData(const QModelIndex &index, const QVariant &value, int role)

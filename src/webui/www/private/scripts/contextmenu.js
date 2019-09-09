@@ -1,3 +1,33 @@
+/*
+ * Bittorrent Client using Qt and libtorrent.
+ * Copyright (C) 2009  Christophe Dumez <chris@qbittorrent.org>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ * In addition, as a special exception, the copyright holders give permission to
+ * link this program with the OpenSSL project's "OpenSSL" library (or with
+ * modified versions of it that use the same license as the "OpenSSL" library),
+ * and distribute the linked executables. You must obey the GNU General Public
+ * License in all respects for all of the code used other than "OpenSSL".  If you
+ * modify file(s), you may extend this exception to your version of the file(s),
+ * but you are not obligated to do so. If you do not wish to do so, delete this
+ * exception statement from your version.
+ */
+
+'use strict';
+
 var lastShownContexMenu = null;
 var ContextMenu = new Class({
     //implements
@@ -345,10 +375,13 @@ var TorrentsTableContextMenu = new Class({
         else if (!there_are_paused && !there_are_force_start)
             this.hideItem('Start');
 
-        if (!all_are_auto_tmm && there_are_auto_tmm)
+        if (!all_are_auto_tmm && there_are_auto_tmm) {
             this.hideItem('AutoTorrentManagement');
-        else
+        }
+        else {
+            this.showItem('AutoTorrentManagement');
             this.setItemChecked('AutoTorrentManagement', all_are_auto_tmm);
+        }
 
     },
 
@@ -395,5 +428,23 @@ var CategoriesFilterContextMenu = new Class({
             this.hideItem('EditCategory');
             this.hideItem('DeleteCategory');
         }
+    }
+});
+
+var SearchPluginsTableContextMenu = new Class({
+    Extends: ContextMenu,
+
+    updateMenuItems: function() {
+        var enabledColumnIndex = function(text) {
+            var columns = $("searchPluginsTableFixedHeaderRow").getChildren("th");
+            for (var i = 0; i < columns.length; ++i)
+                if (columns[i].get("html") === "Enabled")
+                    return i;
+        };
+
+        this.showItem('Enabled');
+        this.setItemChecked('Enabled', this.options.element.getChildren("td")[enabledColumnIndex()].get("html") === "Yes");
+
+        this.showItem('Uninstall');
     }
 });

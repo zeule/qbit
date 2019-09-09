@@ -29,52 +29,27 @@
 #ifndef NET_PORTFORWARDER_H
 #define NET_PORTFORWARDER_H
 
-#include <libtorrent/version.hpp>
-#if LIBTORRENT_VERSION_NUM >= 10200
-#include <libtorrent/portmap.hpp>
-#endif
-
-#include <QHash>
 #include <QObject>
-
-namespace libtorrent
-{
-    class session;
-}
 
 namespace Net
 {
     class PortForwarder : public QObject
     {
-        Q_OBJECT
         Q_DISABLE_COPY(PortForwarder)
 
     public:
-        static void initInstance(libtorrent::session *const provider);
-        static void freeInstance();
+        explicit PortForwarder(QObject *parent = nullptr);
+        ~PortForwarder() override;
+
         static PortForwarder *instance();
 
-        bool isEnabled() const;
-        void setEnabled(bool enabled);
+        virtual bool isEnabled() const = 0;
+        virtual void setEnabled(bool enabled) = 0;
 
-        void addPort(quint16 port);
-        void deletePort(quint16 port);
+        virtual void addPort(quint16 port) = 0;
+        virtual void deletePort(quint16 port) = 0;
 
     private:
-        explicit PortForwarder(libtorrent::session *const provider, QObject *parent = nullptr);
-        ~PortForwarder();
-
-        void start();
-        void stop();
-
-        bool m_active;
-        libtorrent::session *m_provider;
-#if LIBTORRENT_VERSION_NUM < 10200
-        QHash<quint16, int> m_mappedPorts;
-#else
-        QHash<quint16, std::vector<libtorrent::port_mapping_t>> m_mappedPorts;
-#endif
-
         static PortForwarder *m_instance;
     };
 }

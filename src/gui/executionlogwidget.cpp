@@ -28,10 +28,10 @@
 
 #include "executionlogwidget.h"
 
-#include <QColor>
 #include <QDateTime>
 #include <QPalette>
 
+#include "base/global.h"
 #include "guiiconprovider.h"
 #include "loglistwidget.h"
 #include "theme/colortheme.h"
@@ -41,8 +41,8 @@
 ExecutionLogWidget::ExecutionLogWidget(QWidget *parent, const Log::MsgTypes &types)
     : QWidget(parent)
     , m_ui(new Ui::ExecutionLogWidget)
-    , m_msgList(new LogListWidget(MAX_LOG_MESSAGES, Log::MsgTypes(types)))
-    , m_peerList(new LogListWidget(MAX_LOG_MESSAGES))
+    , m_msgList(new LogListWidget(MAX_LOG_MESSAGES, types, this))
+    , m_peerList(new LogListWidget(MAX_LOG_MESSAGES, Log::ALL, this))
 {
     m_ui->setupUi(this);
 
@@ -54,9 +54,9 @@ ExecutionLogWidget::ExecutionLogWidget(QWidget *parent, const Log::MsgTypes &typ
     m_ui->tabBan->layout()->addWidget(m_peerList);
 
     const Logger *const logger = Logger::instance();
-    foreach (const Log::Msg &msg, logger->getMessages())
+    for (const Log::Msg &msg : asConst(logger->getMessages()))
         addLogMessage(msg);
-    foreach (const Log::Peer &peer, logger->getPeers())
+    for (const Log::Peer &peer : asConst(logger->getPeers()))
         addPeerMessage(peer);
     connect(logger, &Logger::newLogMessage, this, &ExecutionLogWidget::addLogMessage);
     connect(logger, &Logger::newLogPeer, this, &ExecutionLogWidget::addPeerMessage);
@@ -64,8 +64,6 @@ ExecutionLogWidget::ExecutionLogWidget(QWidget *parent, const Log::MsgTypes &typ
 
 ExecutionLogWidget::~ExecutionLogWidget()
 {
-    delete m_msgList;
-    delete m_peerList;
     delete m_ui;
 }
 
@@ -89,7 +87,7 @@ void ExecutionLogWidget::addLogMessage(const Log::Msg &msg)
     const QColor messageColor = Theme::ColorTheme::current().logMessageColor(msg.type);
     const QColor neutralColor = QPalette().color(QPalette::Inactive, QPalette::WindowText);
 
-    QString text = coloredString(time.toString(Qt::SystemLocaleShortDate), neutralColor)
+    const QString text = coloredString(time.toString(Qt::SystemLocaleShortDate), neutralColor)
                         + QLatin1String(" - ")
                         + coloredString(msg.message, messageColor);
     m_msgList->appendLine(text, msg.type);

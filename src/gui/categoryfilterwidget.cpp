@@ -29,7 +29,6 @@
 #include "categoryfilterwidget.h"
 
 #include <QAction>
-#include <QHeaderView>
 #include <QMenu>
 
 #include "base/bittorrent/session.h"
@@ -59,7 +58,7 @@ namespace
 CategoryFilterWidget::CategoryFilterWidget(QWidget *parent)
     : QTreeView(parent)
 {
-    CategoryFilterProxyModel *proxyModel = new CategoryFilterProxyModel(this);
+    auto *proxyModel = new CategoryFilterProxyModel(this);
     proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
     proxyModel->setSourceModel(new CategoryFilterModel(this));
     setModel(proxyModel);
@@ -91,7 +90,7 @@ CategoryFilterWidget::CategoryFilterWidget(QWidget *parent)
 QString CategoryFilterWidget::currentCategory() const
 {
     QModelIndex current;
-    auto selectedRows = selectionModel()->selectedRows();
+    const auto selectedRows = selectionModel()->selectedRows();
     if (!selectedRows.isEmpty())
         current = selectedRows.first();
 
@@ -114,7 +113,7 @@ void CategoryFilterWidget::showMenu(QPoint)
                           , tr("Add category..."));
     connect(addAct, &QAction::triggered, this, &CategoryFilterWidget::addCategory);
 
-    auto selectedRows = selectionModel()->selectedRows();
+    const auto selectedRows = selectionModel()->selectedRows();
     if (!selectedRows.empty() && !CategoryFilterModel::isSpecialItem(selectedRows.first())) {
         if (BitTorrent::Session::instance()->isSubcategoriesEnabled()) {
             QAction *addSubAct = menu.addAction(
@@ -220,7 +219,7 @@ void CategoryFilterWidget::editCategory()
 
 void CategoryFilterWidget::removeCategory()
 {
-    auto selectedRows = selectionModel()->selectedRows();
+    const auto selectedRows = selectionModel()->selectedRows();
     if (!selectedRows.empty() && !CategoryFilterModel::isSpecialItem(selectedRows.first())) {
         BitTorrent::Session::instance()->removeCategory(
                     static_cast<CategoryFilterProxyModel *>(model())->categoryName(selectedRows.first()));
@@ -231,7 +230,7 @@ void CategoryFilterWidget::removeCategory()
 void CategoryFilterWidget::removeUnusedCategories()
 {
     auto session = BitTorrent::Session::instance();
-    for (const QString &category : copyAsConst(session->categories().keys())) {
+    for (const QString &category : asConst(session->categories().keys())) {
         if (model()->data(static_cast<CategoryFilterProxyModel *>(model())->index(category), Qt::UserRole) == 0)
             session->removeCategory(category);
     }

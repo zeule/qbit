@@ -33,12 +33,12 @@
 #include <QClipboard>
 #include <QDesktopServices>
 #include <QHeaderView>
+#include <QKeyEvent>
 #include <QMenu>
 #include <QPalette>
-#include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 #include <QTableView>
-#include <QTreeView>
+#include <QUrl>
 
 #include "base/bittorrent/session.h"
 #include "base/preferences.h"
@@ -129,7 +129,6 @@ SearchJobWidget::SearchJobWidget(SearchHandler *searchHandler, QWidget *parent)
     updateFilter();
 
     m_lineEditSearchResultsFilter = new LineEdit(this);
-    m_lineEditSearchResultsFilter->setFixedWidth(Utils::Gui::scaledSize(this, 170));
     m_lineEditSearchResultsFilter->setPlaceholderText(tr("Filter search results..."));
     m_lineEditSearchResultsFilter->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_lineEditSearchResultsFilter, &QWidget::customContextMenuRequested, this, &SearchJobWidget::showFilterContextMenu);
@@ -162,8 +161,7 @@ SearchJobWidget::SearchJobWidget(SearchHandler *searchHandler, QWidget *parent)
     connect(searchHandler, &SearchHandler::searchFailed, this, &SearchJobWidget::searchFailed);
     connect(this, &QObject::destroyed, searchHandler, &QObject::deleteLater);
 
-    QShortcut *enterHotkey = new QShortcut(Qt::Key_Return, m_ui->resultsBrowser, nullptr, nullptr, Qt::WidgetShortcut);
-    connect(enterHotkey, &QShortcut::activated, this, &SearchJobWidget::downloadTorrents);
+    setStatusTip(statusText(m_status));
 }
 
 SearchJobWidget::~SearchJobWidget()
@@ -263,7 +261,7 @@ void SearchJobWidget::downloadTorrent(const QModelIndex &rowIndex)
     const QString siteUrl = m_proxyModel->data(
                 m_proxyModel->index(rowIndex.row(), SearchSortModel::ENGINE_URL)).toString();
 
-    if (torrentUrl.startsWith("bc://bt/", Qt::CaseInsensitive) || torrentUrl.startsWith("magnet:", Qt::CaseInsensitive)) {
+    if (torrentUrl.startsWith("magnet:", Qt::CaseInsensitive)) {
         addTorrentToSession(torrentUrl);
     }
     else {
@@ -315,6 +313,8 @@ void SearchJobWidget::updateFilter()
 void SearchJobWidget::fillFilterComboBoxes()
 {
     using Utils::Misc::SizeUnit;
+    using Utils::Misc::unitString;
+
     QStringList unitStrings;
     unitStrings.append(unitString(SizeUnit::Byte));
     unitStrings.append(unitString(SizeUnit::KibiByte));
@@ -384,7 +384,7 @@ QString SearchJobWidget::statusText(SearchJobWidget::Status st)
     case Status::NoResults:
         return tr("Search returned no results");
     default:
-        return QString();
+        return {};
     }
 }
 
@@ -476,4 +476,16 @@ CachedSettingValue<SearchJobWidget::NameFilteringMode> &SearchJobWidget::nameFil
 {
     static CachedSettingValue<NameFilteringMode> setting("Search/FilteringMode", NameFilteringMode::OnlyNames);
     return setting;
+}
+
+void SearchJobWidget::keyPressEvent(QKeyEvent *event)
+{
+    switch (event->key()) {
+    case Qt::Key_Enter:
+    case Qt::Key_Return:
+        downloadTorrents();
+        break;
+    default:
+        QWidget::keyPressEvent(event);
+    }
 }

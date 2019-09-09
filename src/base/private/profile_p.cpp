@@ -31,8 +31,6 @@
 
 #include <QCoreApplication>
 
-#include "base/utils/fs.h"
-
 Private::Profile::Profile(const QString &configurationName)
     : m_configurationSuffix {configurationName.isEmpty() ? QString() : QLatin1Char('_') + configurationName}
 {
@@ -103,7 +101,7 @@ SettingsPtr Private::DefaultProfile::applicationSettings(const QString &name) co
 #endif
 }
 
-QString Private::DefaultProfile::locationWithConfigurationName(QStandardPaths::StandardLocation location) const
+QString Private::DefaultProfile::locationWithConfigurationName(const QStandardPaths::StandardLocation location) const
 {
     return QStandardPaths::writableLocation(location) + configurationSuffix();
 }
@@ -174,9 +172,9 @@ QString Private::Converter::toPortablePath(const QString &path) const
 
 #ifdef Q_OS_WIN
     if (QDir::isAbsolutePath(path)) {
-        QChar driveLeter = path[0].toUpper();
-        QChar baseDriveLetter = m_baseDir.path()[0].toUpper();
-        bool onSameDrive = (driveLeter.category() == QChar::Letter_Uppercase) && (driveLeter == baseDriveLetter);
+        const QChar driveLeter = path[0].toUpper();
+        const QChar baseDriveLetter = m_baseDir.path()[0].toUpper();
+        const bool onSameDrive = (driveLeter.category() == QChar::Letter_Uppercase) && (driveLeter == baseDriveLetter);
         if (!onSameDrive)
             return path;
     }

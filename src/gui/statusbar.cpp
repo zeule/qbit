@@ -58,7 +58,7 @@ StatusBar::StatusBar(QWidget *parent)
     BitTorrent::Session *const session = BitTorrent::Session::instance();
     connect(session, &BitTorrent::Session::speedLimitModeChanged, this, &StatusBar::updateAltSpeedsBtn);
     QWidget *container = new QWidget(this);
-    QHBoxLayout *layout = new QHBoxLayout(container);
+    auto *layout = new QHBoxLayout(container);
     layout->setContentsMargins(0,0,0,0);
 
     container->setLayout(layout);
@@ -209,18 +209,19 @@ void StatusBar::updateSpeedLabels()
 {
     const BitTorrent::SessionStatus &sessionStatus = BitTorrent::Session::instance()->status();
 
-    QString speedLbl = Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.payloadDownloadRate), true);
-    int speedLimit = BitTorrent::Session::instance()->downloadSpeedLimit();
-    if (speedLimit)
-        speedLbl += " [" + Utils::Misc::friendlyUnit(speedLimit, true) + ']';
-    speedLbl += " (" + Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.totalPayloadDownload)) + ')';
-    m_dlSpeedLbl->setText(speedLbl);
-    speedLimit = BitTorrent::Session::instance()->uploadSpeedLimit();
-    speedLbl = Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.payloadUploadRate), true);
-    if (speedLimit)
-        speedLbl += " [" + Utils::Misc::friendlyUnit(speedLimit, true) + ']';
-    speedLbl += " (" + Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.totalPayloadUpload)) + ')';
-    m_upSpeedLbl->setText(speedLbl);
+    QString dlSpeedLbl = Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.payloadDownloadRate), true);
+    int dlSpeedLimit = BitTorrent::Session::instance()->downloadSpeedLimit();
+    if (dlSpeedLimit > 0)
+        dlSpeedLbl += " [" + Utils::Misc::friendlyUnit(dlSpeedLimit, true) + ']';
+    dlSpeedLbl += " (" + Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.totalPayloadDownload)) + ')';
+    m_dlSpeedLbl->setText(dlSpeedLbl);
+
+    QString upSpeedLbl = Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.payloadUploadRate), true);
+    const int upSpeedLimit = BitTorrent::Session::instance()->uploadSpeedLimit();
+    if (upSpeedLimit > 0)
+        upSpeedLbl += " [" + Utils::Misc::friendlyUnit(upSpeedLimit, true) + ']';
+    upSpeedLbl += " (" + Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(sessionStatus.totalPayloadUpload)) + ')';
+    m_upSpeedLbl->setText(upSpeedLbl);
 }
 
 void StatusBar::refresh()

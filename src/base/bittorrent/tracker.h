@@ -30,17 +30,14 @@
 #ifndef BITTORRENT_TRACKER_H
 #define BITTORRENT_TRACKER_H
 
+#include <libtorrent/fwd.hpp>
+
 #include <QHash>
 #include <QObject>
+#include <QHostAddress>
 
 #include "base/http/irequesthandler.h"
 #include "base/http/responsebuilder.h"
-#include "base/http/types.h"
-
-namespace libtorrent
-{
-    class entry;
-}
 
 namespace Http
 {
@@ -51,14 +48,14 @@ namespace BitTorrent
 {
     struct Peer
     {
-        QString ip;
+        QHostAddress ip;
         QByteArray peerId;
         int port;
 
         bool operator!=(const Peer &other) const;
         bool operator==(const Peer &other) const;
         QString uid() const;
-        libtorrent::entry toEntry(bool noPeerId) const;
+        lt::entry toEntry(bool noPeerId) const;
     };
 
     struct TrackerAnnounceRequest
@@ -90,9 +87,9 @@ namespace BitTorrent
 
     private:
         void respondToAnnounceRequest();
-        void registerPeer(const TrackerAnnounceRequest &annonceReq);
-        void unregisterPeer(const TrackerAnnounceRequest &annonceReq);
-        void replyWithPeerList(const TrackerAnnounceRequest &annonceReq);
+        void registerPeer(const TrackerAnnounceRequest &announceReq);
+        void unregisterPeer(const TrackerAnnounceRequest &announceReq);
+        void replyWithPeerList(const TrackerAnnounceRequest &announceReq);
 
         Http::Server *m_server;
         TorrentList m_torrents;

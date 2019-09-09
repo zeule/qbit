@@ -56,7 +56,7 @@ private slots:
     void applyFontTheme();
 
 private:
-    int m_maxLines;
+    const int m_maxLines;
     Log::MsgTypes m_types;
 };
 

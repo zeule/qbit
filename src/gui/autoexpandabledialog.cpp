@@ -28,9 +28,6 @@
 
 #include "autoexpandabledialog.h"
 
-#include <QDesktopWidget>
-
-#include "mainwindow.h"
 #include "ui_autoexpandabledialog.h"
 #include "utils.h"
 
@@ -71,7 +68,7 @@ QString AutoExpandableDialog::getText(QWidget *parent, const QString &title, con
     if (ok)
         *ok = res;
 
-    if (!res) return QString();
+    if (!res) return {};
 
     return d.m_ui->textEdit->text();
 }

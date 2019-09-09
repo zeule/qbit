@@ -32,7 +32,8 @@
 
 #include <QDir>
 #include <QObject>
-#include <QString>
+
+class QString;
 
 class IconProvider : public QObject
 {

@@ -32,6 +32,7 @@
 #include <QProcess>
 #include <QTimer>
 
+#include "../global.h"
 #include "../utils/foreignapps.h"
 #include "../utils/fs.h"
 #include "searchpluginmanager.h"
@@ -73,12 +74,7 @@ SearchHandler::SearchHandler(const QString &pattern, const QString &category, co
     m_searchProcess->setProgram(Utils::ForeignApps::pythonInfo().executableName);
     m_searchProcess->setArguments(params + m_pattern.split(' '));
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
     connect(m_searchProcess, &QProcess::errorOccurred, this, &SearchHandler::processFailed);
-#else
-    connect(m_searchProcess, static_cast<void (QProcess::*)(QProcess::ProcessError)>(&QProcess::error)
-            , this, &SearchHandler::processFailed);
-#endif
     connect(m_searchProcess, &QProcess::readyReadStandardOutput, this, &SearchHandler::readSearchOutput);
     connect(m_searchProcess, static_cast<void (QProcess::*)(int)>(&QProcess::finished)
             , this, &SearchHandler::processFinished);
@@ -113,7 +109,7 @@ void SearchHandler::cancelSearch()
 // Slot called when QProcess is Finished
 // QProcess can be finished for 3 reasons:
 // Error | Stopped by user | Finished normally
-void SearchHandler::processFinished(int exitcode)
+void SearchHandler::processFinished(const int exitcode)
 {
     m_searchTimeout->stop();
 
@@ -138,7 +134,7 @@ void SearchHandler::readSearchOutput()
     m_searchResultLineTruncated = lines.takeLast().trimmed();
 
     QList<SearchResult> searchResultList;
-    foreach (const QByteArray &line, lines) {
+    for (const QByteArray &line : asConst(lines)) {
         SearchResult searchResult;
         if (parseSearchResult(QString::fromUtf8(line), searchResult))
             searchResultList << searchResult;

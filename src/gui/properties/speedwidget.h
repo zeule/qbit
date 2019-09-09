@@ -34,11 +34,11 @@
 
 #include "speedplotview.h"
 
-class QVBoxLayout;
 class QHBoxLayout;
 class QLabel;
 class QMenu;
-class QSignalMapper;
+class QVBoxLayout;
+
 class PropertiesWidget;
 
 class ComboBoxMenuButton : public QComboBox
@@ -59,7 +59,7 @@ class SpeedWidget : public QWidget
     Q_OBJECT
 
 public:
-    SpeedWidget(PropertiesWidget *parent);
+    explicit SpeedWidget(PropertiesWidget *parent);
     ~SpeedWidget();
 
 private slots:
@@ -80,7 +80,6 @@ private:
     ComboBoxMenuButton *m_graphsButton;
     QMenu *m_graphsMenu;
     QList<QAction *> m_graphsMenuActions;
-    QSignalMapper *m_graphsSignalMapper;
 };
 
 #endif // SPEEDWIDGET_H

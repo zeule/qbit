@@ -5,8 +5,10 @@ api/apierror.h
 api/appcontroller.h
 api/isessionmanager.h
 api/authcontroller.h
+api/freediskspacechecker.h
 api/logcontroller.h
 api/rsscontroller.h
+api/searchcontroller.h
 api/synccontroller.h
 api/torrentscontroller.h
 api/transfercontroller.h
@@ -19,8 +21,10 @@ api/apicontroller.cpp
 api/apierror.cpp
 api/appcontroller.cpp
 api/authcontroller.cpp
+api/freediskspacechecker.cpp
 api/logcontroller.cpp
 api/rsscontroller.cpp
+api/searchcontroller.cpp
 api/synccontroller.cpp
 api/torrentscontroller.cpp
 api/transfercontroller.cpp

@@ -36,30 +36,18 @@
 #endif
 
 #include <QDebug>
-#include <QHeaderView>
 #include <QMessageBox>
-#include <QMimeData>
-#include <QProcess>
 #include <QRegularExpression>
 #include <QShortcut>
-#include <QSignalMapper>
-#include <QSortFilterProxyModel>
-#include <QStandardItemModel>
 #include <QTextStream>
-#include <QTreeView>
 
-#include "base/bittorrent/session.h"
-#include "base/preferences.h"
+#include "base/global.h"
 #include "base/search/searchpluginmanager.h"
 #include "base/search/searchhandler.h"
 #include "base/utils/foreignapps.h"
-#include "base/utils/fs.h"
-#include "addnewtorrentdialog.h"
 #include "guiiconprovider.h"
 #include "mainwindow.h"
 #include "pluginselectdialog.h"
-#include "searchlistdelegate.h"
-#include "searchsortmodel.h"
 #include "searchjobwidget.h"
 #include "ui_searchwidget.h"
 
@@ -82,7 +70,7 @@ namespace
         case SearchJobWidget::Status::NoResults:
             return QLatin1String("state-offline");
         default:
-            return QString();
+            return {};
         }
     }
 }
@@ -90,7 +78,6 @@ namespace
 SearchWidget::SearchWidget(MainWindow *mainWindow)
     : QWidget(mainWindow)
     , m_ui(new Ui::SearchWidget())
-    , m_tabStatusChangedMapper(new QSignalMapper(this))
     , m_mainWindow(mainWindow)
     , m_isNewQueryString(false)
 {
@@ -130,11 +117,7 @@ SearchWidget::SearchWidget(MainWindow *mainWindow)
     connect(m_ui->tabWidget, &QTabWidget::tabCloseRequested, this, &SearchWidget::closeTab);
     connect(m_ui->tabWidget, &QTabWidget::currentChanged, this, &SearchWidget::tabChanged);
 
-    connect(m_tabStatusChangedMapper, static_cast<void (QSignalMapper::*)(QWidget *)>(&QSignalMapper::mapped)
-            , this, &SearchWidget::tabStatusChanged);
-
-    // NOTE: Although SearchManager is Application-wide component now, we still create it the legacy way.
-    auto *searchManager = new SearchPluginManager;
+    const auto *searchManager = SearchPluginManager::instance();
     const auto onPluginChanged = [this]()
     {
         fillPluginComboBox();
@@ -167,11 +150,11 @@ void SearchWidget::fillCatCombobox()
 
     using QStrPair = QPair<QString, QString>;
     QList<QStrPair> tmpList;
-    foreach (const QString &cat, SearchPluginManager::instance()->getPluginCategories(selectedPlugin()))
+    for (const QString &cat : asConst(SearchPluginManager::instance()->getPluginCategories(selectedPlugin())))
         tmpList << qMakePair(SearchPluginManager::categoryFullName(cat), cat);
     std::sort(tmpList.begin(), tmpList.end(), [](const QStrPair &l, const QStrPair &r) { return (QString::localeAwareCompare(l.first, r.first) < 0); });
 
-    foreach (const QStrPair &p, tmpList) {
+    for (const QStrPair &p : asConst(tmpList)) {
         qDebug("Supported category: %s", qUtf8Printable(p.second));
         m_ui->comboCategory->addItem(p.first, QVariant(p.second));
     }
@@ -189,11 +172,11 @@ void SearchWidget::fillPluginComboBox()
 
     using QStrPair = QPair<QString, QString>;
     QList<QStrPair> tmpList;
-    foreach (const QString &name, SearchPluginManager::instance()->enabledPlugins())
+    for (const QString &name : asConst(SearchPluginManager::instance()->enabledPlugins()))
         tmpList << qMakePair(SearchPluginManager::instance()->pluginFullName(name), name);
     std::sort(tmpList.begin(), tmpList.end(), [](const QStrPair &l, const QStrPair &r) { return (l.first < r.first); } );
 
-    foreach (const QStrPair &p, tmpList)
+    for (const QStrPair &p : asConst(tmpList))
         m_ui->selectPlugin->addItem(p.first, QVariant(p.second));
 
     if (m_ui->selectPlugin->count() > 3)
@@ -231,7 +214,6 @@ void SearchWidget::selectActivePage()
 SearchWidget::~SearchWidget()
 {
     qDebug("Search destruction");
-    delete SearchPluginManager::instance();
     delete m_ui;
 }
 
@@ -281,7 +263,7 @@ void SearchWidget::on_pluginsButton_clicked()
     new PluginSelectDialog(SearchPluginManager::instance(), this);
 }
 
-void SearchWidget::searchTextEdited(QString)
+void SearchWidget::searchTextEdited(const QString &)
 {
     // Enable search button
     m_ui->searchButton->setText(tr("Search"));
@@ -296,7 +278,7 @@ void SearchWidget::giveFocusToSearchInput()
 // Function called when we click on search button
 void SearchWidget::on_searchButton_clicked()
 {
-    if (Utils::ForeignApps::pythonInfo().version.majorNumber() <= 0) {
+    if (!Utils::ForeignApps::pythonInfo().isValid()) {
         m_mainWindow->showNotificationBaloon(tr("Search Engine"), tr("Please install Python to use the Search Engine."));
         return;
     }
@@ -343,9 +325,7 @@ void SearchWidget::on_searchButton_clicked()
     m_ui->tabWidget->setCurrentWidget(newTab);
 
     connect(newTab, &SearchJobWidget::resultsCountUpdated, this, &SearchWidget::resultsCountUpdated);
-    connect(newTab, &SearchJobWidget::statusChanged
-            , m_tabStatusChangedMapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-    m_tabStatusChangedMapper->setMapping(newTab, newTab);
+    connect(newTab, &SearchJobWidget::statusChanged, this, [this, newTab]() { tabStatusChanged(newTab); });
 
     m_ui->searchButton->setText(tr("Stop"));
     m_activeSearchTab = newTab;

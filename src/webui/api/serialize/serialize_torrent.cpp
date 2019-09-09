@@ -28,10 +28,10 @@
 
 #include "serialize_torrent.h"
 
-#include "base/bittorrent/session.h"
+#include <QDateTime>
+
 #include "base/bittorrent/torrenthandle.h"
 #include "base/utils/fs.h"
-#include "base/utils/string.h"
 
 namespace
 {
@@ -70,10 +70,6 @@ namespace
             return QLatin1String("checkingDL");
         case BitTorrent::TorrentState::ForcedDownloading:
             return QLatin1String("forcedDL");
-#if LIBTORRENT_VERSION_NUM < 10100
-        case BitTorrent::TorrentState::QueuedForChecking:
-            return QLatin1String("queuedForChecking");
-#endif
         case BitTorrent::TorrentState::CheckingResumeData:
             return QLatin1String("checkingResumeData");
         case BitTorrent::TorrentState::Moving:
@@ -94,7 +90,7 @@ QVariantMap serialize(const BitTorrent::TorrentHandle &torrent)
     ret[KEY_TORRENT_PROGRESS] = torrent.progress();
     ret[KEY_TORRENT_DLSPEED] = torrent.downloadPayloadRate();
     ret[KEY_TORRENT_UPSPEED] = torrent.uploadPayloadRate();
-    ret[KEY_TORRENT_PRIORITY] = torrent.queuePosition();
+    ret[KEY_TORRENT_PRIORITY] = static_cast<int>(torrent.queuePosition());
     ret[KEY_TORRENT_SEEDS] = torrent.seedsCount();
     ret[KEY_TORRENT_NUM_COMPLETE] = torrent.totalSeedsCount();
     ret[KEY_TORRENT_LEECHS] = torrent.leechsCount();

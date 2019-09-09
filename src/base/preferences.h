@@ -30,19 +30,16 @@
 #ifndef PREFERENCES_H
 #define PREFERENCES_H
 
-#include <QDateTime>
-#include <QHostAddress>
 #include <QList>
-#include <QNetworkCookie>
-#include <QReadWriteLock>
-#include <QSize>
-#include <QStringList>
-#include <QTime>
-#include <QTimer>
-#include <QVariant>
 
 #include "base/utils/net.h"
-#include "types.h"
+
+class QDateTime;
+class QNetworkCookie;
+class QSize;
+class QStringList;
+class QTime;
+class QVariant;
 
 enum SchedulerDays
 {
@@ -78,8 +75,6 @@ namespace DNS
     };
 }
 
-class SettingsStorage;
-
 class Preferences : public QObject
 {
     Q_OBJECT
@@ -87,8 +82,9 @@ class Preferences : public QObject
 
     Preferences();
 
-    const QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
+    const QVariant value(const QString &key, const QVariant &defaultValue = {}) const;
     void setValue(const QString &key, const QVariant &value);
+    void upgrade();
 
     static Preferences *m_instance;
 
@@ -195,22 +191,26 @@ public:
     void setWebUiAuthSubnetWhitelist(QStringList subnets);
     QString getWebUiUsername() const;
     void setWebUiUsername(const QString &username);
-    QString getWebUiPassword() const;
-    void setWebUiPassword(const QString &newPassword);
+    QByteArray getWebUIPassword() const;
+    void setWebUIPassword(const QByteArray &password);
+    int getWebUISessionTimeout() const;
+    void setWebUISessionTimeout(int timeout);
 
     // WebUI security
     bool isWebUiClickjackingProtectionEnabled() const;
     void setWebUiClickjackingProtectionEnabled(bool enabled);
     bool isWebUiCSRFProtectionEnabled() const;
     void setWebUiCSRFProtectionEnabled(bool enabled);
+    bool isWebUIHostHeaderValidationEnabled() const;
+    void setWebUIHostHeaderValidationEnabled(bool enabled);
 
     // HTTPS
     bool isWebUiHttpsEnabled() const;
     void setWebUiHttpsEnabled(bool enabled);
-    QByteArray getWebUiHttpsCertificate() const;
-    void setWebUiHttpsCertificate(const QByteArray &data);
-    QByteArray getWebUiHttpsKey() const;
-    void setWebUiHttpsKey(const QByteArray &data);
+    QString getWebUIHttpsCertificatePath() const;
+    void setWebUIHttpsCertificatePath(const QString &path);
+    QString getWebUIHttpsKeyPath() const;
+    void setWebUIHttpsKeyPath(const QString &path);
     bool isAltWebUiEnabled() const;
     void setAltWebUiEnabled(bool enabled);
     QString getWebUiRootFolder() const;
@@ -229,9 +229,8 @@ public:
     void setDynDNSPassword(const QString &password);
 
     // Advanced settings
-    void setUILockPassword(const QString &clearPassword);
-    void clearUILockPassword();
-    QString getUILockPasswordMD5() const;
+    QByteArray getUILockPassword() const;
+    void setUILockPassword(const QByteArray &password);
     bool isUILocked() const;
     void setUILocked(bool locked);
     bool isAutoRunEnabled() const;
@@ -295,7 +294,7 @@ public:
     void setCloseToTrayNotified(bool b);
     TrayIcon::Style trayIconStyle() const;
     void setTrayIconStyle(TrayIcon::Style style);
-#endif
+#endif // Q_OS_MAC
 
     // Stuff that don't appear in the Options GUI but are saved
     // in the same file.
@@ -304,7 +303,7 @@ public:
     QString getDNSLastIP() const;
     void setDNSLastIP(const QString &ip);
     bool getAcceptedLegal() const;
-    void setAcceptedLegal(const bool accepted);
+    void setAcceptedLegal(bool accepted);
     QByteArray getMainGeometry() const;
     void setMainGeometry(const QByteArray &geometry);
     QByteArray getMainVSplitterState() const;
@@ -322,9 +321,9 @@ public:
     QByteArray getPropFileListState() const;
     void setPropFileListState(const QByteArray &state);
     int getPropCurTab() const;
-    void setPropCurTab(const int &tab);
+    void setPropCurTab(int tab);
     bool getPropVisible() const;
-    void setPropVisible(const bool visible);
+    void setPropVisible(bool visible);
     QByteArray getPropTrackerListState() const;
     void setPropTrackerListState(const QByteArray &state);
     QSize getRssGeometrySize() const;
@@ -352,17 +351,17 @@ public:
     bool getTagFilterState() const;
     bool getTrackerFilterState() const;
     int getTransSelFilter() const;
-    void setTransSelFilter(const int &index);
+    void setTransSelFilter(int index);
     QByteArray getTransHeaderState() const;
     void setTransHeaderState(const QByteArray &state);
     bool getRegexAsFilteringPatternForTransferList() const;
     void setRegexAsFilteringPatternForTransferList(bool checked);
     int getToolbarTextPosition() const;
-    void setToolbarTextPosition(const int position);
+    void setToolbarTextPosition(int position);
 
     // From old RssSettings class
     bool isRSSWidgetEnabled() const;
-    void setRSSWidgetVisible(const bool enabled);
+    void setRSSWidgetVisible(bool enabled);
 
     // Network
     QList<QNetworkCookie> getNetworkCookies() const;
@@ -372,11 +371,9 @@ public:
     bool isSpeedWidgetEnabled() const;
     void setSpeedWidgetEnabled(bool enabled);
     int getSpeedWidgetPeriod() const;
-    void setSpeedWidgetPeriod(const int period);
+    void setSpeedWidgetPeriod(int period);
     bool getSpeedWidgetGraphEnable(int id) const;
-    void setSpeedWidgetGraphEnable(int id, const bool enable);
-
-    void upgrade();
+    void setSpeedWidgetGraphEnable(int id, bool enable);
 
 public slots:
     void setStatusFilterState(bool checked);

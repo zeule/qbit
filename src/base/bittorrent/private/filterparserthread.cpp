@@ -37,8 +37,6 @@
 
 #include <boost/numeric/conversion/cast.hpp>
 
-namespace libt = libtorrent;
-
 namespace
 {
     class IPv4Parser
@@ -52,7 +50,7 @@ namespace
             char *endptr;
             for (; *str; ++str) {
                 if (*str == '.') {
-                    long int extractedNum = strtol(octetStart, &endptr, 10);
+                    const long int extractedNum = strtol(octetStart, &endptr, 10);
                     if ((extractedNum >= 0L) && (extractedNum <= 255L))
                         m_buf[octetIndex++] = static_cast<unsigned char>(extractedNum);
                     else
@@ -68,7 +66,7 @@ namespace
             }
 
             if (str != octetStart) {
-                long int extractedNum = strtol(octetStart, &endptr, 10);
+                const long int extractedNum = strtol(octetStart, &endptr, 10);
                 if ((extractedNum >= 0L) && (extractedNum <= 255L))
                     m_buf[octetIndex] = static_cast<unsigned char>(strtol(octetStart, &endptr, 10));
                 else
@@ -81,24 +79,24 @@ namespace
             return false;
         }
 
-        libt::address_v4::bytes_type parsed() const
+        lt::address_v4::bytes_type parsed() const
         {
             return m_buf;
         }
 
     private:
-        libt::address_v4::bytes_type m_buf;
+        lt::address_v4::bytes_type m_buf;
     };
 
-    bool parseIPAddress(const char *data, libt::address &address)
+    bool parseIPAddress(const char *data, lt::address &address)
     {
         IPv4Parser parser;
         boost::system::error_code ec;
 
         if (parser.tryParse(data))
-            address = libt::address_v4(parser.parsed());
+            address = lt::address_v4(parser.parsed());
         else
-            address = libt::address_v6::from_string(data, ec);
+            address = lt::address_v6::from_string(data, ec);
 
         return !ec;
     }
@@ -148,7 +146,7 @@ int FilterParserThread::parseDATFilterFile()
         bytesRead = file.read(buffer.data() + offset, boost::numeric_cast<qint64>(BUFFER_SIZE - offset - 1));
         if (bytesRead < 0)
             break;
-        std::size_t dataSize = boost::numeric_cast<std::size_t>(bytesRead) + offset;
+        const std::size_t dataSize = boost::numeric_cast<std::size_t>(bytesRead) + offset;
         if (bytesRead == 0 && dataSize == 0)
             break;
 
@@ -179,9 +177,8 @@ int FilterParserThread::parseDATFilterFile()
                 memmove(buffer.data(), start, offset);
                 break;
             }
-            else {
-                ++nbLine;
-            }
+
+            ++nbLine;
 
             if ((*start == '#')
                 || ((*start == '/') && ((start + 1 < &buffer[dataSize]) && (*(start + 1) == '/')))) {
@@ -217,7 +214,7 @@ int FilterParserThread::parseDATFilterFile()
                 continue;
             }
 
-            libt::address startAddr;
+            lt::address startAddr;
             char* newStart = trim(start, delimIP - 1);
             if (!parseIPAddress(newStart, startAddr)) {
                 ++parseErrorCount;
@@ -226,7 +223,7 @@ int FilterParserThread::parseDATFilterFile()
                 continue;
             }
 
-            libt::address endAddr;
+            lt::address endAddr;
             newStart = trim(delimIP + 1, endOfIPRange);
             if (!parseIPAddress(newStart, endAddr)) {
                 ++parseErrorCount;
@@ -247,10 +244,10 @@ int FilterParserThread::parseDATFilterFile()
 
             // Now Add to the filter
             try {
-                m_filter.add_rule(startAddr, endAddr, libt::ip_filter::blocked);
+                m_filter.add_rule(startAddr, endAddr, lt::ip_filter::blocked);
                 ++ruleCount;
             }
-            catch (std::exception &e) {
+            catch (const std::exception &e) {
                 ++parseErrorCount;
                 addLog(tr("IP filter exception thrown for line %1. Exception is: %2")
                        .arg(nbLine).arg(QString::fromLocal8Bit(e.what())));
@@ -296,7 +293,7 @@ int FilterParserThread::parseP2PFilterFile()
         bytesRead = file.read(buffer.data() + offset, boost::numeric_cast<qint64>(BUFFER_SIZE - offset - 1));
         if (bytesRead < 0)
             break;
-        std::size_t dataSize = boost::numeric_cast<std::size_t>(bytesRead) + offset;
+        const std::size_t dataSize = boost::numeric_cast<std::size_t>(bytesRead) + offset;
         if (bytesRead == 0 && dataSize == 0)
             break;
 
@@ -327,9 +324,8 @@ int FilterParserThread::parseP2PFilterFile()
                 memmove(buffer.data(), start, offset);
                 break;
             }
-            else {
-                ++nbLine;
-            }
+
+            ++nbLine;
 
             if ((*start == '#')
                 || ((*start == '/') && ((start + 1 < &buffer[dataSize]) && (*(start + 1) == '/')))) {
@@ -357,7 +353,7 @@ int FilterParserThread::parseP2PFilterFile()
                 continue;
             }
 
-            libt::address startAddr;
+            lt::address startAddr;
             char* newStart = trim(partsDelimiter + 1, delimIP - 1);
             if (!parseIPAddress(newStart, startAddr)) {
                 ++parseErrorCount;
@@ -366,7 +362,7 @@ int FilterParserThread::parseP2PFilterFile()
                 continue;
             }
 
-            libt::address endAddr;
+            lt::address endAddr;
             newStart = trim(delimIP + 1, endOfLine);
             if (!parseIPAddress(newStart, endAddr)) {
                 ++parseErrorCount;
@@ -386,10 +382,10 @@ int FilterParserThread::parseP2PFilterFile()
             start = endOfLine;
 
             try {
-                m_filter.add_rule(startAddr, endAddr, libt::ip_filter::blocked);
+                m_filter.add_rule(startAddr, endAddr, lt::ip_filter::blocked);
                 ++ruleCount;
             }
-            catch (std::exception &e) {
+            catch (const std::exception &e) {
                 ++parseErrorCount;
                 addLog(tr("IP filter exception thrown for line %1. Exception is: %2")
                        .arg(nbLine).arg(QString::fromLocal8Bit(e.what())));
@@ -406,7 +402,7 @@ int FilterParserThread::parseP2PFilterFile()
     return ruleCount;
 }
 
-int FilterParserThread::getlineInStream(QDataStream &stream, std::string &name, char delim)
+int FilterParserThread::getlineInStream(QDataStream &stream, std::string &name, const char delim)
 {
     char c;
     int totalRead = 0;
@@ -467,14 +463,14 @@ int FilterParserThread::parseP2BFilterFile()
             // Network byte order to Host byte order
             // asio address_v4 constructor expects it
             // that way
-            libt::address_v4 first(ntohl(start));
-            libt::address_v4 last(ntohl(end));
+            const lt::address_v4 first(ntohl(start));
+            const lt::address_v4 last(ntohl(end));
             // Apply to bittorrent session
             try {
-                m_filter.add_rule(first, last, libt::ip_filter::blocked);
+                m_filter.add_rule(first, last, lt::ip_filter::blocked);
                 ++ruleCount;
             }
-            catch (std::exception &) {}
+            catch (const std::exception &) {}
         }
     }
     else if (version == 3) {
@@ -517,14 +513,14 @@ int FilterParserThread::parseP2BFilterFile()
             // Network byte order to Host byte order
             // asio address_v4 constructor expects it
             // that way
-            libt::address_v4 first(ntohl(start));
-            libt::address_v4 last(ntohl(end));
+            const lt::address_v4 first(ntohl(start));
+            const lt::address_v4 last(ntohl(end));
             // Apply to bittorrent session
             try {
-                m_filter.add_rule(first, last, libt::ip_filter::blocked);
+                m_filter.add_rule(first, last, lt::ip_filter::blocked);
                 ++ruleCount;
             }
-            catch (std::exception &) {}
+            catch (const std::exception &) {}
 
             if (m_abort) return ruleCount;
         }
@@ -551,12 +547,12 @@ void FilterParserThread::processFilterFile(const QString &filePath)
 
     m_abort = false;
     m_filePath = filePath;
-    m_filter = libt::ip_filter();
+    m_filter = lt::ip_filter();
     // Run it
     start();
 }
 
-libt::ip_filter FilterParserThread::IPfilter()
+lt::ip_filter FilterParserThread::IPfilter()
 {
     return m_filter;
 }
@@ -583,7 +579,7 @@ void FilterParserThread::run()
     try {
         emit IPFilterParsed(ruleCount);
     }
-    catch (std::exception &) {
+    catch (const std::exception &) {
         emit IPFilterError();
     }
 

@@ -28,9 +28,6 @@
 
 #include "misc.h"
 
-#include <boost/version.hpp>
-#include <libtorrent/version.hpp>
-
 #ifdef Q_OS_WIN
 #include <windows.h>
 #include <Shlobj.h>
@@ -40,38 +37,27 @@
 #endif
 
 #ifdef Q_OS_MAC
-#include <CoreServices/CoreServices.h>
 #include <Carbon/Carbon.h>
+#include <CoreServices/CoreServices.h>
 #endif
 
-#include <QByteArray>
-#include <QDebug>
-#include <QFileInfo>
-#include <QProcess>
-#include <QRegularExpression>
-#include <QSysInfo>
-#include <QUrl>
+#include <boost/version.hpp>
+#include <openssl/opensslv.h>
+#include <libtorrent/version.hpp>
+#include <zlib.h>
 
-#ifdef DISABLE_GUI
 #include <QCoreApplication>
-#else
-#include <QApplication>
-#include <QDesktopServices>
-#include <QDesktopWidget>
-#include <QStyle>
+#include <QRegularExpression>
+#include <QSet>
+#include <QSysInfo>
+
 #if (defined(Q_OS_UNIX) && !defined(Q_OS_MAC)) && defined(QT_DBUS_LIB)
 #include <QDBusInterface>
-#include <QDBusMessage>
-#endif
-#if defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
-#include "base/utils/version.h"
-#endif
 #endif
 
-#include "base/logger.h"
+#include "base/types.h"
 #include "base/unicodestrings.h"
 #include "base/utils/string.h"
-#include "fs.h"
 
 namespace
 {
@@ -84,6 +70,27 @@ namespace
         QT_TRANSLATE_NOOP3("misc", "PiB", "pebibytes (1024 tebibytes)"),
         QT_TRANSLATE_NOOP3("misc", "EiB", "exbibytes (1024 pebibytes)")
     };
+
+    // return best userfriendly storage unit (B, KiB, MiB, GiB, TiB, ...)
+    // use Binary prefix standards from IEC 60027-2
+    // see http://en.wikipedia.org/wiki/Kilobyte
+    // value must be given in bytes
+    // to send numbers instead of strings with suffixes
+    bool splitToFriendlyUnit(const qint64 sizeInBytes, qreal &val, Utils::Misc::SizeUnit &unit)
+    {
+        if (sizeInBytes < 0) return false;
+
+        int i = 0;
+        val = static_cast<qreal>(sizeInBytes);
+
+        while ((val >= 1024.) && (i <= static_cast<int>(Utils::Misc::SizeUnit::ExbiByte))) {
+            val /= 1024.;
+            ++i;
+        }
+
+        unit = static_cast<Utils::Misc::SizeUnit>(i);
+        return true;
+    }
 }
 
 void Utils::Misc::shutdownComputer(const ShutdownDialogAction &action)
@@ -224,71 +231,43 @@ void Utils::Misc::shutdownComputer(const ShutdownDialogAction &action)
 #endif
 }
 
-#ifndef DISABLE_GUI
-QPoint Utils::Misc::screenCenter(const QWidget *w)
+QString Utils::Misc::unitString(const SizeUnit unit, const bool isSpeed)
 {
-    // Returns the QPoint which the widget will be placed center on screen (where parent resides)
-
-    QWidget *parent = w->parentWidget();
-    QDesktopWidget *desktop = QApplication::desktop();
-    int scrn = desktop->screenNumber(parent);  // fallback to `primaryScreen` when parent is invalid
-    QRect r = desktop->availableGeometry(scrn);
-    return QPoint(r.x() + (r.width() - w->frameSize().width()) / 2, r.y() + (r.height() - w->frameSize().height()) / 2);
-}
-#endif
-
-QString Utils::Misc::unitString(Utils::Misc::SizeUnit unit)
-{
-    return QCoreApplication::translate("misc",
-                                       units[static_cast<int>(unit)].source, units[static_cast<int>(unit)].comment);
-}
-
-// return best userfriendly storage unit (B, KiB, MiB, GiB, TiB, ...)
-// use Binary prefix standards from IEC 60027-2
-// see http://en.wikipedia.org/wiki/Kilobyte
-// value must be given in bytes
-// to send numbers instead of strings with suffixes
-bool Utils::Misc::friendlyUnit(qint64 sizeInBytes, qreal &val, Utils::Misc::SizeUnit &unit)
-{
-    if (sizeInBytes < 0) return false;
-
-    int i = 0;
-    qreal rawVal = static_cast<qreal>(sizeInBytes);
-
-    while ((rawVal >= 1024.) && (i <= static_cast<int>(SizeUnit::ExbiByte))) {
-        rawVal /= 1024.;
-        ++i;
-    }
-    val = rawVal;
-    unit = static_cast<SizeUnit>(i);
-    return true;
-}
-
-QString Utils::Misc::friendlyUnit(qint64 bytesValue, bool isSpeed)
-{
-    SizeUnit unit;
-    qreal friendlyVal;
-    if (!friendlyUnit(bytesValue, friendlyVal, unit))
-        return QCoreApplication::translate("misc", "Unknown", "Unknown (size)");
-    QString ret;
-    if (unit == SizeUnit::Byte)
-        ret = QString::number(bytesValue) + QString::fromUtf8(C_NON_BREAKING_SPACE) + unitString(unit);
-    else
-        ret = Utils::String::fromDouble(friendlyVal, friendlyUnitPrecision(unit)) + QString::fromUtf8(C_NON_BREAKING_SPACE) + unitString(unit);
+    const auto &unitString = units[static_cast<int>(unit)];
+    QString ret = QCoreApplication::translate("misc", unitString.source, unitString.comment);
     if (isSpeed)
         ret += QCoreApplication::translate("misc", "/s", "per second");
     return ret;
 }
 
-int Utils::Misc::friendlyUnitPrecision(SizeUnit unit)
+QString Utils::Misc::friendlyUnit(const qint64 bytesValue, const bool isSpeed)
 {
-    // friendlyUnit's number of digits after the decimal point
-    if (unit <= SizeUnit::MebiByte) return 1;
-    else if (unit == SizeUnit::GibiByte) return 2;
-    else return 3;
+    SizeUnit unit;
+    qreal friendlyVal;
+    if (!splitToFriendlyUnit(bytesValue, friendlyVal, unit))
+        return QCoreApplication::translate("misc", "Unknown", "Unknown (size)");
+    return Utils::String::fromDouble(friendlyVal, friendlyUnitPrecision(unit))
+           + QString::fromUtf8(C_NON_BREAKING_SPACE)
+           + unitString(unit, isSpeed);
 }
 
-qlonglong Utils::Misc::sizeInBytes(qreal size, Utils::Misc::SizeUnit unit)
+int Utils::Misc::friendlyUnitPrecision(const SizeUnit unit)
+{
+    // friendlyUnit's number of digits after the decimal point
+    switch (unit) {
+    case SizeUnit::Byte:
+        return 0;
+    case SizeUnit::KibiByte:
+    case SizeUnit::MebiByte:
+        return 1;
+    case SizeUnit::GibiByte:
+        return 2;
+    default:
+        return 3;
+    }
+}
+
+qlonglong Utils::Misc::sizeInBytes(qreal size, const Utils::Misc::SizeUnit unit)
 {
     for (int i = 0; i < static_cast<int>(unit); ++i)
         size *= 1024;
@@ -335,6 +314,7 @@ bool Utils::Misc::isPreviewable(const QString &extension)
         "RMVB",
         "SWA",
         "SWF",
+        "TS",
         "VOB",
         "WAV",
         "WMA",
@@ -390,38 +370,6 @@ QString Utils::Misc::getUserIDString()
     uid = QString::number(getuid());
 #endif
     return uid;
-}
-
-QStringList Utils::Misc::toStringList(const QList<bool> &l)
-{
-    QStringList ret;
-    foreach (const bool &b, l)
-        ret << (b ? "1" : "0");
-    return ret;
-}
-
-QList<int> Utils::Misc::intListfromStringList(const QStringList &l)
-{
-    QList<int> ret;
-    foreach (const QString &s, l)
-        ret << s.toInt();
-    return ret;
-}
-
-QList<bool> Utils::Misc::boolListfromStringList(const QStringList &l)
-{
-    QList<bool> ret;
-    foreach (const QString &s, l)
-        ret << (s == "1");
-    return ret;
-}
-
-bool Utils::Misc::isUrl(const QString &s)
-{
-    static const QRegularExpression reURLScheme(
-                "http[s]?|ftp", QRegularExpression::CaseInsensitiveOption);
-
-    return reURLScheme.match(QUrl(s).scheme()).hasMatch();
 }
 
 QString Utils::Misc::parseHtmlLinks(const QString &rawText)
@@ -486,73 +434,6 @@ QString Utils::Misc::parseHtmlLinks(const QString &rawText)
     return result;
 }
 
-#ifndef DISABLE_GUI
-// Open the given path with an appropriate application
-void Utils::Misc::openPath(const QString &absolutePath)
-{
-    const QString path = Utils::Fs::fromNativePath(absolutePath);
-    // Hack to access samba shares with QDesktopServices::openUrl
-    if (path.startsWith("//"))
-        QDesktopServices::openUrl(Utils::Fs::toNativePath("file:" + path));
-    else
-        QDesktopServices::openUrl(QUrl::fromLocalFile(path));
-}
-
-// Open the parent directory of the given path with a file manager and select
-// (if possible) the item at the given path
-void Utils::Misc::openFolderSelect(const QString &absolutePath)
-{
-    const QString path = Utils::Fs::fromNativePath(absolutePath);
-    // If the item to select doesn't exist, try to open its parent
-    if (!QFileInfo::exists(path)) {
-        openPath(path.left(path.lastIndexOf('/')));
-        return;
-    }
-#ifdef Q_OS_WIN
-    HRESULT hresult = ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    PIDLIST_ABSOLUTE pidl = ::ILCreateFromPathW(reinterpret_cast<PCTSTR>(Utils::Fs::toNativePath(path).utf16()));
-    if (pidl) {
-        ::SHOpenFolderAndSelectItems(pidl, 0, nullptr, 0);
-        ::ILFree(pidl);
-    }
-    if ((hresult == S_OK) || (hresult == S_FALSE))
-        ::CoUninitialize();
-#elif defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
-    QProcess proc;
-    proc.start("xdg-mime", {"query", "default", "inode/directory"});
-    proc.waitForFinished();
-    QString output = proc.readLine().simplified();
-    if ((output == "dolphin.desktop") || (output == "org.kde.dolphin.desktop")) {
-        proc.startDetached("dolphin", {"--select", Utils::Fs::toNativePath(path)});
-    }
-    else if ((output == "nautilus.desktop") || (output == "org.gnome.Nautilus.desktop")
-                 || (output == "nautilus-folder-handler.desktop")) {
-        proc.start("nautilus", {"--version"});
-        proc.waitForFinished();
-        const QString nautilusVerStr = QString(proc.readLine()).remove(QRegularExpression("[^0-9.]"));
-        using NautilusVersion = Utils::Version<int, 3>;
-        if (NautilusVersion::tryParse(nautilusVerStr, {1, 0, 0}) > NautilusVersion {3, 28})
-            proc.startDetached("nautilus", {Utils::Fs::toNativePath(path)});
-        else
-            proc.startDetached("nautilus", {"--no-desktop", Utils::Fs::toNativePath(path)});
-    }
-    else if (output == "nemo.desktop") {
-        proc.startDetached("nemo", {"--no-desktop", Utils::Fs::toNativePath(path)});
-    }
-    else if ((output == "konqueror.desktop") || (output == "kfmclient_dir.desktop")) {
-        proc.startDetached("konqueror", {"--select", Utils::Fs::toNativePath(path)});
-    }
-    else {
-        // "caja" manager can't pinpoint the file, see: https://github.com/qbittorrent/qBittorrent/issues/5003
-        openPath(path.left(path.lastIndexOf('/')));
-    }
-#else
-    openPath(path.left(path.lastIndexOf('/')));
-#endif
-}
-
-#endif // DISABLE_GUI
-
 QString Utils::Misc::osName()
 {
     // static initialization for usage in signal handler
@@ -579,6 +460,19 @@ QString Utils::Misc::libtorrentVersionString()
     // static initialization for usage in signal handler
     static const QString ver = LIBTORRENT_VERSION;
     return ver;
+}
+
+QString Utils::Misc::opensslVersionString()
+{
+    const QString version {OPENSSL_VERSION_TEXT};
+    return version.split(' ', QString::SkipEmptyParts)[1];
+}
+
+QString Utils::Misc::zlibVersionString()
+{
+    // static initialization for usage in signal handler
+    static const QString version {ZLIB_VERSION};
+    return version;
 }
 
 #ifdef Q_OS_WIN
