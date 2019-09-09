@@ -1056,11 +1056,11 @@ void Session::applyBandwidthLimits(lt::settings_pack &settingsPack) const
 
 void Session::initMetrics()
 {
-    const auto findMetricIndex = [](const char* indexName) -> SessionMetricIndices::StatIndex
+    const auto findMetricIndex = [](const char* indexName)
     {
         const auto res = lt::find_metric_idx(indexName);
         Q_ASSERT(res >= 0);
-        return static_cast<SessionMetricIndices::StatIndex>(res);
+        return static_cast<SessionMetricIndices::IndexType>(res);
     };
     m_metricIndices.net.hasIncomingConnections = findMetricIndex("net.has_incoming_connections");
     m_metricIndices.net.sentPayloadBytes = findMetricIndex("net.sent_payload_bytes");

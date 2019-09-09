@@ -141,49 +141,49 @@ namespace BitTorrent
     struct SessionMetricIndices
     {
 #if LIBTORRENT_VERSION_NUM < 10200
-        using StatIndex = std::size_t;
+        using IndexType = std::size_t;
 #else
-        using StatIndex = std::ptrdiff_t;
+        using IndexType = std::ptrdiff_t;
 #endif
         struct
         {
-            StatIndex hasIncomingConnections = 0;
-            StatIndex sentPayloadBytes = 0;
-            StatIndex recvPayloadBytes = 0;
-            StatIndex sentBytes = 0;
-            StatIndex recvBytes = 0;
-            StatIndex sentIPOverheadBytes = 0;
-            StatIndex recvIPOverheadBytes = 0;
-            StatIndex sentTrackerBytes = 0;
-            StatIndex recvTrackerBytes = 0;
-            StatIndex recvRedundantBytes = 0;
-            StatIndex recvFailedBytes = 0;
+            IndexType hasIncomingConnections = 0;
+            IndexType sentPayloadBytes = 0;
+            IndexType recvPayloadBytes = 0;
+            IndexType sentBytes = 0;
+            IndexType recvBytes = 0;
+            IndexType sentIPOverheadBytes = 0;
+            IndexType recvIPOverheadBytes = 0;
+            IndexType sentTrackerBytes = 0;
+            IndexType recvTrackerBytes = 0;
+            IndexType recvRedundantBytes = 0;
+            IndexType recvFailedBytes = 0;
         } net;
 
         struct
         {
-            StatIndex numPeersConnected = 0;
-            StatIndex numPeersUpDisk = 0;
-            StatIndex numPeersDownDisk = 0;
+            IndexType numPeersConnected = 0;
+            IndexType numPeersUpDisk = 0;
+            IndexType numPeersDownDisk = 0;
         } peer;
 
         struct
         {
-            StatIndex dhtBytesIn = 0;
-            StatIndex dhtBytesOut = 0;
-            StatIndex dhtNodes = 0;
+            IndexType dhtBytesIn = 0;
+            IndexType dhtBytesOut = 0;
+            IndexType dhtNodes = 0;
         } dht;
 
         struct
         {
-            StatIndex diskBlocksInUse = 0;
-            StatIndex numBlocksRead = 0;
-            StatIndex numBlocksCacheHits = 0;
-            StatIndex writeJobs = 0;
-            StatIndex readJobs = 0;
-            StatIndex hashJobs = 0;
-            StatIndex queuedDiskJobs = 0;
-            StatIndex diskJobTime = 0;
+            IndexType diskBlocksInUse = 0;
+            IndexType numBlocksRead = 0;
+            IndexType numBlocksCacheHits = 0;
+            IndexType writeJobs = 0;
+            IndexType readJobs = 0;
+            IndexType hashJobs = 0;
+            IndexType queuedDiskJobs = 0;
+            IndexType diskJobTime = 0;
         } disk;
     };
 
