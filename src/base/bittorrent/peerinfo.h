@@ -34,28 +34,20 @@
 #include <libtorrent/peer_info.hpp>
 
 #include <QCoreApplication>
-#include <QHostAddress>
 
 class QBitArray;
 
 namespace BitTorrent
 {
     class TorrentHandle;
-
-    struct PeerAddress
-    {
-        QHostAddress ip;
-        ushort port;
-
-        PeerAddress();
-        PeerAddress(const QHostAddress &ip, ushort port);
-    };
+    struct PeerAddress;
 
     class PeerInfo
     {
         Q_DECLARE_TR_FUNCTIONS(PeerInfo)
 
     public:
+        PeerInfo() = default;
         PeerInfo(const TorrentHandle *torrent, const lt::peer_info &nativeInfo);
 
         bool fromDHT() const;
@@ -108,8 +100,8 @@ namespace BitTorrent
         void calcRelevance(const TorrentHandle *torrent);
         void determineFlags();
 
-        lt::peer_info m_nativeInfo;
-        qreal m_relevance;
+        lt::peer_info m_nativeInfo = {};
+        qreal m_relevance = 0;
         QString m_flags;
         QString m_flagsDescription;
     };

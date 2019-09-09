@@ -31,18 +31,17 @@
 
 #include <functional>
 #include <QTreeView>
-
-namespace BitTorrent
-{
-    class TorrentHandle;
-}
-
-class QShortcut;
+#include <QVector>
 
 class MainWindow;
 class TransferListDelegate;
 class TransferListModel;
 class TransferListSortModel;
+
+namespace BitTorrent
+{
+    class TorrentHandle;
+}
 
 class TransferListWidget : public QTreeView
 {
@@ -99,15 +98,15 @@ protected:
     QModelIndex mapToSource(const QModelIndex &index) const;
     QModelIndex mapFromSource(const QModelIndex &index) const;
     bool loadSettings();
-    QList<BitTorrent::TorrentHandle *> getSelectedTorrents() const;
+    QVector<BitTorrent::TorrentHandle *> getSelectedTorrents() const;
 
 protected slots:
     void torrentDoubleClicked();
-    void displayListMenu(const QPoint&);
+    void displayListMenu(const QPoint &);
     void currentChanged(const QModelIndex &current, const QModelIndex&) override;
-    void toggleSelectedTorrentsSuperSeeding() const;
-    void toggleSelectedTorrentsSequentialDownload() const;
-    void toggleSelectedFirstLastPiecePrio() const;
+    void setSelectedTorrentsSuperSeeding(bool enabled) const;
+    void setSelectedTorrentsSequentialDownload(bool enabled) const;
+    void setSelectedFirstLastPiecePrio(bool enabled) const;
     void setSelectedAutoTMMEnabled(bool enabled) const;
     void askNewCategoryForSelection();
     void saveSettings();
@@ -121,6 +120,7 @@ private slots:
 private:
     void wheelEvent(QWheelEvent *event) override;
     void askAddTagsForSelection();
+    void editTorrentTrackers();
     void confirmRemoveAllTagsForSelection();
     QStringList askTagsForSelection(const QString &dialogTitle);
     void applyToSelectedTorrents(const std::function<void (BitTorrent::TorrentHandle *const)> &fn);
@@ -129,11 +129,6 @@ private:
     TransferListModel *m_listModel;
     TransferListSortModel *m_sortFilterModel;
     MainWindow *m_mainWindow;
-    QShortcut *m_editHotkey;
-    QShortcut *m_deleteHotkey;
-    QShortcut *m_permDeleteHotkey;
-    QShortcut *m_doubleClickHotkey;
-    QShortcut *m_recheckHotkey;
 };
 
 #endif // TRANSFERLISTWIDGET_H

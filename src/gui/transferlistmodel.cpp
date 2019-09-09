@@ -39,7 +39,7 @@
 #include "base/bittorrent/torrenthandle.h"
 #include "base/global.h"
 #include "base/utils/fs.h"
-#include "guiiconprovider.h"
+#include "uithememanager.h"
 #include "theme/colortheme.h"
 
 // TransferListModel
@@ -64,15 +64,13 @@ TransferListModel::TransferListModel(QObject *parent)
     connect(Session::instance(), &Session::torrentFinishedChecking, this, &TransferListModel::handleTorrentStatusUpdated);
 }
 
-int TransferListModel::rowCount(const QModelIndex &index) const
+int TransferListModel::rowCount(const QModelIndex &) const
 {
-    Q_UNUSED(index);
-    return m_torrents.size();
+    return m_torrentList.size();
 }
 
-int TransferListModel::columnCount(const QModelIndex &parent) const
+int TransferListModel::columnCount(const QModelIndex &) const
 {
-    Q_UNUSED(parent);
     return NB_COLUMNS;
 }
 
@@ -81,7 +79,7 @@ QVariant TransferListModel::headerData(int section, Qt::Orientation orientation,
     if (orientation == Qt::Horizontal) {
         if (role == Qt::DisplayRole) {
             switch (section) {
-            case TR_PRIORITY: return QChar('#');
+            case TR_QUEUE_POSITION: return QChar('#');
             case TR_NAME: return tr("Name", "i.e: torrent name");
             case TR_SIZE: return tr("Size", "i.e: torrent size");
             case TR_PROGRESS: return tr("Done", "% Done");
@@ -111,8 +109,8 @@ QVariant TransferListModel::headerData(int section, Qt::Orientation orientation,
             case TR_SEEN_COMPLETE_DATE: return tr("Last Seen Complete", "Indicates the time when the torrent was last seen complete/whole");
             case TR_LAST_ACTIVITY: return tr("Last Activity", "Time passed since a chunk was downloaded/uploaded");
             case TR_TOTAL_SIZE: return tr("Total Size", "i.e. Size including unwanted data");
-            default:
-                return {};
+            case TR_AVAILABILITY: return tr("Availability", "The number of distributed copies of the torrent");
+            default: return {};
             }
         }
         else if (role == Qt::TextAlignmentRole) {
@@ -134,8 +132,9 @@ QVariant TransferListModel::headerData(int section, Qt::Orientation orientation,
             case TR_DLLIMIT:
             case TR_RATIO_LIMIT:
             case TR_RATIO:
-            case TR_PRIORITY:
+            case TR_QUEUE_POSITION:
             case TR_LAST_ACTIVITY:
+            case TR_AVAILABILITY:
                 return QVariant(Qt::AlignRight | Qt::AlignVCenter);
             default:
                 return QAbstractListModel::headerData(section, orientation, role);
@@ -146,15 +145,15 @@ QVariant TransferListModel::headerData(int section, Qt::Orientation orientation,
     return {};
 }
 
-QVariant TransferListModel::data(const QModelIndex &index, int role) const
+QVariant TransferListModel::data(const QModelIndex &index, const int role) const
 {
     if (!index.isValid()) return {};
 
-    BitTorrent::TorrentHandle *const torrent = m_torrents.value(index.row());
+    const BitTorrent::TorrentHandle *torrent = m_torrentList.value(index.row());
     if (!torrent) return {};
 
     if ((role == Qt::DecorationRole) && (index.column() == TR_NAME))
-        return GuiIconProvider::instance()->icon(torrent->state());
+        return UIThemeManager::instance()->icon(torrent->state());
 
     if (role == Qt::ForegroundRole)
         return textIsColorized()
@@ -167,7 +166,7 @@ QVariant TransferListModel::data(const QModelIndex &index, int role) const
     switch (index.column()) {
     case TR_NAME:
         return torrent->name();
-    case TR_PRIORITY:
+    case TR_QUEUE_POSITION:
         return torrent->queuePosition();
     case TR_SIZE:
         return torrent->wantedSize();
@@ -228,6 +227,8 @@ QVariant TransferListModel::data(const QModelIndex &index, int role) const
         if (torrent->isPaused() || torrent->isChecking())
             return -1;
         return QVariant::fromValue(torrent->timeSinceActivity());
+    case TR_AVAILABILITY:
+        return torrent->distributedCopies();
     case TR_TOTAL_SIZE:
         return torrent->totalSize();
     }
@@ -237,14 +238,12 @@ QVariant TransferListModel::data(const QModelIndex &index, int role) const
 
 bool TransferListModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    qDebug() << Q_FUNC_INFO << value;
     if (!index.isValid() || (role != Qt::DisplayRole)) return false;
 
-    qDebug("Index is valid and role is DisplayRole");
-    BitTorrent::TorrentHandle *const torrent = m_torrents.value(index.row());
+    BitTorrent::TorrentHandle *const torrent = m_torrentList.value(index.row());
     if (!torrent) return false;
 
-    // Category, seed date and Name columns can be edited
+    // Category and Name columns can be edited
     switch (index.column()) {
     case TR_NAME:
         torrent->setName(value.toString());
@@ -261,12 +260,14 @@ bool TransferListModel::setData(const QModelIndex &index, const QVariant &value,
 
 void TransferListModel::addTorrent(BitTorrent::TorrentHandle *const torrent)
 {
-    if (m_torrents.indexOf(torrent) == -1) {
-        const int row = m_torrents.size();
-        beginInsertRows(QModelIndex(), row, row);
-        m_torrents << torrent;
-        endInsertRows();
-    }
+    Q_ASSERT(!m_torrentMap.contains(torrent));
+
+    const int row = m_torrentList.size();
+
+    beginInsertRows({}, row, row);
+    m_torrentList << torrent;
+    m_torrentMap[torrent] = row;
+    endInsertRows();
 }
 
 Qt::ItemFlags TransferListModel::flags(const QModelIndex &index) const
@@ -281,7 +282,7 @@ BitTorrent::TorrentHandle *TransferListModel::torrentHandle(const QModelIndex &i
 {
     if (!index.isValid()) return nullptr;
 
-    return m_torrents.value(index.row());
+    return m_torrentList.value(index.row());
 }
 
 bool TransferListModel::textIsColorized()
@@ -296,24 +297,43 @@ void TransferListModel::setTextIsColorized(bool v)
 
 void TransferListModel::handleTorrentAboutToBeRemoved(BitTorrent::TorrentHandle *const torrent)
 {
-    const int row = m_torrents.indexOf(torrent);
-    if (row >= 0) {
-        beginRemoveRows(QModelIndex(), row, row);
-        m_torrents.removeAt(row);
-        endRemoveRows();
+    const int row = m_torrentMap.value(torrent, -1);
+    Q_ASSERT(row >= 0);
+
+    beginRemoveRows({}, row, row);
+    m_torrentList.removeAt(row);
+    m_torrentMap.remove(torrent);
+    for (int &value : m_torrentMap) {
+        if (value > row)
+            --value;
     }
+    endRemoveRows();
 }
 
 void TransferListModel::handleTorrentStatusUpdated(BitTorrent::TorrentHandle *const torrent)
 {
-    const int row = m_torrents.indexOf(torrent);
-    if (row >= 0)
-        emit dataChanged(index(row, 0), index(row, columnCount() - 1));
+    const int row = m_torrentMap.value(torrent, -1);
+    Q_ASSERT(row >= 0);
+
+    emit dataChanged(index(row, 0), index(row, columnCount() - 1));
 }
 
-void TransferListModel::handleTorrentsUpdated()
+void TransferListModel::handleTorrentsUpdated(const QVector<BitTorrent::TorrentHandle *> &torrents)
 {
-    emit dataChanged(index(0, 0), index(rowCount() - 1, columnCount() - 1));
+    const int columns = (columnCount() - 1);
+
+    if (torrents.size() <= (m_torrentList.size() * 0.5)) {
+        for (BitTorrent::TorrentHandle *const torrent : torrents) {
+            const int row = m_torrentMap.value(torrent, -1);
+            Q_ASSERT(row >= 0);
+
+            emit dataChanged(index(row, 0), index(row, columns));
+        }
+    }
+    else {
+        // save the overhead when more than half of the torrent list needs update
+        emit dataChanged(index(0, 0), index((rowCount() - 1), columns));
+    }
 }
 
 CachedSettingValue<bool> &TransferListModel::textIsColorizedSetting()

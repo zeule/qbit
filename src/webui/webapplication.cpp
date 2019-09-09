@@ -90,7 +90,7 @@ namespace
         return ret;
     }
 
-    inline QUrl urlFromHostHeader(const QString &hostHeader)
+    QUrl urlFromHostHeader(const QString &hostHeader)
     {
         if (!hostHeader.contains(QLatin1String("://")))
             return {QLatin1String("http://") + hostHeader};
@@ -193,7 +193,7 @@ void WebApplication::sendWebUIFile()
     sendFile(localPath);
 }
 
-void WebApplication::translateDocument(QString &data)
+void WebApplication::translateDocument(QString &data) const
 {
     const QRegularExpression regex("QBT_TR\\((([^\\)]|\\)(?!QBT_TR))+)\\)QBT_TR\\[CONTEXT=([a-zA-Z_][a-zA-Z0-9_]*)\\]");
 
@@ -370,11 +370,10 @@ void WebApplication::sendFile(const QString &path)
     const QDateTime lastModified {QFileInfo(path).lastModified()};
 
     // find translated file in cache
-    auto it = m_translatedFiles.constFind(path);
-    if ((it != m_translatedFiles.constEnd()) && (lastModified <= (*it).lastModified)) {
-        const QString mimeName {QMimeDatabase().mimeTypeForFileNameAndData(path, (*it).data).name()};
-        print((*it).data, mimeName);
-        header(Http::HEADER_CACHE_CONTROL, getCachingInterval(mimeName));
+    const auto it = m_translatedFiles.constFind(path);
+    if ((it != m_translatedFiles.constEnd()) && (lastModified <= it->lastModified)) {
+        print(it->data, it->mimeType);
+        header(Http::HEADER_CACHE_CONTROL, getCachingInterval(it->mimeType));
         return;
     }
 
@@ -402,7 +401,7 @@ void WebApplication::sendFile(const QString &path)
         translateDocument(dataStr);
         data = dataStr.toUtf8();
 
-        m_translatedFiles[path] = {data, lastModified}; // caching translated file
+        m_translatedFiles[path] = {data, mimeType.name(), lastModified}; // caching translated file
     }
 
     print(data, mimeType.name());

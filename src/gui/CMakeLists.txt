@@ -4,7 +4,6 @@ set(CMAKE_AUTOUIC True)
 add_library(qbt_gui_headers INTERFACE)
 target_include_directories(qbt_gui_headers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory(lineedit)
 add_subdirectory(properties)
 add_subdirectory(powermanagement)
 add_subdirectory(rss)
@@ -26,15 +25,16 @@ deletionconfirmationdialog.h
 downloadfromurldialog.h
 executionlogwidget.h
 fspathedit.h
-fspathedit_p.h
-guiiconprovider.h
 hidabletabwidget.h
 ipsubnetwhitelistoptionsdialog.h
+lineedit.h
 loglistwidget.h
 mainwindow.h
 optionsdialog.h
 previewlistdelegate.h
 previewselectdialog.h
+private/fspathedit_p.h
+private/tristatewidget.h
 raisedmessagebox.h
 scanfoldersdelegate.h
 shutdownconfirmdialog.h
@@ -52,11 +52,14 @@ torrentcontentmodelfolder.h
 torrentcontentmodelitem.h
 torrentcontenttreeview.h
 torrentcreatordialog.h
+trackerentriesdialog.h
 transferlistdelegate.h
 transferlistfilterswidget.h
 transferlistmodel.h
 transferlistsortmodel.h
 transferlistwidget.h
+tristateaction.h
+uithememanager.h
 updownratiodialog.h
 utils.h
 theme/colorprovider_p.h
@@ -75,6 +78,7 @@ theme/themeinfo.h
 theme/themeprovider.h
 
 # sources
+aboutdialog.cpp
 addnewtorrentdialog.cpp
 advancedsettings.cpp
 autoexpandabledialog.cpp
@@ -87,13 +91,16 @@ cookiesmodel.cpp
 downloadfromurldialog.cpp
 executionlogwidget.cpp
 fspathedit.cpp
-fspathedit_p.cpp
-guiiconprovider.cpp
+hidabletabwidget.cpp
 ipsubnetwhitelistoptionsdialog.cpp
+lineedit.cpp
 loglistwidget.cpp
 mainwindow.cpp
 optionsdialog.cpp
+previewlistdelegate.cpp
 previewselectdialog.cpp
+private/fspathedit_p.cpp
+private/tristatewidget.cpp
 raisedmessagebox.cpp
 scanfoldersdelegate.cpp
 shutdownconfirmdialog.cpp
@@ -111,11 +118,14 @@ torrentcontentmodelfolder.cpp
 torrentcontentmodelitem.cpp
 torrentcontenttreeview.cpp
 torrentcreatordialog.cpp
+trackerentriesdialog.cpp
 transferlistdelegate.cpp
 transferlistfilterswidget.cpp
 transferlistmodel.cpp
 transferlistsortmodel.cpp
 transferlistwidget.cpp
+tristateaction.cpp
+uithememanager.cpp
 updownratiodialog.cpp
 utils.cpp
 theme/colorprovider_p.cpp
@@ -149,14 +159,14 @@ speedlimitdialog.ui
 statsdialog.ui
 torrentcategorydialog.ui
 torrentcreatordialog.ui
+trackerentriesdialog.ui
 updownratiodialog.ui
 )
 
 target_link_libraries(qbt_gui
     PRIVATE
-        qbt_lineedit qbt_powermanagement qbt_rss qbt_properties qbt_searchengine
+        qbt_powermanagement qbt_rss qbt_properties qbt_searchengine
         qbt_base
-        QtSingleApplication::QtSingleApplication
     PUBLIC
         qbt_gui_headers
 )

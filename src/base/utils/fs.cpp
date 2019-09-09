@@ -39,7 +39,7 @@
 
 #if defined(Q_OS_WIN)
 #include <Windows.h>
-#elif defined(Q_OS_MAC) || defined(Q_OS_FREEBSD) || defined(Q_OS_OPENBSD)
+#elif defined(Q_OS_MACOS) || defined(Q_OS_FREEBSD) || defined(Q_OS_OPENBSD)
 #include <sys/param.h>
 #include <sys/mount.h>
 #elif defined(Q_OS_HAIKU)
@@ -60,17 +60,12 @@
 #include "base/bittorrent/torrenthandle.h"
 #include "base/global.h"
 
-/**
- * Converts a path to a string suitable for display.
- * This function makes sure the directory separator used is consistent
- * with the OS being run.
- */
 QString Utils::Fs::toNativePath(const QString &path)
 {
     return QDir::toNativeSeparators(path);
 }
 
-QString Utils::Fs::fromNativePath(const QString &path)
+QString Utils::Fs::toUniformPath(const QString &path)
 {
     return QDir::fromNativeSeparators(path);
 }
@@ -87,7 +82,7 @@ QString Utils::Fs::fileExtension(const QString &filename)
 
 QString Utils::Fs::fileName(const QString &filePath)
 {
-    const QString path = fromNativePath(filePath);
+    const QString path = toUniformPath(filePath);
     const int slashIndex = path.lastIndexOf('/');
     if (slashIndex == -1)
         return path;
@@ -96,7 +91,7 @@ QString Utils::Fs::fileName(const QString &filePath)
 
 QString Utils::Fs::folderName(const QString &filePath)
 {
-    const QString path = fromNativePath(filePath);
+    const QString path = toUniformPath(filePath);
     const int slashIndex = path.lastIndexOf('/');
     if (slashIndex == -1)
         return path;
@@ -235,7 +230,19 @@ bool Utils::Fs::isValidFileSystemName(const QString &name, const bool allowSepar
 {
     if (name.isEmpty()) return false;
 
-    const QRegularExpression regex(allowSeparators ? "[:?\"*<>|]" : "[\\\\/:?\"*<>|]");
+#if defined(Q_OS_WIN)
+    const QRegularExpression regex {allowSeparators
+        ? QLatin1String("[:?\"*<>|]")
+        : QLatin1String("[\\\\/:?\"*<>|]")};
+#elif defined(Q_OS_MACOS)
+    const QRegularExpression regex {allowSeparators
+        ? QLatin1String("[\\0:]")
+        : QLatin1String("[\\0/:]")};
+#else
+    const QRegularExpression regex {allowSeparators
+        ? QLatin1String("[\\0]")
+        : QLatin1String("[\\0/]")};
+#endif
     return !name.contains(regex);
 }
 
@@ -248,7 +255,7 @@ qint64 Utils::Fs::freeDiskSpaceOnPath(const QString &path)
 
 QString Utils::Fs::branchPath(const QString &filePath, QString *removed)
 {
-    QString ret = fromNativePath(filePath);
+    QString ret = toUniformPath(filePath);
     if (ret.endsWith('/'))
         ret.chop(1);
     const int slashIndex = ret.lastIndexOf('/');
@@ -314,7 +321,7 @@ bool Utils::Fs::isNetworkFileSystem(const QString &path)
         return false;
 
     return (::GetDriveTypeW(volumePath.get()) == DRIVE_REMOTE);
-#elif defined(Q_OS_MAC) || defined(Q_OS_OPENBSD)
+#elif defined(Q_OS_MACOS) || defined(Q_OS_OPENBSD)
     QString file = path;
     if (!file.endsWith('/'))
         file += '/';

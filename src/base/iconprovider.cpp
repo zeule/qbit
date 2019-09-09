@@ -35,6 +35,7 @@ IconProvider::IconProvider(QObject *parent)
     : QObject(parent)
 {
     setIconDir(defaultIconDir());
+    m_instance = this;
 }
 
 IconProvider::~IconProvider() = default;
@@ -52,8 +53,7 @@ QString IconProvider::defaultIconDir()
 
 void IconProvider::initInstance()
 {
-    if (!m_instance)
-        m_instance = new IconProvider;
+    new IconProvider;
 }
 
 void IconProvider::freeInstance()

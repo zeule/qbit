@@ -38,7 +38,7 @@
 #include <Windows.h>
 #endif
 
-class QString;
+#include <QString>
 
 enum class ShutdownDialogAction;
 
@@ -86,7 +86,7 @@ namespace Utils
 
         // Take a number of seconds and return a user-friendly
         // time duration like "1d 2h 10m".
-        QString userFriendlyDuration(std::chrono::seconds seconds);
+        QString userFriendlyDuration(std::chrono::seconds seconds, std::chrono::seconds maxCap = std::chrono::seconds{-1});
         QString getUserIDString();
 
 #ifdef Q_OS_WIN

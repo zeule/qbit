@@ -31,6 +31,8 @@
 
 #include <libtorrent/announce_entry.hpp>
 
+#include <QtGlobal>
+
 class QString;
 
 namespace BitTorrent
@@ -70,6 +72,7 @@ namespace BitTorrent
     };
 
     bool operator==(const TrackerEntry &left, const TrackerEntry &right);
+    uint qHash(const TrackerEntry &key, uint seed);
 }
 
 #endif // BITTORRENT_TRACKERENTRY_H

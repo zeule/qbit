@@ -66,9 +66,8 @@ else()
             # hope that they apply. If not, you the user are on your own.
             set(LibtorrentRasterbar_DEFINITIONS
                 -DTORRENT_USE_OPENSSL
-                -DTORRENT_DISABLE_GEO_IP
                 -DBOOST_ASIO_ENABLE_CANCELIO
-                -D_FILE_OFFSET_BITS=64)
+                -DUNICODE -D_UNICODE -D_FILE_OFFSET_BITS=64)
         endif()
 
         if(NOT LibtorrentRasterbar_USE_STATIC_LIBS)

@@ -36,6 +36,8 @@
 
 #include "settingsstorage.h"
 
+#include <boost/math/special_functions/relative_difference.hpp>
+
 template <typename T>
 class CachedSettingValue
 {
@@ -68,6 +70,14 @@ public:
 
     CachedSettingValue<T> &operator=(const T &newValue)
     {
+        if constexpr(std::is_floating_point_v<T>) {
+            if (boost::math::epsilon_difference(m_value, newValue) < 1)
+                return *this;
+        } else {
+            if (m_value == newValue)
+                return *this;
+        }
+
         m_value = newValue;
         storeValue(m_value);
         return *this;

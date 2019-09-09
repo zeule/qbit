@@ -36,8 +36,8 @@
 #include <libtorrent/torrent_handle.hpp>
 #include <libtorrent/torrent_status.hpp>
 
+#include <QDateTime>
 #include <QHash>
-#include <QList>
 #include <QObject>
 #include <QQueue>
 #include <QSet>
@@ -84,6 +84,7 @@ namespace BitTorrent
         int downloadLimit;
         // for new torrents
         QVector<DownloadPriority> filePriorities;
+        QDateTime addedTime;
         // for restored torrents
         qreal ratioLimit;
         std::chrono::minutes seedingTimeLimit;
@@ -263,7 +264,7 @@ namespace BitTorrent
         int queuePosition() const;
         QVector<TrackerEntry> trackers() const;
         QHash<QString, TrackerInfo> trackerInfos() const;
-        QList<QUrl> urlSeeds() const;
+        QVector<QUrl> urlSeeds() const;
         QString error() const;
         qlonglong totalDownload() const;
         qlonglong totalUpload() const;
@@ -288,7 +289,7 @@ namespace BitTorrent
         int downloadLimit() const;
         int uploadLimit() const;
         bool superSeeding() const;
-        QList<PeerInfo> peers() const;
+        QVector<PeerInfo> peers() const;
         QBitArray pieces() const;
         QBitArray downloadingPieces() const;
         QVector<int> pieceAvailability() const;
@@ -326,8 +327,8 @@ namespace BitTorrent
         void flushCache();
         void addTrackers(const QVector<TrackerEntry> &trackers);
         void replaceTrackers(const QVector<TrackerEntry> &trackers);
-        void addUrlSeeds(const QList<QUrl> &urlSeeds);
-        void removeUrlSeeds(const QList<QUrl> &urlSeeds);
+        void addUrlSeeds(const QVector<QUrl> &urlSeeds);
+        void removeUrlSeeds(const QVector<QUrl> &urlSeeds);
         bool connectPeer(const PeerAddress &peerAddress);
 
         QString toMagnetUri() const;
@@ -395,8 +396,6 @@ namespace BitTorrent
         void move_impl(QString path, bool overwrite);
         void moveStorage(const QString &newPath, bool overwrite);
         void manageIncompleteFiles();
-        bool addUrlSeed(const QUrl &urlSeed);
-        bool removeUrlSeed(const QUrl &urlSeed);
         void setFirstLastPiecePriorityImpl(bool enabled, const QVector<DownloadPriority> &updatedFilePrio = {});
 
         Session *const m_session;
@@ -438,6 +437,7 @@ namespace BitTorrent
         qreal m_ratioLimit;
         std::chrono::minutes m_seedingTimeLimit;
         bool m_tempPathDisabled;
+        bool m_fastresumeDataRejected;
         bool m_hasMissingFiles;
         bool m_hasRootFolder;
         bool m_needsToSetFirstLastPiecePriority;
@@ -447,12 +447,15 @@ namespace BitTorrent
 
         enum StartupState
         {
-            NotStarted,
-            Starting,
-            Started
+            Preparing, // torrent is preparing to start regular processing
+            Starting, // torrent is prepared and starting to perform regular processing
+            Started // torrent is performing regular processing
         };
+        StartupState m_startupState = Preparing;
+        // Handle torrent state when it starts performing some service job
+        // being in Paused state so it might be unpaused internally and then paused again
+        bool m_pauseWhenReady;
 
-        StartupState m_startupState = NotStarted;
         bool m_unchecked = false;
     };
 }

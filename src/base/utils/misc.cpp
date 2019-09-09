@@ -36,7 +36,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 #endif
@@ -51,7 +51,7 @@
 #include <QSet>
 #include <QSysInfo>
 
-#if (defined(Q_OS_UNIX) && !defined(Q_OS_MAC)) && defined(QT_DBUS_LIB)
+#if (defined(Q_OS_UNIX) && !defined(Q_OS_MACOS)) && defined(QT_DBUS_LIB)
 #include <QDBusInterface>
 #endif
 
@@ -139,7 +139,7 @@ void Utils::Misc::shutdownComputer(const ShutdownDialogAction &action)
     tkp.Privileges[0].Attributes = 0;
     AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES) NULL, 0);
 
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
     AEEventID EventToSend;
     if (action != ShutdownDialogAction::Shutdown)
         EventToSend = kAESleep;
@@ -323,14 +323,14 @@ bool Utils::Misc::isPreviewable(const QString &extension)
     return multimediaExtensions.contains(extension.toUpper());
 }
 
-// Take a number of seconds and return an user-friendly
-// time duration like "1d 2h 10m".
-QString Utils::Misc::userFriendlyDuration(std::chrono::seconds seconds)
+QString Utils::Misc::userFriendlyDuration(std::chrono::seconds seconds, std::chrono::seconds maxCap)
 {
     using std::chrono::duration_cast;
     using namespace std::chrono_literals;
 
-    if (seconds >= MAX_ETA)
+    if (seconds.count() < 0)
+        return QString::fromUtf8(C_INFINITY);
+    if ((maxCap.count() >= 0) && (seconds >= maxCap))
         return QString::fromUtf8(C_INFINITY);
 
     if (seconds.count() == 0)
@@ -354,7 +354,9 @@ QString Utils::Misc::userFriendlyDuration(std::chrono::seconds seconds)
     if (days < 100)
         return QCoreApplication::translate("misc", "%1d %2h", "e.g: 2days 10hours").arg(QString::number(days), QString::number(hours.count()));
 
-    return QString::fromUtf8(C_INFINITY);
+    qlonglong years = (days / 365);
+    days -= (years * 365);
+    return QCoreApplication::translate("misc", "%1y %2d", "e.g: 2years 10days").arg(QString::number(years), QString::number(days));
 }
 
 QString Utils::Misc::getUserIDString()
@@ -465,7 +467,7 @@ QString Utils::Misc::libtorrentVersionString()
 QString Utils::Misc::opensslVersionString()
 {
     const QString version {OPENSSL_VERSION_TEXT};
-    return version.split(' ', QString::SkipEmptyParts)[1];
+    return version.splitRef(' ', QString::SkipEmptyParts)[1].toString();
 }
 
 QString Utils::Misc::zlibVersionString()

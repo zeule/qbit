@@ -40,7 +40,7 @@
 #include "base/bittorrent/sessionstatus.h"
 #include "base/bittorrent/torrenthandle.h"
 #include "base/utils/misc.h"
-#include "guiiconprovider.h"
+#include "uithememanager.h"
 #include "speedlimitdialog.h"
 #include "utils.h"
 
@@ -49,7 +49,7 @@
 StatusBar::StatusBar(QWidget *parent)
     : QStatusBar(parent)
 {
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     // Redefining global stylesheet breaks certain elements on mac like tabs.
     // Qt checks whether the stylesheet class inherts("QMacStyle") and this becomes false.
     qApp->setStyleSheet("QStatusBar::item { border-width: 0; }");
@@ -73,7 +73,7 @@ StatusBar::StatusBar(QWidget *parent)
     connect(m_connecStatusLblIcon, &QAbstractButton::clicked, this, &StatusBar::connectionButtonClicked);
 
     m_dlSpeedLbl = new QPushButton(this);
-    m_dlSpeedLbl->setIcon(GuiIconProvider::instance()->getIcon(QLatin1String("cloud-download")));
+    m_dlSpeedLbl->setIcon(UIThemeManager::instance()->getIcon(QLatin1String("cloud-download")));
     connect(m_dlSpeedLbl, &QAbstractButton::clicked, this, &StatusBar::capDownloadSpeed);
     m_dlSpeedLbl->setFlat(true);
     m_dlSpeedLbl->setFocusPolicy(Qt::NoFocus);
@@ -82,7 +82,7 @@ StatusBar::StatusBar(QWidget *parent)
     m_dlSpeedLbl->setMinimumWidth(200);
 
     m_upSpeedLbl = new QPushButton(this);
-    m_upSpeedLbl->setIcon(GuiIconProvider::instance()->getIcon(QLatin1String("cloud-upload")));
+    m_upSpeedLbl->setIcon(UIThemeManager::instance()->getIcon(QLatin1String("cloud-upload")));
     connect(m_upSpeedLbl, &QAbstractButton::clicked, this, &StatusBar::capUploadSpeed);
     m_upSpeedLbl->setFlat(true);
     m_upSpeedLbl->setFocusPolicy(Qt::NoFocus);
@@ -115,22 +115,22 @@ StatusBar::StatusBar(QWidget *parent)
 
     QFrame *statusSep1 = new QFrame(this);
     statusSep1->setFrameStyle(QFrame::VLine);
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     statusSep1->setFrameShadow(QFrame::Raised);
 #endif
     QFrame *statusSep2 = new QFrame(this);
     statusSep2->setFrameStyle(QFrame::VLine);
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     statusSep2->setFrameShadow(QFrame::Raised);
 #endif
     QFrame *statusSep3 = new QFrame(this);
     statusSep3->setFrameStyle(QFrame::VLine);
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     statusSep3->setFrameShadow(QFrame::Raised);
 #endif
     QFrame *statusSep4 = new QFrame(this);
     statusSep4->setFrameStyle(QFrame::VLine);
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     statusSep4->setFrameShadow(QFrame::Raised);
 #endif
     layout->addWidget(m_DHTLbl);
@@ -177,17 +177,17 @@ void StatusBar::updateConnectionStatus()
     const BitTorrent::SessionStatus &sessionStatus = BitTorrent::Session::instance()->status();
 
     if (!BitTorrent::Session::instance()->isListening()) {
-        m_connecStatusLblIcon->setIcon(GuiIconProvider::instance()->getIcon(QLatin1String("state-offline")));
+        m_connecStatusLblIcon->setIcon(UIThemeManager::instance()->getIcon(QLatin1String("state-offline")));
         m_connecStatusLblIcon->setToolTip(QLatin1String("<b>") + tr("Connection Status:") + QLatin1String("</b><br>") + tr("Offline. This usually means that qBittorrent failed to listen on the selected port for incoming connections."));
     }
     else {
         if (sessionStatus.hasIncomingConnections) {
             // Connection OK
-            m_connecStatusLblIcon->setIcon(GuiIconProvider::instance()->getIcon(QLatin1String("state-ok")));
+            m_connecStatusLblIcon->setIcon(UIThemeManager::instance()->getIcon(QLatin1String("state-ok")));
             m_connecStatusLblIcon->setToolTip(QLatin1String("<b>") + tr("Connection Status:") + QLatin1String("</b><br>") + tr("Online"));
         }
         else {
-            m_connecStatusLblIcon->setIcon(GuiIconProvider::instance()->getIcon(QLatin1String("state-warning")));
+            m_connecStatusLblIcon->setIcon(UIThemeManager::instance()->getIcon(QLatin1String("state-warning")));
             m_connecStatusLblIcon->setToolTip(QLatin1String("<b>") + tr("Connection status:") + QLatin1String("</b><br>") + QLatin1String("<i>") + tr("No direct connections. This may indicate network configuration problems.") + QLatin1String("</i>"));
         }
     }
@@ -234,12 +234,12 @@ void StatusBar::refresh()
 void StatusBar::updateAltSpeedsBtn(bool alternative)
 {
     if (alternative) {
-        m_altSpeedsBtn->setIcon(GuiIconProvider::instance()->getIcon(QLatin1String("speedometer-flipped")));
+        m_altSpeedsBtn->setIcon(UIThemeManager::instance()->getIcon(QLatin1String("speedometer-flipped")));
         m_altSpeedsBtn->setToolTip(tr("Click to switch to regular speed limits"));
         m_altSpeedsBtn->setDown(true);
     }
     else {
-        m_altSpeedsBtn->setIcon(GuiIconProvider::instance()->getIcon(QLatin1String("speedometer")));
+        m_altSpeedsBtn->setIcon(UIThemeManager::instance()->getIcon(QLatin1String("speedometer")));
         m_altSpeedsBtn->setToolTip(tr("Click to switch to alternative speed limits"));
         m_altSpeedsBtn->setDown(false);
     }

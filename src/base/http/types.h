@@ -98,8 +98,8 @@ namespace Http
         QString method;
         QString path;
         QStringMap headers;
-        QMap<QString, QByteArray> query;
-        QStringMap posts;
+        QHash<QString, QByteArray> query;
+        QHash<QString, QString> posts;
         QVector<UploadedFile> files;
     };
 
@@ -107,8 +107,6 @@ namespace Http
     {
         uint code;
         QString text;
-
-        ResponseStatus(uint code = 200, const QString &text = "OK"): code(code), text(text) {}
     };
 
     struct Response
@@ -117,7 +115,10 @@ namespace Http
         QStringMap headers;
         QByteArray content;
 
-        Response(uint code = 200, const QString &text = "OK"): status(code, text) {}
+        Response(uint code = 200, const QString &text = "OK")
+            : status {code, text}
+        {
+        }
     };
 }
 

@@ -105,7 +105,7 @@ private:
     void sendFile(const QString &path);
     void sendWebUIFile();
 
-    void translateDocument(QString &data);
+    void translateDocument(QString &data) const;
 
     // Session management
     QString generateSid() const;
@@ -123,7 +123,7 @@ private:
     WebSession *m_currentSession = nullptr;
     Http::Request m_request;
     Http::Environment m_env;
-    QMap<QString, QString> m_params;
+    QHash<QString, QString> m_params;
     const QString m_cacheID;
 
     const QRegularExpression m_apiPathPattern {(QLatin1String("^/api/v2/(?<scope>[A-Za-z_][A-Za-z_0-9]*)/(?<action>[A-Za-z_][A-Za-z_0-9]*)$"))};
@@ -136,6 +136,7 @@ private:
     struct TranslatedFile
     {
         QByteArray data;
+        QString mimeType;
         QDateTime lastModified;
     };
     QHash<QString, TranslatedFile> m_translatedFiles;
@@ -145,7 +146,7 @@ private:
 
     bool m_isLocalAuthEnabled;
     bool m_isAuthSubnetWhitelistEnabled;
-    QList<Utils::Net::Subnet> m_authSubnetWhitelist;
+    QVector<Utils::Net::Subnet> m_authSubnetWhitelist;
     int m_sessionTimeout;
 
     // security related

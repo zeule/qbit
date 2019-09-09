@@ -68,7 +68,7 @@ qreal Utils::Gui::screenScalingFactor(const QWidget *widget)
 #ifdef Q_OS_WIN
     const int screen = qApp->desktop()->screenNumber(widget);
     return (QApplication::screens()[screen]->logicalDotsPerInch() / 96);
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
     return 1;
 #else
     return widget->devicePixelRatioF();
@@ -158,7 +158,7 @@ QPoint Utils::Gui::screenCenter(const QWidget *w)
 // Open the given path with an appropriate application
 void Utils::Gui::openPath(const QString &absolutePath)
 {
-    const QString path = Utils::Fs::fromNativePath(absolutePath);
+    const QString path = Utils::Fs::toUniformPath(absolutePath);
     // Hack to access samba shares with QDesktopServices::openUrl
     if (path.startsWith("//"))
         QDesktopServices::openUrl(Utils::Fs::toNativePath("file:" + path));
@@ -170,7 +170,7 @@ void Utils::Gui::openPath(const QString &absolutePath)
 // (if possible) the item at the given path
 void Utils::Gui::openFolderSelect(const QString &absolutePath)
 {
-    const QString path = Utils::Fs::fromNativePath(absolutePath);
+    const QString path = Utils::Fs::toUniformPath(absolutePath);
     // If the item to select doesn't exist, try to open its parent
     if (!QFileInfo::exists(path)) {
         openPath(path.left(path.lastIndexOf('/')));
@@ -185,7 +185,7 @@ void Utils::Gui::openFolderSelect(const QString &absolutePath)
     }
     if ((hresult == S_OK) || (hresult == S_FALSE))
         ::CoUninitialize();
-#elif defined(Q_OS_UNIX) && !defined(Q_OS_MAC)
+#elif defined(Q_OS_UNIX) && !defined(Q_OS_MACOS)
     QProcess proc;
     proc.start("xdg-mime", {"query", "default", "inode/directory"});
     proc.waitForFinished();

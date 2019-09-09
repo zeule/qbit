@@ -73,7 +73,7 @@ QString Private::DefaultProfile::configLocation() const
 
 QString Private::DefaultProfile::dataLocation() const
 {
-#if defined(Q_OS_WIN) || defined (Q_OS_MAC)
+#if defined(Q_OS_WIN) || defined (Q_OS_MACOS)
     return locationWithConfigurationName(QStandardPaths::AppLocalDataLocation);
 #else
     // on Linux gods know why qBittorrent creates 'data' subdirectory in ~/.local/share/
@@ -84,17 +84,12 @@ QString Private::DefaultProfile::dataLocation() const
 
 QString Private::DefaultProfile::downloadLocation() const
 {
-#if defined(Q_OS_WIN)
-    if (QSysInfo::windowsVersion() <= QSysInfo::WV_XP)  // Windows XP
-        return QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).absoluteFilePath(
-            QCoreApplication::translate("fsutils", "Downloads"));
-#endif
     return QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
 }
 
 SettingsPtr Private::DefaultProfile::applicationSettings(const QString &name) const
 {
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
+#if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
     return SettingsPtr(new QSettings(QSettings::IniFormat, QSettings::UserScope, profileName(), name));
 #else
     return SettingsPtr(new QSettings(profileName(), name));
@@ -140,7 +135,7 @@ QString Private::CustomProfile::downloadLocation() const
 SettingsPtr Private::CustomProfile::applicationSettings(const QString &name) const
 {
     // here we force QSettings::IniFormat format always because we need it to be portable across platforms
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
+#if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
     constexpr const char *CONF_FILE_EXTENSION = ".ini";
 #else
     constexpr const char *CONF_FILE_EXTENSION = ".conf";
