@@ -203,15 +203,15 @@ void StatusFilterWidget::updateStatusIcons()
     const UIThemeManager* icons = UIThemeManager::instance(); // shortcut
     using BitTorrent::TorrentState;
 
-    item(TorrentFilter::All)->setData(Qt::DecorationRole, QIcon(":/icons/skin/filterall.svg"));
-    item(TorrentFilter::Downloading)->setData(Qt::DecorationRole, icons->icon(TorrentState::Downloading));
-    item(TorrentFilter::Seeding)->setData(Qt::DecorationRole, icons->icon(TorrentState::Uploading));
-    item(TorrentFilter::Completed)->setData(Qt::DecorationRole, icons->icon(TorrentState::PausedUploading));
-    item(TorrentFilter::Resumed)->setData(Qt::DecorationRole, QIcon(":/icons/skin/resumed.svg"));
-    item(TorrentFilter::Paused)->setData(Qt::DecorationRole, icons->icon(TorrentState::PausedDownloading));
-    item(TorrentFilter::Active)->setData(Qt::DecorationRole, QIcon(":/icons/skin/filteractive.svg"));
-    item(TorrentFilter::Inactive)->setData(Qt::DecorationRole, QIcon(":/icons/skin/filterinactive.svg"));
-    item(TorrentFilter::Errored)->setData(Qt::DecorationRole, icons->icon(TorrentState::Error));
+    item(TorrentFilter::All)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("view-filter")));
+    item(TorrentFilter::Downloading)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-download")));
+    item(TorrentFilter::Seeding)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("folder-network")));
+    item(TorrentFilter::Completed)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-ok")));
+    item(TorrentFilter::Resumed)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("repository")));
+    item(TorrentFilter::Paused)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-pause")));
+    item(TorrentFilter::Active)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-sync")));
+    item(TorrentFilter::Inactive)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-offline")));
+    item(TorrentFilter::Errored)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-error")));
 }
 
 void StatusFilterWidget::showMenu(const QPoint &) {}
