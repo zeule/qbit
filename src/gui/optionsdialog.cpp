@@ -937,8 +937,15 @@ void OptionsDialog::saveOptions()
     session->setAddTrackersEnabled(m_ui->checkEnableAddTrackers->isChecked());
     session->setAdditionalTrackers(m_ui->textTrackers->toPlainText());
     session->setGlobalMaxRatio(getMaxRatio());
-    session->setGlobalMaxSeedingMinutes(std::chrono::minutes(getMaxSeedingMinutes()));
-    session->setMaxRatioAction(static_cast<MaxRatioAction>(m_ui->comboRatioLimitAct->currentIndex()));
+    session->setGlobalMaxSeedingMinutes(std::chrono::minutes(getMaxSeedingMinutes());
+
+    const QVector<MaxRatioAction> actIndex = {
+        Pause,
+        Remove,
+        DeleteFiles,
+        EnableSuperSeeding
+    };
+    session->setMaxRatioAction(actIndex.value(m_ui->comboRatioLimitAct->currentIndex()));
     // End Bittorrent preferences
 
     // Misc preferences
@@ -1326,8 +1333,20 @@ void OptionsDialog::loadOptions()
         m_ui->checkMaxSeedingMinutes->setChecked(false);
         m_ui->spinMaxSeedingMinutes->setEnabled(false);
     }
+<<<<<<< HEAD
     m_ui->comboRatioLimitAct->setEnabled((session->globalMaxSeedingMinutes().count() >= 0) || (session->globalMaxRatio() >= 0.));
     m_ui->comboRatioLimitAct->setCurrentIndex(session->maxRatioAction());
+=======
+    m_ui->comboRatioLimitAct->setEnabled((session->globalMaxSeedingMinutes() >= 0) || (session->globalMaxRatio() >= 0.));
+
+    const QHash<MaxRatioAction, int> actIndex = {
+        {Pause, 0},
+        {Remove, 1},
+        {DeleteFiles, 2},
+        {EnableSuperSeeding, 3}
+    };
+    m_ui->comboRatioLimitAct->setCurrentIndex(actIndex.value(session->maxRatioAction()));
+>>>>>>> Add "Remove torrent and its files" option to share ratio limiting
     // End Bittorrent preferences
 
     // Web UI preferences
