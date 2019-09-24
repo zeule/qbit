@@ -341,7 +341,8 @@ MainWindow::MainWindow(QWidget *parent)
     // Configure BT session according to options
     loadPreferences();
 
-    connect(BitTorrent::Session::instance(), &BitTorrent::Session::torrentsUpdated, this, &MainWindow::updateGUI);
+    connect(BitTorrent::Session::instance(), &BitTorrent::Session::statsUpdated, this, &MainWindow::reloadSessionStats);
+    connect(BitTorrent::Session::instance(), &BitTorrent::Session::torrentsUpdated, this, &MainWindow::reloadTorrentStats);
 
     // Accept drag 'n drops
     setAcceptDrops(true);
@@ -1533,16 +1534,20 @@ void MainWindow::loadPreferences(bool configureSession)
     qDebug("GUI settings loaded");
 }
 
-// Check connection status and display right icon
-void MainWindow::updateGUI()
+void MainWindow::reloadSessionStats()
 {
-    if (currentTabWidget() == m_transferListWidget)
-        m_propertiesWidget->loadDynamicData();
-
     const BitTorrent::SessionStatus &status = BitTorrent::Session::instance()->status();
 
     // update global information
-#ifndef Q_OS_MACOS
+#ifdef Q_OS_MACOS
+    if (status.payloadDownloadRate > 0) {
+        QtMac::setBadgeLabelText(tr("%1/s", "s is a shorthand for seconds")
+            .arg(Utils::Misc::friendlyUnit(status.payloadDownloadRate)));
+    }
+    else if (!QtMac::badgeLabelText().isEmpty()) {
+        QtMac::setBadgeLabelText("");
+    }
+#else
     if (m_systrayIcon) {
 #if defined HAVE_KF5NOTIFICATIONS
         QString html = "<img src='" + UIThemeManager::instance()->getIconPath("cloud-download.svg")
@@ -1554,15 +1559,23 @@ void MainWindow::updateGUI()
         m_systrayIcon->setToolTipSubTitle(html);
 #else
 #ifdef Q_OS_UNIX
-        const QString html = "<div style='background-color: #678db2; color: #fff;height: 18px; font-weight: bold; margin-bottom: 5px;'>";
-        html += "qBittorrent";
-        html += "</div>";
-        html += "<div style='vertical-align: baseline; height: 18px;'>";
-        html += "<img src='" + UIThemeManager::instance()->getIconPath("cloud-download.svg") + "' height='14'/>&nbsp;" + tr("DL speed: %1", "e.g: Download speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadDownloadRate), true));
-        html += "</div>";
-        html += "<div style='vertical-align: baseline; height: 18px;'>";
-        html += "<img src='" + UIThemeManager::instance()->getIconPath("cloud-upload") +"' height='14'/>&nbsp;" + tr("UP speed: %1", "e.g: Upload speed: 10 KiB/s").arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadUploadRate), true));
-        html += "</div>";
+        const QString toolTip = QString(QLatin1String(
+            "<div style='background-color: #678db2; color: #fff;height: 18px; font-weight: bold; margin-bottom: 5px;'>"
+                "qBittorrent"
+                "</div>"
+                "<div style='vertical-align: baseline; height: 18px;'>"
+                "<img src='%3' height='14'/>&nbsp;%1"
+                "</div>"
+                "<div style='vertical-align: baseline; height: 18px;'>"
+                "<img src='%4' height='14'/>&nbsp;%2"
+                "</div>"))
+            .arg(tr("DL speed: %1", "e.g: Download speed: 10 KiB/s")
+                .arg(Utils::Misc::friendlyUnit(status.payloadDownloadRate, true))
+                 , tr("UP speed: %1", "e.g: Upload speed: 10 KiB/s")
+                .arg(Utils::Misc::friendlyUnit(status.payloadUploadRate, true)),
+                UIThemeManager::instance()->getIconPath("cloud-download.svg"),
+                UIThemeManager::instance()->getIconPath("cloud-upload"));
+
 #else
         // OSes such as Windows do not support html here
         const QString html = tr("DL speed: %1", "e.g: Download speed: 10 KiB/s").arg(
@@ -1574,19 +1587,20 @@ void MainWindow::updateGUI()
         m_systrayIcon->setToolTip(html); // tray icon
 #endif
     }
-#else
-    if (status.payloadDownloadRate > 0)
-        QtMac::setBadgeLabelText(tr("%1/s", "s is a shorthand for seconds")
-            .arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadDownloadRate))));
-    else if (!QtMac::badgeLabelText().isEmpty())
-        QtMac::setBadgeLabelText("");
-#endif // Q_OS_MACOS
-
+#endif
     if (m_displaySpeedInTitle) {
         setWindowTitle(tr("[D: %1, U: %2] qBittorrent %3", "D = Download; U = Upload; %3 is qBittorrent version")
             .arg(Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadDownloadRate), true)
                 , Utils::Misc::friendlyUnit(boost::numeric_cast<qint64>(status.payloadUploadRate), true)
                 , QBT_VERSION));
+    }
+}
+
+void MainWindow::reloadTorrentStats(const QVector<BitTorrent::TorrentHandle *> &torrents)
+{
+    if (currentTabWidget() == m_transferListWidget) {
+        if (torrents.contains(m_propertiesWidget->getCurrentTorrent()))
+            m_propertiesWidget->loadDynamicData();
     }
 }
 
@@ -1766,7 +1780,7 @@ void MainWindow::on_actionSpeedInTitleBar_triggered()
     m_displaySpeedInTitle = static_cast<QAction * >(sender())->isChecked();
     Preferences::instance()->showSpeedInTitleBar(m_displaySpeedInTitle);
     if (m_displaySpeedInTitle)
-        updateGUI();
+        reloadSessionStats();
     else
         setWindowTitle("qBittorrent " QBT_VERSION);
 }
