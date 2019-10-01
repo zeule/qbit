@@ -45,8 +45,10 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QFile>
 #include <QHostAddress>
 #include <QNetworkAddressEntry>
+#include <QNetworkConfigurationManager>
 #include <QNetworkInterface>
 #include <QRegularExpression>
 #include <QString>
@@ -248,9 +250,6 @@ Session *Session::m_instance = nullptr;
 
 Session::Session(QObject *parent)
     : QObject(parent)
-    , m_deferredConfigureScheduled(false)
-    , m_IPFilteringChanged(true)
-    , m_listenInterfaceChanged(true)
     , m_isDHTEnabled(BITTORRENT_SESSION_KEY("DHTEnabled"), true)
     , m_isLSDEnabled(BITTORRENT_SESSION_KEY("LSDEnabled"), true)
     , m_isPeXEnabled(BITTORRENT_SESSION_KEY("PeXEnabled"), true)
@@ -351,10 +350,14 @@ Session::Session(QObject *parent)
                             return tmp;
                         }
                  )
-    , m_wasPexEnabled(m_isPeXEnabled)
-    , m_numResumeData(0)
-    , m_extraLimit(0)
-    , m_recentErroredTorrentsTimer(new QTimer(this))
+    , m_resumeFolderLock {new QFile {this}}
+    , m_refreshTimer {new QTimer {this}}
+    , m_seedingLimitTimer {new QTimer {this}}
+    , m_resumeDataTimer {new QTimer {this}}
+    , m_statistics {new Statistics {this}}
+    , m_ioThread {new QThread {this}}
+    , m_recentErroredTorrentsTimer {new QTimer {this}}
+    , m_networkManager {new QNetworkConfigurationManager {this}}
 {
     if (port() > std::numeric_limits<std::uint16_t>::max())
         m_port = Utils::Random::rand(1024, 65535);
@@ -363,9 +366,9 @@ Session::Session(QObject *parent)
 
     m_recentErroredTorrentsTimer->setSingleShot(true);
     m_recentErroredTorrentsTimer->setInterval(1000);
-    connect(m_recentErroredTorrentsTimer, &QTimer::timeout, this, [this]() { m_recentErroredTorrents.clear(); });
+    connect(m_recentErroredTorrentsTimer, &QTimer::timeout
+        , this, [this]() { m_recentErroredTorrents.clear(); });
 
-    m_seedingLimitTimer = new QTimer(this);
     m_seedingLimitTimer->setInterval(10000);
     connect(m_seedingLimitTimer, &QTimer::timeout, this, &Session::processShareLimits);
 
@@ -384,35 +387,31 @@ Session::Session(QObject *parent)
 
     m_tags = QSet<QString>::fromList(m_storedTags.value());
 
-    m_refreshTimer = new QTimer(this);
     m_refreshTimer->setInterval(boost::numeric_cast<int>(refreshInterval()));
     connect(m_refreshTimer, &QTimer::timeout, this, &Session::refresh);
     m_refreshTimer->start();
-
-    m_statistics = new Statistics(this);
 
     updateSeedingLimitTimer();
     populateAdditionalTrackers();
 
     enableTracker(isTrackerEnabled());
 
-    connect(Net::ProxyConfigurationManager::instance(), &Net::ProxyConfigurationManager::proxyConfigurationChanged
-            , this, &Session::configureDeferred);
+    connect(Net::ProxyConfigurationManager::instance()
+        , &Net::ProxyConfigurationManager::proxyConfigurationChanged
+        , this, &Session::configureDeferred);
 
     // Network configuration monitor
-    connect(&m_networkManager, &QNetworkConfigurationManager::onlineStateChanged, this, &Session::networkOnlineStateChanged);
-    connect(&m_networkManager, &QNetworkConfigurationManager::configurationAdded, this, &Session::networkConfigurationChange);
-    connect(&m_networkManager, &QNetworkConfigurationManager::configurationRemoved, this, &Session::networkConfigurationChange);
-    connect(&m_networkManager, &QNetworkConfigurationManager::configurationChanged, this, &Session::networkConfigurationChange);
+    connect(m_networkManager, &QNetworkConfigurationManager::onlineStateChanged, this, &Session::networkOnlineStateChanged);
+    connect(m_networkManager, &QNetworkConfigurationManager::configurationAdded, this, &Session::networkConfigurationChange);
+    connect(m_networkManager, &QNetworkConfigurationManager::configurationRemoved, this, &Session::networkConfigurationChange);
+    connect(m_networkManager, &QNetworkConfigurationManager::configurationChanged, this, &Session::networkConfigurationChange);
 
-    m_ioThread = new QThread(this);
     m_resumeDataSavingManager = new ResumeDataSavingManager {m_resumeFolderPath};
     m_resumeDataSavingManager->moveToThread(m_ioThread);
     connect(m_ioThread, &QThread::finished, m_resumeDataSavingManager, &QObject::deleteLater);
     m_ioThread->start();
 
     // Regular saving of fastresume data
-    m_resumeDataTimer = new QTimer(this);
     connect(m_resumeDataTimer, &QTimer::timeout, this, [this]() { generateResumeData(); });
     const int saveInterval = static_cast<int>(saveResumeDataInterval());
     if (saveInterval > 0) {
@@ -424,8 +423,6 @@ Session::Session(QObject *parent)
     new PortForwarderImpl {m_nativeSession};
 
     initMetrics();
-
-    qDebug("* BitTorrent Session constructed");
 }
 
 bool Session::isDHTEnabled() const
@@ -874,8 +871,8 @@ Session::~Session()
     m_ioThread->quit();
     m_ioThread->wait();
 
-    m_resumeFolderLock.close();
-    m_resumeFolderLock.remove();
+    m_resumeFolderLock->close();
+    m_resumeFolderLock->remove();
 }
 
 void Session::initInstance()
@@ -3522,8 +3519,8 @@ void Session::initResumeFolder()
     m_resumeFolderPath = Utils::Fs::expandPathAbs(specialFolderLocation(SpecialFolder::Data) + RESUME_FOLDER);
     const QDir resumeFolderDir(m_resumeFolderPath);
     if (resumeFolderDir.exists() || resumeFolderDir.mkpath(resumeFolderDir.absolutePath())) {
-        m_resumeFolderLock.setFileName(resumeFolderDir.absoluteFilePath("session.lock"));
-        if (!m_resumeFolderLock.open(QFile::WriteOnly)) {
+        m_resumeFolderLock->setFileName(resumeFolderDir.absoluteFilePath("session.lock"));
+        if (!m_resumeFolderLock->open(QFile::WriteOnly)) {
             throw RuntimeError {tr("Cannot write to torrent resume folder.")};
         }
     }
