@@ -40,6 +40,7 @@
 #include <QUrl>
 
 #include "base/bittorrent/downloadpriority.h"
+#include "base/bittorrent/infohash.h"
 #include "base/bittorrent/peeraddress.h"
 #include "base/bittorrent/peerinfo.h"
 #include "base/bittorrent/session.h"
@@ -196,6 +197,15 @@ namespace
         };
 
         return {dht, pex, lsd};
+    }
+
+    QVector<BitTorrent::InfoHash> toInfoHashes(const QStringList &hashes)
+    {
+        QVector<BitTorrent::InfoHash> infoHashes;
+        infoHashes.reserve(hashes.size());
+        for (const QString &hash : hashes)
+            infoHashes << hash;
+        return infoHashes;
     }
 }
 
@@ -903,7 +913,7 @@ void TorrentsController::increasePrioAction()
         throw APIError(APIErrorType::Conflict, tr("Torrent queueing must be enabled"));
 
     const QStringList hashes {params()["hashes"].split('|')};
-    BitTorrent::Session::instance()->increaseTorrentsQueuePos(hashes);
+    BitTorrent::Session::instance()->increaseTorrentsQueuePos(toInfoHashes(hashes));
 }
 
 void TorrentsController::decreasePrioAction()
@@ -914,7 +924,7 @@ void TorrentsController::decreasePrioAction()
         throw APIError(APIErrorType::Conflict, tr("Torrent queueing must be enabled"));
 
     const QStringList hashes {params()["hashes"].split('|')};
-    BitTorrent::Session::instance()->decreaseTorrentsQueuePos(hashes);
+    BitTorrent::Session::instance()->decreaseTorrentsQueuePos(toInfoHashes(hashes));
 }
 
 void TorrentsController::topPrioAction()
@@ -925,7 +935,7 @@ void TorrentsController::topPrioAction()
         throw APIError(APIErrorType::Conflict, tr("Torrent queueing must be enabled"));
 
     const QStringList hashes {params()["hashes"].split('|')};
-    BitTorrent::Session::instance()->topTorrentsQueuePos(hashes);
+    BitTorrent::Session::instance()->topTorrentsQueuePos(toInfoHashes(hashes));
 }
 
 void TorrentsController::bottomPrioAction()
@@ -936,7 +946,7 @@ void TorrentsController::bottomPrioAction()
         throw APIError(APIErrorType::Conflict, tr("Torrent queueing must be enabled"));
 
     const QStringList hashes {params()["hashes"].split('|')};
-    BitTorrent::Session::instance()->bottomTorrentsQueuePos(hashes);
+    BitTorrent::Session::instance()->bottomTorrentsQueuePos(toInfoHashes(hashes));
 }
 
 void TorrentsController::setLocationAction()
