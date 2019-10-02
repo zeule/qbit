@@ -2210,7 +2210,7 @@ void TorrentHandle::setSuperSeeding(const bool enable)
 #endif
 }
 
-void TorrentHandle::flushCache()
+void TorrentHandle::flushCache() const
 {
     m_nativeHandle.flush_cache();
 }
