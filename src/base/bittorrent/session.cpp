@@ -1017,7 +1017,7 @@ void Session::processBannedIPs(lt::ip_filter &filter)
 {
     // First, import current filter
     for (const QString &ip : asConst(m_bannedIPs.value())) {
-        boost::system::error_code ec;
+        lt::error_code ec;
         const lt::address addr = lt::address::from_string(ip.toLatin1().constData(), ec);
         Q_ASSERT(!ec);
         if (!ec)
@@ -1575,7 +1575,7 @@ void Session::banIP(const QString &ip)
     QStringList bannedIPs = m_bannedIPs;
     if (!bannedIPs.contains(ip)) {
         lt::ip_filter filter = m_nativeSession->get_ip_filter();
-        boost::system::error_code ec;
+        lt::error_code ec;
         const lt::address addr = lt::address::from_string(ip.toLatin1().constData(), ec);
         Q_ASSERT(!ec);
         if (ec) return;
@@ -4095,7 +4095,7 @@ void Session::handlePortmapAlert(const lt::portmap_alert *p)
 
 void Session::handlePeerBlockedAlert(const lt::peer_blocked_alert *p)
 {
-    boost::system::error_code ec;
+    lt::error_code ec;
 #if LIBTORRENT_VERSION_NUM < 10200
     const std::string ip = p->ip.to_string(ec);
 #else
@@ -4185,7 +4185,7 @@ namespace
 
 void Session::handlePeerBanAlert(const lt::peer_ban_alert *p)
 {
-    boost::system::error_code ec;
+    lt::error_code ec;
     std::string ip = alertAddressAndPort(p).first.to_string(ec);
     if (!ec)
         Logger::instance()->addPeer(QString::fromLatin1(ip.c_str()), false);
@@ -4211,7 +4211,7 @@ void Session::handleUrlSeedAlert(const lt::url_seed_alert *p)
 
 void Session::handleListenSucceededAlert(const lt::listen_succeeded_alert *p)
 {
-    boost::system::error_code ec;
+    lt::error_code ec;
     const QString proto = QString::fromLatin1(alertSocketTypeName(p));
     const auto addrPort = alertAddressAndPort(p);
 
@@ -4226,7 +4226,7 @@ void Session::handleListenSucceededAlert(const lt::listen_succeeded_alert *p)
 
 void Session::handleListenFailedAlert(const lt::listen_failed_alert *p)
 {
-    boost::system::error_code ec;
+    lt::error_code ec;
     const QString proto = QString::fromLatin1(alertSocketTypeName(p));
     const auto addrPort = alertAddressAndPort(p);
 
@@ -4240,7 +4240,7 @@ void Session::handleListenFailedAlert(const lt::listen_failed_alert *p)
 
 void Session::handleExternalIPAlert(const lt::external_ip_alert *p)
 {
-    boost::system::error_code ec;
+    lt::error_code ec;
     LogMsg(tr("Detected external IP: %1", "e.g. Detected external IP: 1.1.1.1")
         .arg(p->external_address.to_string(ec).c_str()), Log::INFO);
 }
