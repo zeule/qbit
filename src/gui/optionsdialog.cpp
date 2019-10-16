@@ -1333,11 +1333,8 @@ void OptionsDialog::loadOptions()
         m_ui->checkMaxSeedingMinutes->setChecked(false);
         m_ui->spinMaxSeedingMinutes->setEnabled(false);
     }
-<<<<<<< HEAD
+
     m_ui->comboRatioLimitAct->setEnabled((session->globalMaxSeedingMinutes().count() >= 0) || (session->globalMaxRatio() >= 0.));
-    m_ui->comboRatioLimitAct->setCurrentIndex(session->maxRatioAction());
-=======
-    m_ui->comboRatioLimitAct->setEnabled((session->globalMaxSeedingMinutes() >= 0) || (session->globalMaxRatio() >= 0.));
 
     const QHash<MaxRatioAction, int> actIndex = {
         {Pause, 0},
@@ -1346,7 +1343,6 @@ void OptionsDialog::loadOptions()
         {EnableSuperSeeding, 3}
     };
     m_ui->comboRatioLimitAct->setCurrentIndex(actIndex.value(session->maxRatioAction()));
->>>>>>> Add "Remove torrent and its files" option to share ratio limiting
     // End Bittorrent preferences
 
     // Web UI preferences

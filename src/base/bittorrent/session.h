@@ -525,7 +525,7 @@ namespace BitTorrent
         void adjustLimits();
         void applyBandwidthLimits();
         void processBannedIPs(lt::ip_filter &filter);
-        const QStringList getListeningIPs();
+        QStringList getListeningIPs() const;
         void configureListeningInterface();
         void enableTracker(bool enable);
         void enableBandwidthScheduler();
