@@ -32,8 +32,6 @@
 #include "config.h"
 
 #include <algorithm>
-#include <cstdlib>
-#include <iostream>
 #include <queue>
 #include <string>
 #include <utility>
@@ -2148,8 +2146,6 @@ void Session::generateResumeData(const bool final)
 // Called on exit
 void Session::saveResumeData()
 {
-    qDebug("Saving resume data...");
-
     // Pause session
     m_nativeSession->pause();
 
@@ -2160,7 +2156,8 @@ void Session::saveResumeData()
     while (m_numResumeData > 0) {
         const std::vector<lt::alert *> alerts = getPendingAlerts(lt::seconds(30));
         if (alerts.empty()) {
-            fprintf(stderr, " aborting with %d outstanding torrents to save resume data for\n", m_numResumeData);
+            LogMsg(tr("Error: Aborted saving resume data for %1 outstanding torrents.").arg(QString::number(m_numResumeData))
+                , Log::CRITICAL);
             break;
         }
 
