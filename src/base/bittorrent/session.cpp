@@ -927,12 +927,12 @@ void Session::configureComponents()
 
     configurePeerClasses();
 
-    if (m_IPFilteringChanged) {
+    if (!m_IPFilteringConfigured) {
         if (isIPFilteringEnabled())
             enableIPFilter();
         else
             disableIPFilter();
-        m_IPFilteringChanged = false;
+        m_IPFilteringConfigured = true;
     }
 }
 
@@ -1081,9 +1081,9 @@ void Session::loadLTSettings(lt::settings_pack &settingsPack)
 #ifdef Q_OS_WIN
     QString chosenIP;
 #endif
-    if (m_listenInterfaceChanged) {
-        const unsigned port = useRandomPort() ? 0u : this->port();
-        if (port <= std::numeric_limits<std::uint16_t>::max())  // user specified port
+    if (!m_listenInterfaceConfigured) {
+        const unsigned port = useRandomPort() ? 0 : this->port();
+        if (port > 0)  // user specified port
             settingsPack.set_int(lt::settings_pack::max_retry_port_bind, 0);
 
         for (const QString &ip : asConst(getListeningIPs())) {
@@ -1137,7 +1137,7 @@ void Session::loadLTSettings(lt::settings_pack &settingsPack)
         settingsPack.set_str(lt::settings_pack::outgoing_interfaces, networkInterface().toStdString());
 #endif // Q_OS_WIN
 
-        m_listenInterfaceChanged = false;
+        m_listenInterfaceConfigured = true;
     }
 
 
@@ -2331,7 +2331,7 @@ QStringList Session::getListeningIPs() const
 // the BitTorrent session will listen to
 void Session::configureListeningInterface()
 {
-    m_listenInterfaceChanged = true;
+    m_listenInterfaceConfigured = false;
     configureDeferred();
 }
 
@@ -2657,7 +2657,7 @@ void Session::setIPFilteringEnabled(const bool enabled)
 {
     if (enabled != m_isIPFilteringEnabled) {
         m_isIPFilteringEnabled = enabled;
-        m_IPFilteringChanged = true;
+        m_IPFilteringConfigured = false;
         configureDeferred();
     }
 }
@@ -2672,7 +2672,7 @@ void Session::setIPFilterFile(QString path)
     path = Utils::Fs::toUniformPath(path);
     if (path != IPFilterFile()) {
         m_IPFilterFile = path;
-        m_IPFilteringChanged = true;
+        m_IPFilteringConfigured = false;
         configureDeferred();
     }
 }
@@ -2706,7 +2706,7 @@ void Session::setBannedIPs(const QStringList &newList)
     // also here we have to recreate filter list including 3rd party ban file
     // and install it again into m_session
     m_bannedIPs = filteredList;
-    m_IPFilteringChanged = true;
+    m_IPFilteringConfigured = false;
     configureDeferred();
 }
 
