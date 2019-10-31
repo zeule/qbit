@@ -300,7 +300,7 @@ void Application::runExternalProgram(const BitTorrent::TorrentHandle *torrent) c
     program.replace("%N", torrent->name());
     program.replace("%L", torrent->category());
 
-    QStringList tags = torrent->tags().toList();
+    QStringList tags = torrent->tags().values();
     std::sort(tags.begin(), tags.end(), Utils::String::naturalLessThan<Qt::CaseInsensitive>);
     program.replace("%G", tags.join(','));
 
