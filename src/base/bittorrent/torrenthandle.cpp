@@ -306,7 +306,7 @@ qlonglong TorrentHandle::totalSize() const
     return m_torrentInfo.totalSize();
 }
 
-// get the size of the torrent without the filtered files
+// size without the "don't download" files
 qlonglong TorrentHandle::wantedSize() const
 {
     return m_nativeStatus.total_wanted;
