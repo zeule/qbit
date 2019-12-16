@@ -31,7 +31,10 @@
 #define TRANSFERLISTMODEL_H
 
 #include <QAbstractListModel>
+#include <QColor>
 #include <QList>
+
+#include <map>
 
 template <typename T> class CachedSettingValue;
 
@@ -39,6 +42,7 @@ namespace BitTorrent
 {
     class InfoHash;
     class TorrentHandle;
+    enum class TorrentState;
 }
 
 class TransferListModel : public QAbstractListModel
@@ -97,6 +101,8 @@ public:
 
     static bool textIsColorized();
     static void setTextIsColorized(bool v);
+    void setStateForeground(BitTorrent::TorrentState state, const QColor& color);
+    QColor stateForeground(BitTorrent::TorrentState state) const;
 
 private slots:
     void addTorrent(BitTorrent::TorrentHandle *const torrent);
@@ -109,6 +115,9 @@ private:
 
     QList<BitTorrent::TorrentHandle *> m_torrentList;  // maps row number to torrent handle
     QHash<BitTorrent::TorrentHandle *, int> m_torrentMap;  // maps torrent handle to row number
+
+    // row text colors
+    std::map<BitTorrent::TorrentState, QColor> m_stateForegroundColors;
 };
 
 #endif // TRANSFERLISTMODEL_H

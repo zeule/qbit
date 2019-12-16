@@ -46,6 +46,7 @@
 
 TransferListModel::TransferListModel(QObject *parent)
     : QAbstractListModel(parent)
+    , m_stateForegroundColors {}
 {
     // Load the torrents
     using namespace BitTorrent;
@@ -156,9 +157,7 @@ QVariant TransferListModel::data(const QModelIndex &index, const int role) const
         return UIThemeManager::instance()->icon(torrent->state());
 
     if (role == Qt::ForegroundRole)
-        return textIsColorized()
-            ? Theme::ColorTheme::current().torrentStateColor(torrent->state())
-            : QGuiApplication::palette().color(QPalette::WindowText);
+        return stateForeground(torrent->state());
 
     if ((role != Qt::DisplayRole) && (role != Qt::UserRole))
         return {};
@@ -334,6 +333,22 @@ void TransferListModel::handleTorrentsUpdated(const QVector<BitTorrent::TorrentH
         // save the overhead when more than half of the torrent list needs update
         emit dataChanged(index(0, 0), index((rowCount() - 1), columns));
     }
+}
+
+void TransferListModel::setStateForeground(const BitTorrent::TorrentState state, const QColor &color)
+{
+    m_stateForegroundColors[state] = color;
+}
+
+QColor TransferListModel::stateForeground(const BitTorrent::TorrentState state) const
+{
+    if (!textIsColorized()) {
+        return QGuiApplication::palette().color(QPalette::WindowText);
+    }
+    const auto it = m_stateForegroundColors.find(state);
+    return it == m_stateForegroundColors.end()
+            ? Theme::ColorTheme::current().torrentStateColor(state)
+            : it->second;
 }
 
 CachedSettingValue<bool> &TransferListModel::textIsColorizedSetting()
