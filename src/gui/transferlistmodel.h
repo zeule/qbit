@@ -34,6 +34,8 @@
 #include <QColor>
 #include <QList>
 
+#include "base/bittorrent/torrenthandle.h"
+
 #include <map>
 
 template <typename T> class CachedSettingValue;
@@ -41,8 +43,6 @@ template <typename T> class CachedSettingValue;
 namespace BitTorrent
 {
     class InfoHash;
-    class TorrentHandle;
-    enum class TorrentState;
 }
 
 class TransferListModel : public QAbstractListModel
@@ -88,6 +88,12 @@ public:
         NB_COLUMNS
     };
 
+    enum DataRole
+    {
+        UnderlyingDataRole = Qt::UserRole,
+        AdditionalUnderlyingDataRole
+    };
+
     explicit TransferListModel(QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = {}) const override;
@@ -112,10 +118,12 @@ private slots:
 
 private:
     static CachedSettingValue<bool> &textIsColorizedSetting();
+    QString displayValue(const BitTorrent::TorrentHandle *torrent, int column) const;
+    QVariant internalValue(const BitTorrent::TorrentHandle *torrent, int column, bool alt = false) const;
 
     QList<BitTorrent::TorrentHandle *> m_torrentList;  // maps row number to torrent handle
     QHash<BitTorrent::TorrentHandle *, int> m_torrentMap;  // maps torrent handle to row number
-
+    const QHash<BitTorrent::TorrentState, QString> m_statusStrings;
     // row text colors
     std::map<BitTorrent::TorrentState, QColor> m_stateForegroundColors;
 };
