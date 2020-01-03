@@ -13,6 +13,8 @@ bittorrent/private/bandwidthscheduler.h
 bittorrent/private/filterparserthread.h
 bittorrent/private/index.h
 bittorrent/private/ltunderlyingtype.h
+bittorrent/private/nativesessionextension.h
+bittorrent/private/nativetorrentextension.h
 bittorrent/private/portforwarderimpl.h
 bittorrent/private/resumedatasavingmanager.h
 bittorrent/private/speedmonitor.h
@@ -90,6 +92,8 @@ bittorrent/peeraddress.cpp
 bittorrent/peerinfo.cpp
 bittorrent/private/bandwidthscheduler.cpp
 bittorrent/private/filterparserthread.cpp
+bittorrent/private/nativesessionextension.cpp
+bittorrent/private/nativetorrentextension.cpp
 bittorrent/private/portforwarderimpl.cpp
 bittorrent/private/resumedatasavingmanager.cpp
 bittorrent/private/speedmonitor.cpp
