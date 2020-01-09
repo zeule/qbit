@@ -272,8 +272,6 @@ void AppController::preferencesAction()
     // libtorrent preferences
     // Async IO threads
     data["async_io_threads"] = session->asyncIOThreads();
-    // stop tracker timeout
-    data["stop_tracker_timeout"] = session->stopTrackerTimeout();
     // File pool size
     data["file_pool_size"] = session->filePoolSize();
     // Checking memory usage
@@ -313,6 +311,8 @@ void AppController::preferencesAction()
     data["announce_to_all_trackers"] = session->announceToAllTrackers();
     data["announce_to_all_tiers"] = session->announceToAllTiers();
     data["announce_ip"] = session->announceIP();
+    // Stop tracker timeout
+    data["stop_tracker_timeout"] = session->stopTrackerTimeout();
 
     setResult(data);
 }
@@ -673,9 +673,6 @@ void AppController::setPreferencesAction()
     // Async IO threads
     if (hasKey("async_io_threads"))
         session->setAsyncIOThreads(it.value().toInt());
-    // Stop tracker timeout
-    if (hasKey("stop_tracker_timeout"))
-        session->setStopTrackerTimeout(it.value().toInt());
     // File pool size
     if (hasKey("file_pool_size"))
         session->setFilePoolSize(it.value().toInt());
@@ -740,6 +737,9 @@ void AppController::setPreferencesAction()
         const QHostAddress announceAddr {it.value().toString().trimmed()};
         session->setAnnounceIP(announceAddr.isNull() ? QString {} : announceAddr.toString());
     }
+    // Stop tracker timeout
+    if (hasKey("stop_tracker_timeout"))
+        session->setStopTrackerTimeout(it.value().toInt());
 
     // Save preferences
     pref->apply();
