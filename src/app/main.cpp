@@ -239,6 +239,8 @@ int main(int argc, char *argv[])
 #endif
 
         if (!firstTimeUser) {
+            handleChangedDefaults(DefaultPreferencesMode::Legacy);
+
 #ifndef DISABLE_GUI
             if (!upgrade()) return EXIT_FAILURE;
 #elif defined(Q_OS_WIN)
@@ -250,6 +252,10 @@ int main(int argc, char *argv[])
                          && isatty(fileno(stdout)))) return EXIT_FAILURE;
 #endif
         }
+        else {
+            handleChangedDefaults(DefaultPreferencesMode::Current);
+        }
+
 #if defined(DISABLE_GUI) && !defined(Q_OS_WIN)
         if (params.shouldDaemonize) {
             app.reset(); // Destroy current application
