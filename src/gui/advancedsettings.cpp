@@ -84,7 +84,6 @@ enum AdvSettingsRows
     DOWNLOAD_TRACKER_FAVICON,
     SAVE_PATH_HISTORY_LENGTH,
     ENABLE_SPEED_WIDGET,
-
     // libtorrent section
     LIBTORRENT_HEADER,
     ASYNC_IO_THREADS,
@@ -260,9 +259,6 @@ void AdvancedSettings::saveAdvancedSettings()
     // Seed choking algorithm
     session->setSeedChokingAlgorithm(static_cast<BitTorrent::SeedChokingAlgorithm>(m_comboBoxSeedChokingAlgorithm.currentIndex()));
 
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
-    pref->setUpdateCheckEnabled(m_checkBoxUseIconTheme.isChecked());
-#endif
     pref->setConfirmTorrentRecheck(m_checkBoxConfirmTorrentRecheck.isChecked());
 
     pref->setConfirmRemoveAllTags(m_checkBoxConfirmRemoveAllTags.isChecked());
@@ -576,11 +572,6 @@ void AdvancedSettings::loadAdvancedSettings()
     m_comboBoxSeedChokingAlgorithm.setCurrentIndex(static_cast<int>(session->seedChokingAlgorithm()));
     addRow(SEED_CHOKING_ALGORITHM, (tr("Upload choking algorithm") + ' ' + makeLink("https://www.libtorrent.org/reference-Settings.html#seed_choking_algorithm", "(?)"))
             , &m_comboBoxSeedChokingAlgorithm);
-
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
-    m_checkBoxUpdateCheck.setChecked(pref->isUpdateCheckEnabled());
-    addRow(UPDATE_CHECK, tr("Check for software updates"), &m_checkBoxUpdateCheck);
-#endif
 
     // Torrent recheck confirmation
     m_checkBoxConfirmTorrentRecheck.setChecked(pref->confirmTorrentRecheck());
