@@ -178,6 +178,14 @@ StatusFilterWidget::StatusFilterWidget(QWidget *parent, TransferListWidget *tran
     active->setData(Qt::DisplayRole, tr("Active (0)"));
     auto *inactive = new QListWidgetItem(this);
     inactive->setData(Qt::DisplayRole, tr("Inactive (0)"));
+    auto *stalled = new QListWidgetItem(this);
+    stalled->setData(Qt::DisplayRole, tr("Stalled (0)"));
+
+    auto *stalledUploading = new QListWidgetItem(this);
+    stalledUploading->setData(Qt::DisplayRole, tr("Stalled Uploading (0)"));
+
+    auto *stalledDownloading = new QListWidgetItem(this);
+    stalledDownloading->setData(Qt::DisplayRole, tr("Stalled Downloading (0)"));
     auto *errored = new QListWidgetItem(this);
     errored->setData(Qt::DisplayRole, tr("Errored (0)"));
 
@@ -204,6 +212,9 @@ void StatusFilterWidget::updateTorrentNumbers()
     int nbPaused = 0;
     int nbActive = 0;
     int nbInactive = 0;
+    int nbStalled = 0;
+    int nbStalledUploading = 0;
+    int nbStalledDownloading = 0;
     int nbErrored = 0;
 
     const QHash<BitTorrent::InfoHash, BitTorrent::TorrentHandle *> torrents = BitTorrent::Session::instance()->torrents();
@@ -222,9 +233,15 @@ void StatusFilterWidget::updateTorrentNumbers()
             ++nbActive;
         if (torrent->isInactive())
             ++nbInactive;
+        if (torrent->state() ==  BitTorrent::TorrentState::StalledUploading)
+            ++nbStalledUploading;
+        if (torrent->state() ==  BitTorrent::TorrentState::StalledDownloading)
+            ++nbStalledDownloading;
         if (torrent->isErrored())
             ++nbErrored;
     }
+
+    nbStalled = nbStalledUploading + nbStalledDownloading;
 
     item(TorrentFilter::All)->setData(Qt::DisplayRole, tr("All (%1)").arg(torrents.count()));
     item(TorrentFilter::Downloading)->setData(Qt::DisplayRole, tr("Downloading (%1)").arg(nbDownloading));
@@ -234,6 +251,9 @@ void StatusFilterWidget::updateTorrentNumbers()
     item(TorrentFilter::Paused)->setData(Qt::DisplayRole, tr("Paused (%1)").arg(nbPaused));
     item(TorrentFilter::Active)->setData(Qt::DisplayRole, tr("Active (%1)").arg(nbActive));
     item(TorrentFilter::Inactive)->setData(Qt::DisplayRole, tr("Inactive (%1)").arg(nbInactive));
+    item(TorrentFilter::Stalled)->setData(Qt::DisplayRole, tr("Stalled (%1)").arg(nbStalled));
+    item(TorrentFilter::StalledUploading)->setData(Qt::DisplayRole, tr("Stalled Uploading (%1)").arg(nbStalledUploading));
+    item(TorrentFilter::StalledDownloading)->setData(Qt::DisplayRole, tr("Stalled Downloading (%1)").arg(nbStalledDownloading));
     item(TorrentFilter::Errored)->setData(Qt::DisplayRole, tr("Errored (%1)").arg(nbErrored));
 }
 
@@ -242,15 +262,18 @@ void StatusFilterWidget::updateStatusIcons()
     const UIThemeManager* icons = UIThemeManager::instance(); // shortcut
     using BitTorrent::TorrentState;
 
-    item(TorrentFilter::All)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("view-filter")));
-    item(TorrentFilter::Downloading)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-download")));
-    item(TorrentFilter::Seeding)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("folder-network")));
-    item(TorrentFilter::Completed)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-ok")));
-    item(TorrentFilter::Resumed)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("repository")));
-    item(TorrentFilter::Paused)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-pause")));
-    item(TorrentFilter::Active)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-sync")));
-    item(TorrentFilter::Inactive)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-offline")));
-    item(TorrentFilter::Errored)->setData(Qt::DecorationRole, icons->getIcon(QLatin1Literal("state-error")));
+    item(TorrentFilter::All)->setData(Qt::DecorationRole, icons->getIcon(QLatin1String("view-filter")));
+    item(TorrentFilter::Downloading)->setData(Qt::DecorationRole, icons->getIcon(QLatin1String("state-download")));
+    item(TorrentFilter::Seeding)->setData(Qt::DecorationRole, icons->getIcon(QLatin1String("folder-network")));
+    item(TorrentFilter::Completed)->setData(Qt::DecorationRole, icons->getIcon(QLatin1String("state-ok")));
+    item(TorrentFilter::Resumed)->setData(Qt::DecorationRole, icons->getIcon(QLatin1String("repository")));
+    item(TorrentFilter::Paused)->setData(Qt::DecorationRole, icons->getIcon(QLatin1String("state-pause")));
+    item(TorrentFilter::Active)->setData(Qt::DecorationRole, icons->getIcon(QLatin1String("state-sync")));
+    item(TorrentFilter::Inactive)->setData(Qt::DecorationRole, icons->getIcon(QLatin1String("state-offline")));
+    item(TorrentFilter::Errored)->setData(Qt::DecorationRole, icons->getIcon(QLatin1String("state-error")));
+    item(TorrentFilter::Stalled)->setData(Qt::DecorationRole, QIcon(":/icons/skin/filterstalled.svg"));
+    item(TorrentFilter::StalledDownloading)->setData(Qt::DecorationRole, QIcon(":/icons/skin/stalledDL.svg"));
+    item(TorrentFilter::StalledUploading)->setData(Qt::DecorationRole, QIcon(":/icons/skin/stalledUP.svg"));
 }
 
 void StatusFilterWidget::showMenu(const QPoint &) {}
