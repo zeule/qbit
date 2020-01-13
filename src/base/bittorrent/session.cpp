@@ -387,6 +387,7 @@ Session::Session(QObject *parent)
 #else
     , m_coalesceReadWriteEnabled(BITTORRENT_SESSION_KEY("CoalesceReadWrite"), false)
 #endif
+    , m_usePieceExtentAffinity(BITTORRENT_SESSION_KEY("PieceExtentAffinity"), false)
     , m_isSuggestMode(BITTORRENT_SESSION_KEY("SuggestMode"), false)
     , m_sendBufferWatermark(BITTORRENT_SESSION_KEY("SendBufferWatermark"), 500)
     , m_sendBufferLowWatermark(BITTORRENT_SESSION_KEY("SendBufferLowWatermark"), 10)
@@ -1282,6 +1283,10 @@ void Session::loadLTSettings(lt::settings_pack &settingsPack)
 
     settingsPack.set_bool(lt::settings_pack::coalesce_reads, isCoalesceReadWriteEnabled());
     settingsPack.set_bool(lt::settings_pack::coalesce_writes, isCoalesceReadWriteEnabled());
+
+#if (LIBTORRENT_VERSION_NUM >= 10202)
+    settingsPack.set_bool(lt::settings_pack::piece_extent_affinity, usePieceExtentAffinity());
+#endif
 
     settingsPack.set_int(lt::settings_pack::suggest_mode, isSuggestModeEnabled()
                          ? lt::settings_pack::suggest_read_cache : lt::settings_pack::no_piece_suggestions);
@@ -3208,6 +3213,19 @@ void Session::setCoalesceReadWriteEnabled(const bool enabled)
 bool Session::isSuggestModeEnabled() const
 {
     return m_isSuggestMode;
+}
+
+bool Session::usePieceExtentAffinity() const
+{
+    return m_usePieceExtentAffinity;
+}
+
+void Session::setPieceExtentAffinity(const bool enabled)
+{
+    if (enabled == m_usePieceExtentAffinity) return;
+
+    m_usePieceExtentAffinity = enabled;
+    configureDeferred();
 }
 
 void Session::setSuggestMode(const bool mode)
