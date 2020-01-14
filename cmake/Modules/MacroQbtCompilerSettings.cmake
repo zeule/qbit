@@ -102,4 +102,3 @@ macro(qbt_set_compiler_options)
 
 # endif (NOT QBT_ADDITONAL_FLAGS)
 endmacro(qbt_set_compiler_options)
-
