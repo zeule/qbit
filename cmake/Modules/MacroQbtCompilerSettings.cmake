@@ -23,8 +23,8 @@ macro(qbt_set_compiler_options)
             "-Wno-error=cpp"
         )
 
+        # GCC 4.8 has problems with std::array and its initialization
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
-            # GCC 4.8 has problems with std::array and its initialization
             list(APPEND _GCC_COMMON_CXX_FLAGS "-Wno-error=missing-field-initializers")
         endif()
 
@@ -43,22 +43,11 @@ macro(qbt_set_compiler_options)
         endif()
 
         if (CMAKE_SYSTEM_NAME MATCHES Linux)
-            # if Glibc version is 2.20 or higher, set -D_DEFAULT_SOURCE
-            include(MacroGlibcDetect)
-            message(STATUS "Detecting Glibc version...")
-            glibc_detect(GLIBC_VERSION)
-            if(${GLIBC_VERSION})
-                if(GLIBC_VERSION LESS "220")
-                    message(STATUS "Glibc version is ${GLIBC_VERSION}")
-                else(GLIBC_VERSION LESS "220")
-                    message(STATUS "Glibc version is ${GLIBC_VERSION}, adding -D_DEFAULT_SOURCE")
-                    add_definitions(-D_DEFAULT_SOURCE)
-                endif(GLIBC_VERSION LESS "220")
-            endif(${GLIBC_VERSION})
-        endif (CMAKE_SYSTEM_NAME MATCHES Linux)
+            add_definitions(-D_DEFAULT_SOURCE)
+        endif()
 
-        if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-            # Clang 5.0 still doesn't support -Wstrict-null-sentinel
+        # Clang 5.0 still doesn't support -Wstrict-null-sentinel
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
             check_cxx_compiler_flag(-Wstrict-null-sentinel _STRICT_NULL_SENTINEL_IS_SUPPORTED)
             if (_STRICT_NULL_SENTINEL_IS_SUPPORTED)
                 list(APPEND _GCC_COMMON_CXX_FLAGS "-Wstrict-null-sentinel")
@@ -94,7 +83,7 @@ macro(qbt_set_compiler_options)
     endif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU|Clang")
 
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-        set(QBT_ADDITONAL_FLAGS "-wd4290 -wd4275 -wd4251 /W4" CACHE STRING "Additional qBittorent compile flags")
+        set(QBT_ADDITONAL_FLAGS "/wd4251 /wd4275 /wd4290  /W4" CACHE STRING "Additional qBittorent compile flags")
     endif ()
 
     string(APPEND CMAKE_C_FLAGS " ${QBT_ADDITONAL_FLAGS}")
