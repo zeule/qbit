@@ -204,5 +204,5 @@ bool BitTorrent::operator==(const TrackerEntry &left, const TrackerEntry &right)
 
 uint BitTorrent::qHash(const TrackerEntry &key, const uint seed)
 {
-    return (::qHash(key.url(), seed) ^ static_cast<uint>(key.tier()));
+    return (::qHash(key.url(), seed) ^ ::qHash(key.tier()));
 }
