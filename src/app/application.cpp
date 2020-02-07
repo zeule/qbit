@@ -563,7 +563,7 @@ int Application::exec(const QStringList &params)
 #ifndef DISABLE_COUNTRIES_RESOLUTION
         Net::GeoIPManager::initInstance();
 #endif
-        ScanFoldersModel::initInstance(this);
+        ScanFoldersModel::initInstance();
 
 #ifndef DISABLE_WEBUI
         m_webui = new WebUI;
