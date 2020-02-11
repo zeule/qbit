@@ -153,7 +153,7 @@ Application::Application(const QString &id, int &argc, char **argv)
     const QString profileDir = portableModeEnabled
         ? QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(DEFAULT_PORTABLE_MODE_PROFILE_DIR)
         : m_commandLineArgs.profileDir;
-    Profile::initialize(profileDir, m_commandLineArgs.configurationName,
+    Profile::initInstance(profileDir, m_commandLineArgs.configurationName,
                         (m_commandLineArgs.relativeFastresumePaths || portableModeEnabled));
 
     Logger::initInstance();
@@ -181,7 +181,7 @@ Application::Application(const QString &id, int &argc, char **argv)
             Logger::instance()->addMessage(tr("Redundant command line flag detected: \"%1\". Portable mode implies relative fastresume.").arg("--relative-fastresume"), Log::WARNING); // to avoid translating the `--relative-fastresume` string
     }
     else {
-        Logger::instance()->addMessage(tr("Using config directory: %1").arg(Profile::instance().location(SpecialFolder::Config)));
+        Logger::instance()->addMessage(tr("Using config directory: %1").arg(Profile::instance()->location(SpecialFolder::Config)));
     }
 }
 
@@ -774,6 +774,8 @@ void Application::cleanup()
         delete m_window;
     }
 #endif // DISABLE_GUI
+
+    Profile::freeInstance();
 
     if (m_shutdownAct != ShutdownDialogAction::Exit) {
         qDebug() << "Sending computer shutdown/suspend/hibernate signal...";
