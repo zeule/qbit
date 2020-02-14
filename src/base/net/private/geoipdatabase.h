@@ -92,6 +92,7 @@ private:
     std::size_t m_indexSize;
     std::size_t m_recordBytes;
     QDateTime m_buildEpoch;
+    QString m_dbType;
     // Search data
     mutable QHash<quint32, QString> m_countries;
     quint32 m_size;
