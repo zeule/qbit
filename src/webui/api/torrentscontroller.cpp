@@ -1183,7 +1183,7 @@ void TorrentsController::renameFileAction()
     const QString oldFilePath = torrent->filePath(fileIndex);
 
     const bool useFilenameExt = BitTorrent::Session::instance()->isAppendExtensionEnabled()
-        && (torrent->filesProgress()[fileIndex] != 1);
+        && (torrent->filesProgress()[fileIndex] < 1.);
     const QString newFileName = (newName + (useFilenameExt ? QB_EXT : QString()));
     const QString newFilePath = (oldFilePath.leftRef(oldFilePath.size() - oldFileName.size()) + newFileName);
 

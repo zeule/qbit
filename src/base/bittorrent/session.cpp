@@ -168,7 +168,7 @@ namespace
         torrentParams.hasSeedStatus = root.dict_find_int_value("qBt-seedStatus");
         torrentParams.firstLastPiecePriority = root.dict_find_int_value("qBt-firstLastPiecePriority");
         torrentParams.hasRootFolder = root.dict_find_int_value("qBt-hasRootFolder");
-        torrentParams.seedingTimeLimit = root.dict_find_int_value("qBt-seedingTimeLimit", TorrentHandle::USE_GLOBAL_SEEDING_TIME);
+        torrentParams.seedingTimeLimit = std::chrono::minutes(root.dict_find_int_value("qBt-seedingTimeLimit", TorrentHandle::USE_GLOBAL_SEEDING_TIME.count()));
 
         const bool isAutoManaged = root.dict_find_int_value("auto_managed");
         const bool isPaused = root.dict_find_int_value("paused");
@@ -1413,7 +1413,7 @@ void Session::configureNetworkInterfaces(lt::settings_pack &settingsPack)
     if (m_listenInterfaceConfigured)
         return;
 
-    const int port = useRandomPort() ? 0 : this->port();
+    const auto port = useRandomPort() ? 0 : this->port();
     if (port > 0)  // user specified port
         settingsPack.set_int(lt::settings_pack::max_retry_port_bind, 0);
 

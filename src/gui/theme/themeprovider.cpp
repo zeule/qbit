@@ -182,7 +182,7 @@ QStringList Theme::ThemeProvider::themeSearchPaths() const
     // 1) themes from this dir serve as fallback
     // 2) user may not override them because of 1)
     res << QLatin1String(":/") + themeDirName;
-    res << QDir(Profile::instance().location(SpecialFolder::Data)).absoluteFilePath(themeDirName);
+    res << QDir(Profile::instance()->location(SpecialFolder::Data)).absoluteFilePath(themeDirName);
     // WARNING QStandardPaths::locateAll() returns a list with entries from home directory at the
     // beginning, but this is not documented and might change. In that case this method will be incorrect.
     res << QStandardPaths::locateAll(QStandardPaths::AppLocalDataLocation, themeDirName, QStandardPaths::LocateDirectory);
