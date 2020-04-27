@@ -12,6 +12,7 @@ project(qbit
 
 include(GNUInstallDirs)
 include(FeatureSummary)
+set_property(GLOBAL PROPERTY FeatureSummary_PKG_TYPES RUNTIME OPTIONAL RECOMMENDED)
 
 # version requirements
 set(requiredBoostVersion 1.56)
